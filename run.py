@@ -16,7 +16,7 @@ def main():
 	parser.add_option("-l", "--logfile",
                       action="store", 
                       dest="logfile",
-                      default="auth.log.anon.100",
+                      default="auth.log.anon.nov.1",
                       help="Log file to analyze",)
 	parser.add_option("-k", "--kpercolation",
                       action="store", 
@@ -40,9 +40,9 @@ def main():
 	edges = g.get_edges_dict()
 	
 	# find weighted maximal clique percolation
-	mpw = maxclique_percolation_weighted(graph, k)	
-	clusters, percolation_dict = mpw.get_non_overlap()	
-	graph_clusters = mpw.get_graph_cluster(percolation_dict)	
+	# mpw = maxclique_percolation_weighted(graph, k)	
+	# clusters, percolation_dict = mpw.get_non_overlap()		
+	# graph_clusters = mpw.get_graph_cluster(percolation_dict)	
 	
 	# graph streaming
 	stream = graph_streaming(graph_clusters, edges, clusters)

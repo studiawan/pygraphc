@@ -14,6 +14,19 @@ class graph_streaming:
 		cluster_length = len(self.clique_percolation)
 		cluster_color = [[uniform(0.0, 1.0) for _ in range(3)] for _ in range(cluster_length)]			
 		return cluster_color
+			
+	def remove_outcluster(self, gstream, edge_dict):
+		# remove edge outside cluster
+		print 'Removing unncessary edges'
+		for node in self.g.nodes_iter(data=True):					
+			neighbors = self.g.neighbors(node[0])
+			for neighbor in neighbors:
+				if neighbor != 'cluster':
+					if self.g[node[0]]['cluster'] != self.g[neighbor]['cluster']:						
+						try:
+							gstream.delete_edge(edge_dict[(node[0], neighbor)])
+						except KeyError:
+							gstream.delete_edge(edge_dict[(neighbor, node[0])])
 	
 	def gephi_streaming(self):
 		gstream = pygephi.GephiClient('http://localhost:8080/workspace0', autoflush=True)
@@ -29,9 +42,14 @@ class graph_streaming:
 		edge_index = 0
 		edge_dict = {}
 		print 'Streaming edge'	
-		edges_only = self.edges.keys()	
-		for e in edges_only:							
-			gstream.add_edge(edge_index, e[0], e[1], directed=False)
+		edges_only = self.edges.keys()			
+		for e in edges_only:			
+			try:
+				weight = self.g[e[0]][e[1]]
+			except KeyError:
+				weight = self.g[e[0]][e[1]]
+			
+			gstream.add_edge(edge_index, e[0], e[1], weight=weight[0]['weight'], directed=False)
 			edge_dict[(e[0], e[1])] = edge_index
 			edge_dict[(e[1], e[0])] = edge_index
 			edge_index += 1
@@ -43,14 +61,6 @@ class graph_streaming:
 			for node in cluster:
 				gstream.change_node(node, **node_attributes)	
 		
-		# remove edge outside cluster
-		print 'Removing unncessary edges'
-		for node in self.g.nodes_iter(data=True):					
-			neighbors = self.g.neighbors(node[0])
-			for neighbor in neighbors:
-				if neighbor != 'cluster':
-					if self.g[node[0]]['cluster'] != self.g[neighbor]['cluster']:						
-						try:
-							gstream.delete_edge(edge_dict[(node[0], neighbor)])
-						except KeyError:
-							gstream.delete_edge(edge_dict[(neighbor, node[0])])
+		# remove edges from different cluster
+		# self.remove_outcluster(gstream, edge_dict)
+		

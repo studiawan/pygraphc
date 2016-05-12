@@ -34,9 +34,11 @@ class maxclique_percolation_weighted(maxclique_percolation):
 				percolation_dict[p] = index
 		
 		diff = set(nodes).difference(percolations[0])
-		if diff:			
+		if diff:
+			other_cluster = len(percolations)			
 			for i in diff:		
-				percolation_dict[i] = i 				
+				percolation_dict[i] = other_cluster
+				other_cluster += 1 				
 			
 		return percolation_dict
 	

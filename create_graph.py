@@ -31,14 +31,14 @@ class create_graph:
 		edges_combinations = [eu[0] for eu in self.events_unique]
 		edge_index = 0
 		edges = {}
-		for ec in combinations(edges_combinations, 2):
+		for ec in combinations(edges_combinations, 2):			
 			# get cosine similarity between two nodes
 			tfidf1, tfidf2 = self.g.node[ec[0]]['tf-idf'], self.g.node[ec[1]]['tf-idf']			 
 			length1, length2 = self.g.node[ec[0]]['length'], self.g.node[ec[1]]['length']
-			cosine_similarity = self.get_cosine_similarity(tfidf1, tfidf2, length1, length2)
+			cosine_similarity = self.get_cosine_similarity(tfidf1, tfidf2, length1, length2)			
 			
 			# create edge
-			if cosine_similarity > 0.0:
+			if cosine_similarity > 0.1:
 				self.g.add_edge(ec[0], ec[1], weight=cosine_similarity)
 				edges[(ec[0], ec[1])] = edge_index
 				edge_index += 1

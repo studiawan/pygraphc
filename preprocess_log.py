@@ -37,14 +37,14 @@ class preprocess_log:
 	def get_tfidf(self, doc, total_docs, docs):
 		# remove number, stopwords
 		doc = sub('[^a-zA-Z]', ' ', doc)
-		additional_stopwords = ['preauth', 'from']
+		additional_stopwords = ['preauth', 'from', 'xxxxx', 'for', 'port', 'sshd', 'ssh']
 		for a in additional_stopwords:
 			doc = doc.replace(a, '')		
 		doc.replace('_', ' ')
 		doc = ' '.join(doc.split())
 
 		stopwords = corpus.stopwords.words('english')
-		stopwords_result = [w.lower() for w in doc.split() if w.lower() not in stopwords]		
+		stopwords_result = [w.lower() for w in doc.split() if w.lower() not in stopwords]				
 
 		# count word frequency (tf)
 		tf = Counter(stopwords_result)
@@ -52,7 +52,7 @@ class preprocess_log:
 		tfidf = []
 		for t in tf.most_common():
 			normalized_tf = float(t[1]) / float(words_total)    # normalized word frequency
-			wid = self.get_wordindocs(t[0], docs)                    # calculate word occurrence in all documents
+			wid = self.get_wordindocs(t[0], docs)               # calculate word occurrence in all documents
 			idf = 1 + log(total_docs / wid)                     # calculate idf
 			tfidf_val = normalized_tf * idf                     # calculate tf-idf
 			tfidf.append((t[0], tfidf_val))
@@ -77,18 +77,18 @@ class preprocess_log:
 		
 		# preprocess logs, add to ordinary list and unique list
 		events_list, events_unique = [], []
-		index = 0
-		index_log = 0
+		index, index_log = 0, 0		 
 		for l in logs_lower:
 			auth_split = l.split()
 			event_type, event_desc = auth_split[0].split('[')[0], ' '.join(auth_split[1:])
 			event = event_type + ' ' + event_desc
 			events_list.append(event)
-			check_events_unique = [e[1]['event'] for e in events_unique]
+			
+			preprocessed_event, tfidf = self.get_tfidf(event, logs_total, logs_lower)
+			check_events_unique = [e[1]['preprocessed_event'] for e in events_unique]
 
 			# if not exist, add new element
-			if event not in check_events_unique:
-				preprocessed_event, tfidf = self.get_tfidf(event, logs_total, logs_lower)
+			if preprocessed_event not in check_events_unique:							
 				length = self.get_doclength(tfidf)
 				events_unique.append([index, {'event': event, 'tf-idf': tfidf, 'length': length, 'status': '',
 											  'cluster': index, 'frequency': 1, 'member': [index_log], 'preprocessed_event':preprocessed_event}])
@@ -96,13 +96,13 @@ class preprocess_log:
 			# if exist, increment the frequency
 			else:
 				for e in events_unique:
-					if event == e[1]['event']:
+					if preprocessed_event == e[1]['preprocessed_event']:
 						member = e[1]['member']
 						member.append(index_log)
 						e[1]['member'] = member
 						e[1]['frequency'] += 1
 
-			index_log += 1
+			index_log += 1		
 		
 		# get inter-arrival time of unique event
 		timestamps = {}
