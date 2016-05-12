@@ -16,7 +16,7 @@ def main():
 	parser.add_option("-l", "--logfile",
                       action="store", 
                       dest="logfile",
-                      default="nov-30.log",
+                      default="auth.log.anon.100",
                       help="Log file to analyze",)
 	parser.add_option("-k", "--kpercolation",
                       action="store", 

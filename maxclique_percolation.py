@@ -27,11 +27,17 @@ class maxclique_percolation_weighted(maxclique_percolation):
 		maxclique_percolation.__init__(self, g, k)		
 	
 	def get_percolation_dict(self, percolations):
+		nodes = self.g.nodes()
 		percolation_dict = {}
 		for index, percolation in enumerate(percolations):
-			for p in percolation:
+			for p in percolation:				
 				percolation_dict[p] = index
 		
+		diff = set(nodes).difference(percolations[0])
+		if diff:			
+			for i in diff:		
+				percolation_dict[i] = i 				
+			
 		return percolation_dict
 	
 	def get_neighbors_weight(self, node, neighbors):
@@ -66,7 +72,7 @@ class maxclique_percolation_weighted(maxclique_percolation):
 		percolation_list = self.get_cluster_member(percolation_dict)
 		return percolation_list, percolation_dict
 
-	def get_graph_cluster(self, percolation_dict):
-		for node in self.g.nodes_iter(data=True):						
+	def get_graph_cluster(self, percolation_dict):				
+		for node in self.g.nodes_iter(data=True):							
 			self.g[node[0]]['cluster'] = percolation_dict[node[0]]					
 		return self.g	
