@@ -4,7 +4,7 @@ from time import sleep
 from random import uniform
 
 class graph_streaming:
-	def __init__(self, graph_clusters, edges, clique_percolation, sleep_time = 0.1):
+	def __init__(self, graph_clusters, edges, clique_percolation=None, sleep_time = 0.1):
 		self.g = graph_clusters		
 		self.edges = edges
 		self.clique_percolation = clique_percolation
@@ -28,14 +28,23 @@ class graph_streaming:
 						except KeyError:
 							gstream.delete_edge(edge_dict[(neighbor, node[0])])
 	
+	def change_color(self, gstream):
+		# change node color based on cluster
+		cluster_color = self.set_node_color()
+		for index, cluster in enumerate(self.clique_percolation):			
+			node_attributes = {'size':10, 'r':cluster_color[index][0], 'g':cluster_color[index][1], 'b':cluster_color[index][2]}
+			for node in cluster:
+				gstream.change_node(node, **node_attributes)
+	
 	def gephi_streaming(self):
 		gstream = pygephi.GephiClient('http://localhost:8080/workspace0', autoflush=True)
 		gstream.clean()		
 		
 		# streaming nodes				
-		print 'Streaming node'
-		for node in self.g.nodes_iter(data=True):						
-			node_attributes = {'size':10, 'r':0.5, 'g':0.5, 'b':0.5, 'cluster':self.g[node[0]]['cluster'], 'preprocessed_event':node[1]['preprocessed_event']}
+		print 'Streaming node'		
+		for node in self.g.nodes_iter(data=True):					
+			# 'cluster':self.g[node[1]]['cluster'],	or node[1]['cluster']							
+			node_attributes = {'size':10, 'r':0.5, 'g':0.5, 'b':0.5, 'preprocessed_event':node[1]['preprocessed_event'], 'frequency':node[1]['frequency']}
 			gstream.add_node(node[0], **node_attributes)
 		
 		# streaming edges
@@ -52,15 +61,7 @@ class graph_streaming:
 			gstream.add_edge(edge_index, e[0], e[1], weight=weight[0]['weight'], directed=False)
 			edge_dict[(e[0], e[1])] = edge_index
 			edge_dict[(e[1], e[0])] = edge_index
-			edge_index += 1
+			edge_index += 1		
 		
-		# change node color based on cluster
-		cluster_color = self.set_node_color()
-		for index, cluster in enumerate(self.clique_percolation):			
-			node_attributes = {'size':10, 'r':cluster_color[index][0], 'g':cluster_color[index][1], 'b':cluster_color[index][2]}
-			for node in cluster:
-				gstream.change_node(node, **node_attributes)	
-		
-		# remove edges from different cluster
-		# self.remove_outcluster(gstream, edge_dict)
-		
+		# change cluster color
+		# self.change_color(gstream)				
