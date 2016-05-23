@@ -9,4 +9,10 @@ class connected_components:
 		for components in nx.connected_components(self.g):
 			clusters.append(components)
 		
+		cluster_id = 0
+		for cluster in clusters:
+			for node in cluster:
+				self.g[node]['cluster'] = cluster_id
+			cluster_id += 1
+		
 		return clusters

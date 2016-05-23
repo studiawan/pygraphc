@@ -42,9 +42,9 @@ class graph_streaming:
 		
 		# streaming nodes				
 		print 'Streaming node'		
-		for node in self.g.nodes_iter(data=True):					
-			# 'cluster':self.g[node[1]]['cluster'],	or node[1]['cluster']							
-			node_attributes = {'size':10, 'r':0.5, 'g':0.5, 'b':0.5, 'preprocessed_event':node[1]['preprocessed_event'], 'frequency':node[1]['frequency']}
+		for node in self.g.nodes_iter(data=True):										
+			print node
+			node_attributes = {'size':10, 'r':0.5, 'g':0.5, 'b':0.5, 'preprocessed_event':node[1]['preprocessed_event'], 'frequency':node[1]['frequency'], 'cluster':self.g[node[0]]['cluster']}
 			gstream.add_node(node[0], **node_attributes)
 		
 		# streaming edges
