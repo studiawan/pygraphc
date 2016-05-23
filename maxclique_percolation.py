@@ -7,6 +7,7 @@ class maxclique_percolation:
 		self.k = k		
 
 	def get_maxcliques_percolation(self):
+		# Source: https://gist.github.com/conradlee/1341933
 		percolation_graph = nx.Graph()
 		cliques = list(frozenset(c) for c in nx.find_cliques(self.g) if len(c) >= self.k)				
 		percolation_graph.add_nodes_from(cliques)
