@@ -1,7 +1,7 @@
 from optparse import OptionParser
 from preprocess_log import preprocess_log
 from create_graph import create_graph
-from connected_components import connected_components
+from kclique_percolation_bruteforce import kclique_percolation_bruteforce
 from graph_streaming import graph_streaming
 
 def main():
@@ -10,8 +10,8 @@ def main():
                       type='choice',
                       action='store',
                       dest='method',
-                      choices=['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted', 'kclique_percolation',],
-                      default='connected_components',
+                      choices=['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted', 'kclique_percolation_bruteforce',],
+                      default='kclique_percolation_bruteforce',
                       help='Graph clustering method to run',)
 	parser.add_option("-l", "--logfile",
                       action="store", 
@@ -23,10 +23,16 @@ def main():
                       dest="k",
                       default=3,
                       help="Number of k for clique percolation",)
+    parser.add_option("-t", "--threshold",
+					  action="store",
+					  dest="t",
+					  default=0.00001,
+					  help="Threshold of geometric mean for weighted k-clique percolation")
                       
 	(options, args) = parser.parse_args()
 	logfile = options.logfile
 	k = options.k
+	t = options.t
 	
 	# preprocess log file
 	p = preprocess_log(logfile)	
@@ -39,9 +45,9 @@ def main():
 	graph = g.get_graph()
 	edges = g.get_edges_dict()
 	
-	# connected components
-	cc = connected_components(graph)
-	clusters = cc.get_connected_components()
+	# k-clique percolation
+	kcpb = kclique_percolation_bruteforce(g, k, t)
+	clusters = kcpb.get_kclique_percolation()
 	
 	# graph streaming
 	stream = graph_streaming(graph, edges, clusters)
