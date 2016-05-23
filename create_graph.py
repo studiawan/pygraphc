@@ -2,10 +2,11 @@ import networkx as nx
 from itertools import combinations
 
 class create_graph:
-	def __init__(self, events_unique):
+	def __init__(self, events_unique, cosine_threshold=0.0):
 		self.events_unique = events_unique
 		self.g = nx.MultiGraph()	
 		self.edges_dict = {}
+		self.cosine_threshold = cosine_threshold
 	
 	def get_graph(self):
 		return self.g
@@ -38,7 +39,7 @@ class create_graph:
 			cosine_similarity = self.get_cosine_similarity(tfidf1, tfidf2, length1, length2)			
 			
 			# create edge
-			if cosine_similarity > 0.1:
+			if cosine_similarity > self.cosine_threshold:
 				self.g.add_edge(ec[0], ec[1], weight=cosine_similarity)
 				edges[(ec[0], ec[1])] = edge_index
 				edge_index += 1
