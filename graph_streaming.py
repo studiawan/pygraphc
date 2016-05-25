@@ -40,11 +40,13 @@ class graph_streaming:
 		gstream = pygephi.GephiClient('http://localhost:8080/workspace0', autoflush=True)
 		gstream.clean()		
 		
-		# streaming nodes				
-		print 'Streaming node'		
-		for node in self.g.nodes_iter(data=True):										
-			print node
-			node_attributes = {'size':10, 'r':0.5, 'g':0.5, 'b':0.5, 'preprocessed_event':node[1]['preprocessed_event'], 'frequency':node[1]['frequency'], 'cluster':self.g[node[0]]['cluster']}
+		# streaming nodes	# this is the RIGHT one			
+		for n in self.g.nodes_iter():
+			print self.g.node[n]
+		print 'Streaming node'	
+		print 'stream', id(self.g)					
+		for node in self.g.nodes_iter(data=True):						
+			node_attributes = {'size':10, 'r':0.5, 'g':0.5, 'b':0.5, 'preprocessed_event':node[1]['preprocessed_event'], 'frequency':node[1]['frequency'], 'cluster':node[1]['cluster']} #self.g[node[0]]['cluster']
 			gstream.add_node(node[0], **node_attributes)
 		
 		# streaming edges
