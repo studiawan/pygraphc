@@ -23,10 +23,10 @@ def main():
                       dest="k",
                       default=3,
                       help="Number of k for clique percolation",)
-    parser.add_option("-t", "--threshold",
-					  action="store",
-					  dest="t",
-					  default=0.00001,
+	parser.add_option("-t", "--threshold", 
+					  action="store", 
+					  dest="t", 
+					  default=0.00001, 
 					  help="Threshold of geometric mean for weighted k-clique percolation")
                       
 	(options, args) = parser.parse_args()
@@ -42,12 +42,13 @@ def main():
 	# create graph
 	g = create_graph(events_unique)
 	g.do_create()
-	graph = g.get_graph()
+	graph = g.get_graph()	
 	edges = g.get_edges_dict()
+	edges_weight = g.get_edges_weight()
 	
 	# k-clique percolation
-	kcpb = kclique_percolation_bruteforce(g, k, t)
-	clusters = kcpb.get_kclique_percolation()
+	kcpb = kclique_percolation_bruteforce(graph, edges_weight, k, t)
+	clusters = kcpb.get_kclique_percolation()	
 	
 	# graph streaming
 	stream = graph_streaming(graph, edges, clusters)
