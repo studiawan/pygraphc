@@ -6,6 +6,7 @@ class create_graph:
 		self.events_unique = events_unique
 		self.g = nx.MultiGraph()	
 		self.edges_dict = {}
+		self.edges_weight = []
 		self.cosine_threshold = cosine_threshold
 	
 	def get_graph(self):
@@ -41,6 +42,7 @@ class create_graph:
 			# create edge
 			if cosine_similarity > self.cosine_threshold:
 				self.g.add_edge(ec[0], ec[1], weight=cosine_similarity)
+				self.edges_weight.append((ec[0], ec[1], cosine_similarity))
 				edges[(ec[0], ec[1])] = edge_index
 				edge_index += 1
 		
@@ -48,6 +50,9 @@ class create_graph:
 	
 	def get_edges_dict(self):
 		return self.edges_dict
+	
+	def get_edges_weight(self):
+		return self.edges_weight
 		
 	def do_create(self):
 		self.create_nodes()
