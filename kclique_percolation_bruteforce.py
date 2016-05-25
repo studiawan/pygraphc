@@ -1,22 +1,26 @@
 import networkx as nx
-import sys
 from collections import deque
 from itertools import chain, islice, combinations
 
 class kclique_percolation_bruteforce:
-	def __init__(self, g, k, threshold):
-		self.g = g
+	def __init__(self, graph, edges_weight, k, threshold):
+		self.graph = graph
+		self.edges_weight = edges_weight
 		self.k = k
 		self.threshold = threshold
+		self.g = None
 		print 'kclique_percolation: initialization ...'
+	
+	def build_graph(self):
+		self.g = nx.Graph()
+		self.g.add_weighted_edges_from(self.edges_weight)
 	
 	def enumerate_all_cliques(self):
 		# https://networkx.github.io/documentation/development/_modules/networkx/algorithms/clique.html#enumerate_all_cliques
 		print 'enumerate_all_cliques ...'
 		index = {}
 		nbrs = {}
-		for u in self.g:
-			sys.stdout.write('.')
+		for u in self.g:			
 			index[u] = len(index)
 			# Neighbors of u that appear after u in the iteration order of G.
 			nbrs[u] = {v for v in self.g[u] if v not in index}
@@ -27,7 +31,6 @@ class kclique_percolation_bruteforce:
 		# 2. (base + cnbrs) is sorted with respect to the iteration order of G.
 		# 3. cnbrs is a set of common neighbors of nodes in base.
 		while queue:
-			sys.stdout.write('.')
 			base, cnbrs = map(list, queue.popleft())
 			yield base
 			for i, u in enumerate(cnbrs):
@@ -51,19 +54,20 @@ class kclique_percolation_bruteforce:
 		
 	def find_weighted_kclique(self):		
 		print 'find_weighted_kclique ...'		
-		cliques = list(self.enumerate_all_cliques())	
+		self.build_graph()
+		cliques = list(self.enumerate_all_cliques())			
 		k_cliques = [clique for clique in cliques if len(clique) == self.k]		
 		valid_cliques = []	
 		for clique in k_cliques:				
 			weights = []
 			for u, v in combinations(clique, 2):										
-				reduced_precision = round(self.g[u][v][0]['weight'], 5)
+				reduced_precision = round(self.g[u][v]['weight'], 5)
 				weights.append(reduced_precision)				
 			gmean = self.get_geometric_mean(weights)	
 			if gmean > self.threshold:
 				valid_cliques.append(frozenset(clique))
 			
-		return valid_cliques
+		return valid_cliques			
 	
 	def get_kclique_percolation(self):
 		print 'get_kclique_percolation ...'
@@ -81,4 +85,12 @@ class kclique_percolation_bruteforce:
 		for component in nx.connected_components(percolation_graph):			
 			kclique_percolation.append(frozenset.union(*component))
 			
+		# set cluster id
+		print 'kclique', id(self.graph)
+		cluster_id = 0
+		for cluster in kclique_percolation:
+			for node in cluster:				
+				self.graph.node[node]['cluster'] = cluster_id											
+			cluster_id += 1
+		
 		return kclique_percolation	
