@@ -12,8 +12,8 @@ def main():
                       action='store',
                       dest='method',
                       choices=['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
-                               'kclique_percolation_bruteforce', ],
-                      default='kclique_percolation_bruteforce',
+                               'kclique_percolation', ],
+                      default='kclique_percolation',
                       help='Graph clustering method to run',)
     parser.add_option("-l", "--logfile",
                       action="store",
@@ -47,6 +47,9 @@ def main():
     graph = g.get_graph()
     edges = g.get_edges_dict()
     edges_weight = g.get_edges_weight()
+
+    # to do
+    # run method based on the option given
 
     # k-clique percolation
     kcp = KCliquePercolation(graph, edges_weight, k, t)

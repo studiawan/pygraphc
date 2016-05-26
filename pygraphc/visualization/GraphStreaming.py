@@ -42,7 +42,7 @@ class GraphStreaming:
         gstream.clean()
 
         # streaming nodes
-        print 'Streaming node'
+        print 'streaming node ...'
         for node in self.g.nodes_iter(data=True):
             node_attributes = {'size': 10, 'r': 0.5, 'g': 0.5, 'b': 0.5,
                                'preprocessed_event': node[1]['preprocessed_event'],
@@ -53,7 +53,7 @@ class GraphStreaming:
         # streaming edges
         edge_index = 0
         edge_dict = {}
-        print 'Streaming edge'
+        print 'streaming edge ...'
         edges_only = self.edges.keys()
         for e in edges_only:
             try:
