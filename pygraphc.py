@@ -54,10 +54,11 @@ def main():
     # k-clique percolation
     kcp = KCliquePercolation(graph, edges_weight, k, t)
     clusters = kcp.get_kclique_percolation()
+    kcliques, valid_kcliques = kcp.get_kcliques(), kcp.get_valid_kcliques()
 
     # graph streaming
-    stream = GraphStreaming(graph, edges, clusters)
-    stream.gephi_streaming()
+    stream = GraphStreaming(graph, edges, clusters, kcliques, valid_kcliques)
+    stream.gephi_streaming('clusters')
 
 
 if __name__ == '__main__':
