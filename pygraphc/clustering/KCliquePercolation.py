@@ -10,7 +10,15 @@ class KCliquePercolation:
         self.k = k
         self.threshold = threshold
         self.g = None
+        self.kcliques = None
+        self.valid_kcliques = []
         print 'kclique_percolation: initialization ...'
+
+    def get_kcliques(self):
+        return self.kcliques
+
+    def get_valid_kcliques(self):
+        return self.valid_kcliques
 
     def build_graph(self):
         self.g = nx.Graph()
@@ -56,9 +64,8 @@ class KCliquePercolation:
     def find_weighted_kclique(self):
         print 'find_weighted_kclique ...'
         self.build_graph()
-        cliques = list(self.enumerate_all_cliques())
-        k_cliques = [clique for clique in cliques if len(clique) == self.k]
-        valid_cliques = []
+        self.kcliques = list(self.enumerate_all_cliques())
+        k_cliques = [clique for clique in self.kcliques if len(clique) == self.k]
         for clique in k_cliques:
             weights = []
             for u, v in combinations(clique, 2):
@@ -66,9 +73,9 @@ class KCliquePercolation:
                 weights.append(reduced_precision)
             gmean = self.get_geometric_mean(weights)
             if gmean > self.threshold:
-                valid_cliques.append(frozenset(clique))
+                self.valid_kcliques.append(frozenset(clique))
 
-        return valid_cliques
+        return self.valid_kcliques
 
     def get_kclique_percolation(self):
         print 'get_kclique_percolation ...'
