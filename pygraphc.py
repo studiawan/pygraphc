@@ -23,12 +23,12 @@ def main():
     parser.add_option("-k", "--kpercolation",
                       action="store",
                       dest="k",
-                      default=3,
+                      default=4,
                       help="Number of k for clique percolation",)
     parser.add_option("-t", "--threshold",
                       action="store",
                       dest="t",
-                      default=0.00001,
+                      default=0.10000,
                       help="Threshold of geometric mean for weighted k-clique percolation")
 
     (options, args) = parser.parse_args()
@@ -48,17 +48,16 @@ def main():
     edges = g.get_edges_dict()
     edges_weight = g.get_edges_weight()
 
-    # to do
-    # run method based on the option given
-
     # k-clique percolation
-    kcp = KCliquePercolation(graph, edges_weight, k, t)
-    clusters = kcp.get_kclique_percolation()
-    kcliques, valid_kcliques = kcp.get_kcliques(), kcp.get_valid_kcliques()
+    clusters, kcliques, valid_kcliques = None, None, None
+    if options.method == 'kclique_percolation':
+        kcp = KCliquePercolation(graph, edges_weight, k, t)
+        clusters = kcp.get_kclique_percolation()
+        kcliques, valid_kcliques = kcp.get_kcliques(), kcp.get_valid_kcliques()
 
     # graph streaming
     stream = GraphStreaming(graph, edges, clusters, kcliques, valid_kcliques)
-    stream.gephi_streaming('clusters')
+    stream.gephi_streaming('valid_kcliques')
 
 
 if __name__ == '__main__':
