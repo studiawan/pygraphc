@@ -12,13 +12,8 @@ class KCliquePercolation:
         self.g = None
         self.kcliques = None
         self.valid_kcliques = []
+        self.percolated_nodes = []
         print 'kclique_percolation: initialization ...'
-
-    def get_kcliques(self):
-        return self.kcliques
-
-    def get_valid_kcliques(self):
-        return self.valid_kcliques
 
     def build_graph(self):
         self.g = nx.Graph()
@@ -64,14 +59,15 @@ class KCliquePercolation:
     def find_weighted_kclique(self):
         print 'find_weighted_kclique ...'
         self.build_graph()
-        self.kcliques = list(self.enumerate_all_cliques())
-        k_cliques = [clique for clique in self.kcliques if len(clique) == self.k]
-        for clique in k_cliques:
+        k_cliques = list(self.enumerate_all_cliques())
+        self.kcliques = [clique for clique in k_cliques if len(clique) == self.k]
+        for clique in self.kcliques:
             weights = []
             for u, v in combinations(clique, 2):
                 reduced_precision = round(self.g[u][v]['weight'], 5)
                 weights.append(reduced_precision)
             gmean = self.get_geometric_mean(weights)
+
             if gmean > self.threshold:
                 self.valid_kcliques.append(frozenset(clique))
 
@@ -85,7 +81,9 @@ class KCliquePercolation:
 
         # Add an edge in the percolation graph for each pair of cliques that percolate
         for clique1, clique2 in combinations(cliques, 2):
-            if len(clique1.intersection(clique2)) >= (self.k - 1):
+            percolation = clique1.intersection(clique2)
+            self.percolated_nodes.append(percolation)
+            if len(percolation) >= (self.k - 1):
                 percolation_graph.add_edge(clique1, clique2)
 
         # Get all connected component in percolation graph
@@ -94,10 +92,42 @@ class KCliquePercolation:
             kclique_percolation.append(frozenset.union(*component))
 
         # set cluster id
-        cluster_id = 0
+        cluster_id = 1
         for cluster in kclique_percolation:
             for node in cluster:
                 self.graph.node[node]['cluster'] = cluster_id
             cluster_id += 1
 
         return kclique_percolation
+
+    def remove_outcluster(self):
+        # remove edge outside cluster
+        removed_edges = []
+        for node in self.g.nodes_iter(data=True):
+            neighbors = self.g.neighbors(node[0])
+            for neighbor in neighbors:
+                if self.graph.node[node[0]]['cluster'] != self.graph.node[neighbor]['cluster']:
+                    try:
+                        self.graph.remove_edge(node[0], neighbor)
+                    except nx.exception.NetworkXError:
+                        pass
+                    removed_edges.append((node[0], neighbor))
+
+        return removed_edges
+
+    def refine_cluster_id(self):
+        clusters = []
+        for component in nx.connected_components(self.graph):
+            clusters.append(component)
+
+        for cluster in clusters:
+            print cluster
+
+    def get_percolation_nodes(self):
+        return self.percolated_nodes
+
+    def get_kcliques(self):
+        return self.kcliques
+
+    def get_valid_kcliques(self):
+        return self.valid_kcliques
