@@ -23,18 +23,23 @@ def main():
     parser.add_option("-k", "--kpercolation",
                       action="store",
                       dest="k",
-                      default=4,
+                      default=3,
                       help="Number of k for clique percolation",)
-    parser.add_option("-t", "--threshold",
+    parser.add_option("-g", "--geometric",
                       action="store",
-                      dest="t",
-                      default=0.10000,
+                      dest="g",
+                      default=0.1,
                       help="Threshold of geometric mean for weighted k-clique percolation")
+    parser.add_option("-c", "--cosine",
+                      action="store",
+                      dest="c",
+                      default=0.0,
+                      help="Threshold for cosine similarity while creating graph edges")
 
     (options, args) = parser.parse_args()
     logfile = options.logfile
     k = options.k
-    t = options.t
+    geometric_mean = options.g
 
     # preprocess log file
     p = PreprocessLog(logfile)
@@ -42,22 +47,26 @@ def main():
     events_unique = p.get_eventsunique()
 
     # create graph
-    g = CreateGraph(events_unique)
+    g = CreateGraph(events_unique, options.c)
     g.do_create()
     graph = g.get_graph()
     edges = g.get_edges_dict()
     edges_weight = g.get_edges_weight()
+    nodes_id = g.get_nodes_id()
 
     # k-clique percolation
-    clusters, kcliques, valid_kcliques = None, None, None
+    clusters, removed_edges = None, None
     if options.method == 'kclique_percolation':
-        kcp = KCliquePercolation(graph, edges_weight, k, t)
-        clusters = kcp.get_kclique_percolation()
-        kcliques, valid_kcliques = kcp.get_kcliques(), kcp.get_valid_kcliques()
+        kcp = KCliquePercolation(graph, edges_weight, nodes_id, k, geometric_mean)
+        kcp.get_kclique_percolation()
+        removed_edges = kcp.remove_outcluster()
+        clusters = kcp.get_clusters()
 
     # graph streaming
-    stream = GraphStreaming(graph, edges, clusters, kcliques, valid_kcliques)
-    stream.gephi_streaming('valid_kcliques')
+    stream = GraphStreaming(graph, edges)
+    stream.gephi_streaming()
+    stream.change_color(clusters)
+    stream.remove_outcluster(removed_edges)
 
 
 if __name__ == '__main__':
