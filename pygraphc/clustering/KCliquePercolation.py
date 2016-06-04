@@ -4,9 +4,10 @@ from itertools import chain, islice, combinations
 
 
 class KCliquePercolation:
-    def __init__(self, graph, edges_weight, k, threshold):
+    def __init__(self, graph, edges_weight, nodes_id, k, threshold):
         self.graph = graph
         self.edges_weight = edges_weight
+        self.nodes_id = nodes_id
         self.k = k
         self.threshold = threshold
         self.g = None
@@ -15,8 +16,9 @@ class KCliquePercolation:
         self.percolated_nodes = []
         print 'kclique_percolation: initialization ...'
 
-    def build_graph(self):
+    def build_temp_graph(self):
         self.g = nx.Graph()
+        self.g.add_nodes_from(self.nodes_id)
         self.g.add_weighted_edges_from(self.edges_weight)
 
     def enumerate_all_cliques(self):
@@ -58,7 +60,7 @@ class KCliquePercolation:
 
     def find_weighted_kclique(self):
         print 'find_weighted_kclique ...'
-        self.build_graph()
+        self.build_temp_graph()
         k_cliques = list(self.enumerate_all_cliques())
         self.kcliques = [clique for clique in k_cliques if len(clique) == self.k]
         for clique in self.kcliques:
@@ -98,8 +100,6 @@ class KCliquePercolation:
                 self.graph.node[node]['cluster'] = cluster_id
             cluster_id += 1
 
-        return kclique_percolation
-
     def remove_outcluster(self):
         # remove edge outside cluster
         removed_edges = []
@@ -108,20 +108,26 @@ class KCliquePercolation:
             for neighbor in neighbors:
                 if self.graph.node[node[0]]['cluster'] != self.graph.node[neighbor]['cluster']:
                     try:
-                        self.graph.remove_edge(node[0], neighbor)
+                        self.g.remove_edge(node[0], neighbor)
                     except nx.exception.NetworkXError:
                         pass
                     removed_edges.append((node[0], neighbor))
 
         return removed_edges
 
-    def refine_cluster_id(self):
+    def get_clusters(self):
         clusters = []
-        for component in nx.connected_components(self.graph):
+        for component in nx.connected_components(self.g):
             clusters.append(component)
 
+        # refine cluster id
+        cluster_id = 1
         for cluster in clusters:
-            print cluster
+            for node in cluster:
+                self.graph.node[node]['cluster'] = cluster_id
+            cluster_id += 1
+
+        return clusters
 
     def get_percolation_nodes(self):
         return self.percolated_nodes
