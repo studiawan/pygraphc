@@ -91,7 +91,7 @@ class PreprocessLog:
             if preprocessed_event not in check_events_unique:
                 length = self.get_doclength(tfidf)
                 events_unique.append([index, {'event': event, 'tf-idf': tfidf, 'length': length, 'status': '',
-                                              'cluster': index, 'frequency': 1, 'member': [index_log],
+                                              'cluster': 0, 'frequency': 1, 'member': [index_log],
                                               'preprocessed_event':preprocessed_event}])
                 index += 1
             # if exist, increment the frequency
