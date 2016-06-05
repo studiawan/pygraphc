@@ -53,7 +53,10 @@ class PreprocessLog:
         for t in tf.most_common():
             normalized_tf = float(t[1]) / float(words_total)    # normalized word frequency
             wid = self.get_wordindocs(t[0], docs)               # calculate word occurrence in all documents
-            idf = 1 + log(total_docs / wid)                     # calculate idf
+            try:
+                idf = 1 + log(total_docs / wid)                     # calculate idf
+            except ZeroDivisionError:
+                idf = 1
             tfidf_val = normalized_tf * idf                     # calculate tf-idf
             tfidf.append((t[0], tfidf_val))
 
@@ -89,11 +92,13 @@ class PreprocessLog:
 
             # if not exist, add new element
             if preprocessed_event not in check_events_unique:
+                print index, preprocessed_event
                 length = self.get_doclength(tfidf)
                 events_unique.append([index, {'event': event, 'tf-idf': tfidf, 'length': length, 'status': '',
                                               'cluster': 0, 'frequency': 1, 'member': [index_log],
                                               'preprocessed_event':preprocessed_event}])
                 index += 1
+
             # if exist, increment the frequency
             else:
                 for e in events_unique:
