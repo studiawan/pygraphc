@@ -1,2 +1,2 @@
 # pygraphc
-Graph clustering tool based on Python
+Graph clustering tool using Python and NetworkX.
