@@ -3,7 +3,7 @@ from collections import deque
 from itertools import chain, islice, combinations
 
 
-class KCliquePercolation:
+class KCliquePercolationWeighted:
     def __init__(self, graph, edges_weight, nodes_id, k, threshold):
         self.graph = graph
         self.edges_weight = edges_weight
@@ -137,3 +137,8 @@ class KCliquePercolation:
 
     def get_valid_kcliques(self):
         return self.valid_kcliques
+
+
+class KCliquePercolationWeightedX(KCliquePercolationWeighted):
+    def __init__(self, graph, edges_weight, nodes_id, k, threshold):
+        KCliquePercolationWeighted.__init__(graph, edges_weight, nodes_id, k, threshold)
