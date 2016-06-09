@@ -16,7 +16,7 @@ class ClusterUtility(object):
 
     @staticmethod
     def set_cluster_id(graph, clusters):
-        cluster_id = 1
+        cluster_id = 0
         for cluster in clusters:
             for node in cluster:
                 graph.node[node]['cluster'] = cluster_id
