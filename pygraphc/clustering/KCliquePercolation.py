@@ -1,27 +1,49 @@
 import networkx as nx
 from collections import deque
 from itertools import chain, islice, combinations
+from ClusterUtility import ClusterUtility
 
 
-class KCliquePercolationWeighted:
-    def __init__(self, graph, edges_weight, nodes_id, k, threshold):
+class KCliquePercolation(object):
+    def __init__(self, graph, edges_weight, nodes_id, k):
+        print 'kclique_percolation: initialization ...'
         self.graph = graph
         self.edges_weight = edges_weight
         self.nodes_id = nodes_id
         self.k = k
-        self.threshold = threshold
         self.g = None
-        self.kcliques = None
-        self.valid_kcliques = []
         self.percolated_nodes = []
-        print 'kclique_percolation: initialization ...'
+        self.removed_edges = []
 
-    def build_temp_graph(self):
+    def get_percolation_nodes(self):
+        return self.percolated_nodes
+
+    def get_removed_edges(self):
+        return self.removed_edges
+
+    def get_kclique_percolation(self):
+        print 'get_kclique_percolation ...'
+        kcliques = self._find_kcliques()
+        print kcliques
+        self._get_percolation_graph(kcliques)
+        self._remove_outcluster()
+        clusters = self._get_clusters()
+
+        return clusters
+
+    def _find_kcliques(self):
+        self._build_temp_graph()
+        k_cliques = list(self._enumerate_all_cliques())
+        kcliques = [frozenset(clique) for clique in k_cliques if len(clique) == self.k]
+
+        return kcliques
+
+    def _build_temp_graph(self):
         self.g = nx.Graph()
         self.g.add_nodes_from(self.nodes_id)
         self.g.add_weighted_edges_from(self.edges_weight)
 
-    def enumerate_all_cliques(self):
+    def _enumerate_all_cliques(self):
         # https://networkx.github.io/documentation/development/_modules/networkx/algorithms/clique.html#enumerate_all_cliques
         print 'enumerate_all_cliques ...'
         index = {}
@@ -45,44 +67,12 @@ class KCliquePercolationWeighted:
                               filter(nbrs[u].__contains__,
                                      islice(cnbrs, i + 1, None))))
 
-    def get_geometric_mean(self, weights):
-        multiplication = 1
-        for weight in weights:
-            multiplication = multiplication * weight
-
-        gmean = 0.0
-        multiplication = round(multiplication, 5)
-        if multiplication > 0.0:
-            k = float(len(weights))
-            gmean = multiplication ** (1 / k)
-
-        return round(gmean, 5)
-
-    def find_weighted_kclique(self):
-        print 'find_weighted_kclique ...'
-        self.build_temp_graph()
-        k_cliques = list(self.enumerate_all_cliques())
-        self.kcliques = [clique for clique in k_cliques if len(clique) == self.k]
-        for clique in self.kcliques:
-            weights = []
-            for u, v in combinations(clique, 2):
-                reduced_precision = round(self.g[u][v]['weight'], 5)
-                weights.append(reduced_precision)
-            gmean = self.get_geometric_mean(weights)
-
-            if gmean > self.threshold:
-                self.valid_kcliques.append(frozenset(clique))
-
-        return self.valid_kcliques
-
-    def get_kclique_percolation(self):
-        print 'get_kclique_percolation ...'
-        cliques = self.find_weighted_kclique()
+    def _get_percolation_graph(self, kcliques):
         percolation_graph = nx.Graph()
-        percolation_graph.add_nodes_from(cliques)
+        percolation_graph.add_nodes_from(kcliques)
 
         # Add an edge in the percolation graph for each pair of cliques that percolate
-        for clique1, clique2 in combinations(cliques, 2):
+        for clique1, clique2 in combinations(kcliques, 2):
             percolation = clique1.intersection(clique2)
             self.percolated_nodes.append(percolation)
             if len(percolation) >= (self.k - 1):
@@ -94,15 +84,11 @@ class KCliquePercolationWeighted:
             kclique_percolation.append(frozenset.union(*component))
 
         # set cluster id
-        cluster_id = 1
-        for cluster in kclique_percolation:
-            for node in cluster:
-                self.graph.node[node]['cluster'] = cluster_id
-            cluster_id += 1
+        ClusterUtility.set_cluster_id(self.graph, kclique_percolation)
 
-    def remove_outcluster(self):
+    def _remove_outcluster(self):
         # remove edge outside cluster
-        removed_edges = []
+        self.removed_edges = []
         for node in self.g.nodes_iter(data=True):
             neighbors = self.g.neighbors(node[0])
             for neighbor in neighbors:
@@ -111,34 +97,37 @@ class KCliquePercolationWeighted:
                         self.g.remove_edge(node[0], neighbor)
                     except nx.exception.NetworkXError:
                         pass
-                    removed_edges.append((node[0], neighbor))
+                    self.removed_edges.append((node[0], neighbor))
 
-        return removed_edges
-
-    def get_clusters(self):
+    def _get_clusters(self):
         clusters = []
         for component in nx.connected_components(self.g):
             clusters.append(component)
 
         # refine cluster id
-        cluster_id = 1
-        for cluster in clusters:
-            for node in cluster:
-                self.graph.node[node]['cluster'] = cluster_id
-            cluster_id += 1
+        ClusterUtility.set_cluster_id(self.graph, clusters)
 
         return clusters
 
-    def get_percolation_nodes(self):
-        return self.percolated_nodes
 
-    def get_kcliques(self):
-        return self.kcliques
-
-    def get_valid_kcliques(self):
-        return self.valid_kcliques
-
-
-class KCliquePercolationWeightedX(KCliquePercolationWeighted):
+class KCliquePercolationWeighted(KCliquePercolation):
     def __init__(self, graph, edges_weight, nodes_id, k, threshold):
-        KCliquePercolationWeighted.__init__(graph, edges_weight, nodes_id, k, threshold)
+        print 'kclique_percolation_weighted: initialization ...'
+        super(KCliquePercolationWeighted, self).__init__(graph, edges_weight, nodes_id, k)
+        self.threshold = threshold
+
+    def _find_kcliques(self):
+        print 'find_weighted_kclique ...'
+        kcliques = super(KCliquePercolationWeighted, self)._find_kcliques()
+        weighted_kcliques = []
+        for clique in kcliques:
+            weights = []
+            for u, v in combinations(clique, 2):
+                reduced_precision = round(self.g[u][v]['weight'], 5)
+                weights.append(reduced_precision)
+            gmean = ClusterUtility.get_geometric_mean(weights)
+
+            if gmean > self.threshold:
+                weighted_kcliques.append(frozenset(clique))
+
+        return weighted_kcliques

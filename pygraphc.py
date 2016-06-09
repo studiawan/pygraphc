@@ -1,8 +1,9 @@
 from optparse import OptionParser
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.preprocess.CreateGraph import CreateGraph
-from pygraphc.clustering.KCliquePercolation import KCliquePercolation
+from pygraphc.clustering.KCliquePercolation import KCliquePercolation, KCliquePercolationWeighted
 from pygraphc.clustering.ConnectedComponents import ConnectedComponents
+from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
 from pygraphc.visualization.GraphStreaming import GraphStreaming
 from time import time
 
@@ -14,8 +15,8 @@ def main():
                       action='store',
                       dest='method',
                       choices=['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
-                               'kclique_percolation', ],
-                      default='connected_components',
+                               'kclique_percolation', 'kclique_percolation_weighted'],
+                      default='kclique_percolation',
                       help='Graph clustering method to run',)
     parser.add_option("-l", "--logfile",
                       action="store",
@@ -25,7 +26,7 @@ def main():
     parser.add_option("-k", "--kpercolation",
                       action="store",
                       dest="k",
-                      default=4,
+                      default=3,
                       help="Number of k for clique percolation",)
     parser.add_option("-g", "--geometric",
                       action="store",
@@ -35,13 +36,13 @@ def main():
     parser.add_option("-c", "--cosine",
                       action="store",
                       dest="c",
-                      default=0.2,
+                      default=0.1,
                       help="Threshold for cosine similarity while creating graph edges")
 
     (options, args) = parser.parse_args()
     logfile = options.logfile
     k = options.k
-    geometric_mean = options.g
+    geometric_mean_threshold = options.g
 
     # preprocess log file
     p = PreprocessLog(logfile)
@@ -59,23 +60,28 @@ def main():
     # k-clique percolation
     clusters, removed_edges = None, None
     if options.method == 'kclique_percolation':
-        kcp = KCliquePercolation(graph, edges_weight, nodes_id, k, geometric_mean)
-        kcp.get_kclique_percolation()
-        removed_edges = kcp.remove_outcluster()
-        clusters = kcp.get_clusters()
+        kcp = KCliquePercolation(graph, edges_weight, nodes_id, k)
+        clusters = kcp.get_kclique_percolation()
+    elif options.method == 'kclique_percolation_weighted':
+        kcpw = KCliquePercolationWeighted(graph, edges_weight, nodes_id, k, geometric_mean_threshold)
+        clusters = kcpw.get_kclique_percolation()
     elif options.method == 'connected_components':
         cc = ConnectedComponents(graph)
         clusters = cc.get_clusters()
+    elif options.method == 'maxclique_percolation_weighted':
+        mcpw = MaxCliquesPercolationWeighted(graph, k)
+        clusters = mcpw.get_maxcliques_percolation_weighted()
 
     # graph streaming
     stream = GraphStreaming(graph, edges)
     stream.gephi_streaming()
     stream.change_color(clusters)
-    # stream.remove_outcluster(removed_edges)
+    if removed_edges:
+        stream.remove_outcluster(removed_edges)
 
     print 'Nodes         :', len(nodes_id)
     print 'Edges         :', len(edges)
-    # print 'Removed edges :', len(removed_edges)
+    print 'Removed edges :', len(removed_edges) if removed_edges else 0
     print 'Clusters      :', len(clusters)
 
 
