@@ -23,8 +23,8 @@ class KCliquePercolation(object):
 
     def get_kclique_percolation(self):
         print 'get_kclique_percolation ...'
+        self._build_temp_graph()
         kcliques = self._find_kcliques()
-        print kcliques
         self._get_percolation_graph(kcliques)
         self._remove_outcluster()
         clusters = self._get_clusters()
@@ -32,7 +32,6 @@ class KCliquePercolation(object):
         return clusters
 
     def _find_kcliques(self):
-        self._build_temp_graph()
         k_cliques = list(self._enumerate_all_cliques())
         kcliques = [frozenset(clique) for clique in k_cliques if len(clique) == self.k]
 
@@ -88,7 +87,6 @@ class KCliquePercolation(object):
 
     def _remove_outcluster(self):
         # remove edge outside cluster
-        self.removed_edges = []
         for node in self.g.nodes_iter(data=True):
             neighbors = self.g.neighbors(node[0])
             for neighbor in neighbors:
@@ -119,15 +117,6 @@ class KCliquePercolationWeighted(KCliquePercolation):
     def _find_kcliques(self):
         print 'find_weighted_kclique ...'
         kcliques = super(KCliquePercolationWeighted, self)._find_kcliques()
-        weighted_kcliques = []
-        for clique in kcliques:
-            weights = []
-            for u, v in combinations(clique, 2):
-                reduced_precision = round(self.g[u][v]['weight'], 5)
-                weights.append(reduced_precision)
-            gmean = ClusterUtility.get_geometric_mean(weights)
-
-            if gmean > self.threshold:
-                weighted_kcliques.append(frozenset(clique))
+        weighted_kcliques = ClusterUtility.get_weighted_cliques(self.graph, kcliques, self.threshold)
 
         return weighted_kcliques
