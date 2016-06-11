@@ -1,9 +1,9 @@
 from optparse import OptionParser
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.preprocess.CreateGraph import CreateGraph
-from pygraphc.clustering.KCliquePercolation import KCliquePercolation, KCliquePercolationWeighted
 from pygraphc.clustering.ConnectedComponents import ConnectedComponents
-from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
+from pygraphc.clustering.KCliquePercolation import KCliquePercolation, KCliquePercolationWeighted
+from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolation, MaxCliquesPercolationWeighted
 from pygraphc.visualization.GraphStreaming import GraphStreaming
 from time import time
 
@@ -68,8 +68,11 @@ def main():
     elif options.method == 'connected_components':
         cc = ConnectedComponents(graph)
         clusters = cc.get_clusters()
+    elif options.method == 'maxclique_percolation':
+        mcp = MaxCliquesPercolation(graph, edges_weight, nodes_id, k)
+        clusters = mcp.get_maxcliques_percolation()
     elif options.method == 'maxclique_percolation_weighted':
-        mcpw = MaxCliquesPercolationWeighted(graph, k)
+        mcpw = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id, k, geometric_mean_threshold)
         clusters = mcpw.get_maxcliques_percolation_weighted()
 
     # graph streaming
