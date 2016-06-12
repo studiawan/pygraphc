@@ -1,43 +1,45 @@
 import networkx as nx
 from itertools import combinations
+from KCliquePercolation import KCliquePercolation
+from ClusterUtility import ClusterUtility
 
 
-class MaxCliquesPercolation:
-    def __init__(self, g, k):
-        self.g = g
-        self.k = k
+class MaxCliquesPercolation(KCliquePercolation):
+    def __init__(self, graph, edges_weight, nodes_id, k):
+        super(MaxCliquesPercolation, self).__init__(graph, edges_weight, nodes_id, k)
 
     def get_maxcliques_percolation(self):
-        # Source: https://gist.github.com/conradlee/1341933
-        percolation_graph = nx.Graph()
-        cliques = list(frozenset(c) for c in nx.find_cliques(self.g) if len(c) >= self.k)
-        percolation_graph.add_nodes_from(cliques)
+        print 'get_maxcliques_percolation ...'
+        super(MaxCliquesPercolation, self)._build_temp_graph()
+        maxcliques = self._find_maxcliques()
 
-        # Add an edge in the clique graph for each pair of cliques that percolate
-        for c1, c2 in combinations(cliques, 2):
-            if len(c1.intersection(c2)) >= (self.k - 1):
-                percolation_graph.add_edge(c1, c2)
+        super(MaxCliquesPercolation, self)._get_percolation_graph(maxcliques)
+        super(MaxCliquesPercolation, self)._remove_outcluster()
+        clusters = super(MaxCliquesPercolation, self)._get_clusters()
 
-        percolation_result = []
-        for component in nx.connected_components(percolation_graph):
-            percolation_result.append(frozenset.union(*component))
+        return clusters
 
-        return cliques, percolation_result
+    def _find_maxcliques(self):
+        maxcliques = list(frozenset(c) for c in nx.find_cliques(self.graph) if len(c) >= self.k)
+        return maxcliques
 
 
 class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
-    def __init__(self, g, k):
-        MaxCliquesPercolation.__init__(self, g, k)
+    def __init__(self, graph, edges_weight, nodes_id, k, threshold):
+        super(MaxCliquesPercolationWeighted, self).__init__(graph, edges_weight, nodes_id, k)
+        self.threshold = threshold
         self.percolation_dict = {}
 
     def get_maxcliques_percolation_weighted(self):
-        cliques, percolations = self.get_maxcliques_percolation()
+        maxcliques = self._find_maxcliques()
+        super(MaxCliquesPercolationWeighted, self)._get_percolation_graph(maxcliques)
+        percolations = super(MaxCliquesPercolationWeighted, self).get_clique_percolation()
         self.__set_percolation_dict(percolations)
         for p1, p2 in combinations(percolations, 2):
             intersections = p1.intersection(p2)
             if intersections:
                 for node in intersections:
-                    node_neighbors = self.g.neighbors(node)
+                    node_neighbors = self.graph.neighbors(node)
                     p1_neighbors, p2_neighbors = p1.intersection(node_neighbors), p2.intersection(node_neighbors)
                     p1_neighbors_weight = self.__get_neighbors_weight(node, p1_neighbors)
                     p2_neighbors_weight = self.__get_neighbors_weight(node, p2_neighbors)
@@ -49,8 +51,14 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         clusters = self.__get_clusters()
         return clusters
 
+    def _find_maxcliques(self):
+        maxcliques = super(MaxCliquesPercolationWeighted, self)._find_maxcliques()
+        weighted_maxcliques = ClusterUtility.get_weighted_cliques(self.graph, maxcliques, self.threshold)
+
+        return weighted_maxcliques
+
     def __set_percolation_dict(self, percolations):
-        nodes = self.g.nodes()
+        nodes = self.graph.nodes()
         percolations_merged = []
         for index, percolation in enumerate(percolations):
             for p in percolation:
@@ -69,14 +77,14 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
     def __get_neighbors_weight(self, node, neighbors):
         weight = 0
         for n in neighbors:
-            weight += self.g[node][n][0]['weight']
+            weight += self.graph[node][n][0]['weight']
 
         return weight
 
     def __set_graph_cluster(self):
-        for node in self.g.nodes_iter(data=True):            
-            self.g.node[node[0]]['cluster'] = self.percolation_dict[node[0]]
-        return self.g
+        for node in self.graph.nodes_iter(data=True):
+            self.graph.node[node[0]]['cluster'] = self.percolation_dict[node[0]]
+        return self.graph
     
     def __get_clusters(self):
         cluster_ids = set(self.percolation_dict.values())
