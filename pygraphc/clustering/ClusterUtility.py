@@ -9,7 +9,6 @@ class ClusterUtility(object):
             multiplication = multiplication * weight
 
         gmean = 0.0
-        multiplication = round(multiplication, 5)
         if multiplication > 0.0:
             k = float(len(weights))
             gmean = multiplication ** (1 / k)
@@ -22,7 +21,7 @@ class ClusterUtility(object):
         for clique in cliques:
             weights = []
             for u, v in combinations(clique, 2):
-                reduced_precision = round(graph[u][v]['weight'], 5)
+                reduced_precision = round(graph[u][v][0]['weight'], 5)
                 weights.append(reduced_precision)
             gmean = ClusterUtility.get_geometric_mean(weights)
 
