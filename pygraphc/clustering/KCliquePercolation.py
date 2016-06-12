@@ -14,12 +14,16 @@ class KCliquePercolation(object):
         self.g = None
         self.percolated_nodes = []
         self.removed_edges = []
+        self.clique_percolation = []
 
     def get_percolation_nodes(self):
         return self.percolated_nodes
 
     def get_removed_edges(self):
         return self.removed_edges
+
+    def get_clique_percolation(self):
+        return self.clique_percolation
 
     def get_kclique_percolation(self):
         print 'get_kclique_percolation ...'
@@ -78,12 +82,12 @@ class KCliquePercolation(object):
                 percolation_graph.add_edge(clique1, clique2)
 
         # Get all connected component in percolation graph
-        kclique_percolation = []
+        self.clique_percolation = []
         for component in nx.connected_components(percolation_graph):
-            kclique_percolation.append(frozenset.union(*component))
+            self.clique_percolation.append(frozenset.union(*component))
 
         # set cluster id
-        ClusterUtility.set_cluster_id(self.graph, kclique_percolation)
+        ClusterUtility.set_cluster_id(self.graph, self.clique_percolation)
 
     def _remove_outcluster(self):
         # remove edge outside cluster
