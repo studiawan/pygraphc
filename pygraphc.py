@@ -16,7 +16,7 @@ def main():
                       dest='method',
                       choices=['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
                                'kclique_percolation', 'kclique_percolation_weighted'],
-                      default='kclique_percolation',
+                      default='kclique_percolation_weighted',
                       help='Graph clustering method to run',)
     parser.add_option("-l", "--logfile",
                       action="store",
@@ -32,7 +32,7 @@ def main():
                       action="store",
                       dest="g",
                       default=0.1,
-                      help="Threshold of geometric mean for weighted k-clique percolation")
+                      help="Threshold of geometric mean")
     parser.add_option("-c", "--cosine",
                       action="store",
                       dest="c",
@@ -82,14 +82,15 @@ def main():
     if removed_edges:
         stream.remove_outcluster(removed_edges)
 
-    print 'Nodes         :', len(nodes_id)
-    print 'Edges         :', len(edges)
-    print 'Removed edges :', len(removed_edges) if removed_edges else 0
-    print 'Clusters      :', len(clusters)
+    return [len(nodes_id), len(edges), len(removed_edges) if removed_edges else 0, len(clusters)]
 
 
 if __name__ == '__main__':
     start = time()
-    main()
+    properties = main()
     duration = time() - start
+    print 'Nodes         :', properties[0]
+    print 'Edges         :', properties[1]
+    print 'Removed edges :', properties[2]
+    print 'Clusters      :', properties[3]
     print 'Runtime       :', duration, 'seconds'
