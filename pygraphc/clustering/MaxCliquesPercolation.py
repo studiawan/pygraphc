@@ -7,6 +7,7 @@ from ClusterUtility import ClusterUtility
 class MaxCliquesPercolation(KCliquePercolation):
     def __init__(self, graph, edges_weight, nodes_id, k):
         super(MaxCliquesPercolation, self).__init__(graph, edges_weight, nodes_id, k)
+        self.max_cliques = None
 
     def get_maxcliques_percolation(self):
         print 'get_maxcliques_percolation ...'
@@ -19,8 +20,12 @@ class MaxCliquesPercolation(KCliquePercolation):
 
         return clusters
 
+    def get_maxcliques(self):
+        return self.max_cliques
+
     def _find_maxcliques(self):
         maxcliques = list(frozenset(c) for c in nx.find_cliques(self.graph) if len(c) >= self.k)
+        self.max_cliques = maxcliques
         return maxcliques
 
 
@@ -54,6 +59,7 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
     def _find_maxcliques(self):
         maxcliques = super(MaxCliquesPercolationWeighted, self)._find_maxcliques()
         weighted_maxcliques = ClusterUtility.get_weighted_cliques(self.graph, maxcliques, self.threshold)
+        self.max_cliques = weighted_maxcliques
 
         return weighted_maxcliques
 
