@@ -22,7 +22,7 @@ class GraphStreaming:
         # change node color based on objects, e.g., cluster, k-clique, or valid k-cliques
         object_color = self.set_node_color(colored_object, [])
         for index, objects in enumerate(colored_object):
-            node_attributes = {'size': 10, 'r': object_color[index][0], 'g': object_color[index][1],
+            node_attributes = {'r': object_color[index][0], 'g': object_color[index][1],
                                'b': object_color[index][2]}
             for node in objects:
                 self.gstream.change_node(node, **node_attributes)
@@ -30,7 +30,7 @@ class GraphStreaming:
             sleep(self.sleep_time)
 
             # back to normal node size
-            node_attributes = {'size': 10}
+            node_attributes = {'r': 0.5, 'g': 0.5, 'b': 0.5}
             for node in objects:
                 self.gstream.change_node(node, **node_attributes)
 
