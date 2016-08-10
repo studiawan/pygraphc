@@ -22,7 +22,7 @@ class CreateGraph:
         except ZeroDivisionError:
             cosine_similarity = 0
 
-        return cosine_similarity
+        return round(cosine_similarity, 3)
 
     def create_edges(self):
         edges_combinations = [eu[0] for eu in self.events_unique]
