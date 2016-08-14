@@ -25,7 +25,6 @@ class ClusterUtility(object):
                 reduced_precision = round(graph[u][v][0]['weight'], 5)
                 weights.append(reduced_precision)
             gmean = ClusterUtility.get_geometric_mean(weights)
-            print clique, gmean
 
             if gmean > threshold:
                 weighted_kcliques.append(frozenset(clique))
@@ -41,42 +40,72 @@ class ClusterUtility(object):
             cluster_id += 1
 
     @staticmethod
-    def get_unique_cluster(graph):
-        # get unique cluster
-        cluster = [n[1]['cluster'] for n in graph.nodes_iter(data='cluster')]
-        unique_cluster = set(cluster)
-
-        return unique_cluster
-
-    @staticmethod
-    def set_cluster_label_id(graph, logs):
-        new_cluster_label = {}
+    def set_cluster_label_id(graph, clusters, original_logs, analysis_dir):
+        new_cluster_member_label = {}   # store individiual cluster id for each cluster member
+        dominant_cluster_labels = {}    # store dominant cluster label from all clusters
         cluster_labels = ['accepted password', 'accepted publickey', 'authentication failure', 'check pass',
                           'connection closed', 'connection reset by peer', 'did not receive identification string',
                           'failed password', 'ignoring max retries', 'invalid user', 'pam adding faulty module',
-                          'pam unable to dlopen', 'possible break-in attempt', 'received disconnect', 'received signal',
-                          'server listening', 'session closed', 'session opened', 'unknown option']
-        unique_cluster = ClusterUtility.get_unique_cluster(graph)
-        for uc in unique_cluster:
-            for node in graph.nodes_iter(data=True):
-                # get all logs per cluster
-                if node[1]['cluster'] == uc:
-                    members = node[1]['member']
-                    logs_per_cluster = []
-                    for member in members:
-                        logs_per_cluster.append(logs[member])
+                          'pam unable to dlopen', 'received disconnect', 'received signal',
+                          'reverse mapping checking getaddrinfo', 'server listening', 'session closed',
+                          'session opened', 'this does not map back to the address', 'unknown option']
+        max_cluster_id = len(cluster_labels) - 1
 
-                    # get dominant label in cluster
-                    label_counter = dict((cl, 0) for cl in cluster_labels)
-                    for label in cluster_labels:
-                        for log in logs_per_cluster:
-                            if label in log:
-                                label_counter[label] += 1
+        for cluster in clusters:
+            logs_per_cluster = []
+            label_counter = dict((cl, 0) for cl in cluster_labels)
+            for c in cluster:
+                # get all original_logs per cluster
+                members = graph.node[c]['member']
+                for member in members:
+                    logs_per_cluster.append(original_logs[member])
 
-                    # get most dominant cluster label
-                    dominant_cluster_label = sorted(label_counter.items(), key=itemgetter(1), reverse=True)[0][1]
-                    new_cluster_label[node[0]] = dominant_cluster_label
+                # get dominant label in cluster
+                for label in cluster_labels:
+                    for log in logs_per_cluster:
+                        if label in log.lower():
+                            label_counter[label] += 1
+
+            # get most dominant cluster label
+            dominant_label_counter = sorted(label_counter.items(), key=itemgetter(1), reverse=True)
+
+            # if cluster label has already used
+            if dominant_label_counter[0][0] in [labels[0] for labels in dominant_cluster_labels.values()]:
+                # get existing counter
+                existing_counter = 0
+                for ec in dominant_cluster_labels.values():
+                    if ec[0] == dominant_label_counter[0][0]:
+                        existing_counter = ec[1]
+
+                # check for which one is more dominant
+                if dominant_label_counter[0][1] > existing_counter:
+                    # get existing cluster with lower existing counter
+                    existing_cluster = \
+                        dominant_cluster_labels.keys()[dominant_cluster_labels.values().index(existing_counter)]
+                    for c in cluster:
+                        new_cluster_member_label[c] = cluster_labels.index(dominant_label_counter[0][0])
+                    # set old cluster to max_cluster_id + 1
+                    for c in existing_cluster:
+                        new_cluster_member_label[c] = max_cluster_id + 1
+
+                else:
+                    for c in cluster:
+                        new_cluster_member_label[c] = max_cluster_id + 1
+            # if cluster label has not used
+            else:
+                dominant_cluster_labels[frozenset(cluster)] = dominant_label_counter[0]
+                for c in cluster:
+                    new_cluster_member_label[c] = cluster_labels.index(dominant_label_counter[0][0])
 
         # set new cluster label
-        for node_id, new_label in new_cluster_label.iteritems():
+        for node_id, new_label in new_cluster_member_label.iteritems():
             graph.node[node_id]['cluster'] = new_label
+
+        # write clustering result to file (clustering result for all members in a node)
+        fopen = open(analysis_dir, 'w')
+        for key, value in new_cluster_member_label.iteritems():
+            cluster_members = graph.node[key]['member']
+            for member in cluster_members:
+                cluster_label = 'undefined' if value > max_cluster_id else cluster_labels[value]
+                fopen.write(str(value) + '; ' + cluster_label + '; ' + original_logs[member])
+        fopen.close()
