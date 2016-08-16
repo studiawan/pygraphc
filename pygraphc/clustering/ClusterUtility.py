@@ -101,11 +101,18 @@ class ClusterUtility(object):
         for node_id, new_label in new_cluster_member_label.iteritems():
             graph.node[node_id]['cluster'] = new_label
 
+        # get sorted log line id - cluster id results
+        analysis_result = {}
+        for node in graph.nodes_iter(data=True):
+            members = node[1]['member']
+            for member in members:
+                analysis_result[member] = new_cluster_member_label[node[0]]
+        sorted(analysis_result.items(), key=itemgetter(0))
+
         # write clustering result to file (clustering result for all members in a node)
         fopen = open(analysis_dir, 'w')
-        for key, value in new_cluster_member_label.iteritems():
-            cluster_members = graph.node[key]['member']
-            for member in cluster_members:
-                cluster_label = 'undefined' if value > max_cluster_id else cluster_labels[value]
-                fopen.write(str(value) + '; ' + cluster_label + '; ' + original_logs[member])
+        for rowid, cluster_id in analysis_result.iteritems():
+            print rowid, cluster_id
+            cluster_label = 'undefined' if cluster_id > max_cluster_id else cluster_labels[cluster_id]
+            fopen.write(str(cluster_id) + '; ' + cluster_label + '; ' + original_logs[rowid])
         fopen.close()
