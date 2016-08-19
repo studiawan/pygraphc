@@ -48,7 +48,10 @@ class ClusterUtility(object):
                           'failed password', 'ignoring max retries', 'invalid user', 'pam adding faulty module',
                           'pam unable to dlopen', 'received disconnect', 'received signal',
                           'reverse mapping checking getaddrinfo', 'server listening', 'session closed',
-                          'session opened', 'this does not map back to the address', 'unknown option']
+                          'session opened', 'this does not map back to the address', 'unknown option',
+                          'error connect', 'open failed', 'root login refused', 'bad protocol version identification',
+                          'subsystem request', 'protocol major versions differ', 'failed none', 'expired password',
+                          'unable open env file', 'dispatch protocol error', 'syslogin perform logout']
         max_cluster_id = len(cluster_labels) - 1
 
         for cluster in clusters:
@@ -112,7 +115,6 @@ class ClusterUtility(object):
         # write clustering result to file (clustering result for all members in a node)
         fopen = open(analysis_dir, 'w')
         for rowid, cluster_id in analysis_result.iteritems():
-            print rowid, cluster_id
             cluster_label = 'undefined' if cluster_id > max_cluster_id else cluster_labels[cluster_id]
             fopen.write(str(cluster_id) + '; ' + cluster_label + '; ' + original_logs[rowid])
         fopen.close()
