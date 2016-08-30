@@ -12,67 +12,9 @@ class PreprocessLog:
         self.events_list = []
         self.events_unique = []
 
-    def read_log(self):
-        with open(self.logfile, 'r') as f:
-            logs = f.readlines()
-
-        self.logs = logs
-        self.loglength = len(logs)
-
-    def get_logs(self):
-        return self.logs
-
-    def get_loglength(self):
-        return self.loglength
-
-    def get_wordindocs(self, word, docs):
-        # find word occurence in all docs (logs)
-        count = 0
-        for doc in docs:
-            if word in doc:
-                count += 1
-
-        return float(count)
-
-    def get_tfidf(self, doc, total_docs, docs):
-        # remove number, stopwords
-        doc = sub('[^a-zA-Z]', ' ', doc)
-        additional_stopwords = ['preauth', 'from', 'xxxxx', 'for', 'port', 'sshd', 'ssh']
-        for a in additional_stopwords:
-            doc = doc.replace(a, '')
-        doc.replace('_', ' ')
-        doc = ' '.join(doc.split())
-
-        stopwords = corpus.stopwords.words('english')
-        stopwords_result = [w.lower() for w in doc.split() if w.lower() not in stopwords]
-
-        # count word frequency (tf)
-        tf = Counter(stopwords_result)
-        words_total = len(stopwords_result)
-        tfidf = []
-        for t in tf.most_common():
-            normalized_tf = float(t[1]) / float(words_total)    # normalized word frequency
-            wid = self.get_wordindocs(t[0], docs)               # calculate word occurrence in all documents
-            try:
-                idf = 1 + log(total_docs / wid)                     # calculate idf
-            except ZeroDivisionError:
-                idf = 1
-            tfidf_val = normalized_tf * idf                     # calculate tf-idf
-            tfidf.append((t[0], tfidf_val))
-
-        return doc, tfidf
-
-    def get_doclength(self, tfidf):
-        # calculate doc's length for cosine similarity
-        length = 0
-        for ti in tfidf:
-            length += pow(ti[1], 2)
-
-        return sqrt(length)
-
     def do_preprocess(self):
         # read log file
-        self.read_log()
+        self.__read_log()
 
         # convert to lower, count total logs
         logs_lower = [' '.join(l.lower().split()[5:]) for l in self.logs[:]]
@@ -87,13 +29,13 @@ class PreprocessLog:
             event = event_type + ' ' + event_desc
             events_list.append(event)
 
-            preprocessed_event, tfidf = self.get_tfidf(event, logs_total, logs_lower)
+            preprocessed_event, tfidf = self.__get_tfidf(event, logs_total, logs_lower)
             check_events_unique = [e[1]['preprocessed_event'] for e in events_unique]
 
             # if not exist, add new element
             if preprocessed_event not in check_events_unique:
                 print index, preprocessed_event
-                length = self.get_doclength(tfidf)
+                length = self.__get_doclength(tfidf)
                 events_unique.append([index, {'event': event, 'tf-idf': tfidf, 'length': length, 'status': '',
                                               'cluster': 0, 'frequency': 1, 'member': [index_log],
                                               'preprocessed_event':preprocessed_event}])
@@ -129,3 +71,63 @@ class PreprocessLog:
 
     def get_eventsunique(self):
         return self.events_unique
+
+    def get_logs(self):
+        return self.logs
+
+    def get_loglength(self):
+        return self.loglength
+
+    def __read_log(self):
+        with open(self.logfile, 'r') as f:
+            logs = f.readlines()
+
+        self.logs = logs
+        self.loglength = len(logs)
+
+    def __get_wordindocs(self, word, docs):
+        # find word occurence in all docs (logs)
+        count = 0
+        for doc in docs:
+            if word in doc:
+                count += 1
+
+        return float(count)
+
+    def __get_tfidf(self, doc, total_docs, docs):
+        # remove number, stopwords
+        doc = sub('[^a-zA-Z]', ' ', doc)
+        additional_stopwords = ['preauth', 'from', 'xxxxx', 'for', 'port', 'sshd', 'ssh']
+        for a in additional_stopwords:
+            doc = doc.replace(a, '')
+        doc.replace('_', ' ')
+        doc = ' '.join(doc.split())
+
+        stopwords = corpus.stopwords.words('english')
+        stopwords_result = [w.lower() for w in doc.split() if w.lower() not in stopwords]
+
+        # count word frequency (tf)
+        tf = Counter(stopwords_result)
+        words_total = len(stopwords_result)
+        tfidf = []
+        for t in tf.most_common():
+            normalized_tf = float(t[1]) / float(words_total)    # normalized word frequency
+            wid = self.__get_wordindocs(t[0], docs)               # calculate word occurrence in all documents
+            try:
+                idf = 1 + log(total_docs / wid)                     # calculate idf
+            except ZeroDivisionError:
+                idf = 1
+            tfidf_val = normalized_tf * idf                     # calculate tf-idf
+            tfidf.append((t[0], tfidf_val))
+
+        return doc, tfidf
+
+    def __get_doclength(self, tfidf):
+        # calculate doc's length for cosine similarity
+        length = 0
+        for ti in tfidf:
+            length += pow(ti[1], 2)
+
+        return sqrt(length)
+
+
