@@ -11,16 +11,9 @@ class GraphStreaming:
         self.gstream = pygraphc.pygephi.GephiClient('http://localhost:8080/workspace0', autoflush=True)
         self.gstream.clean()
 
-    def set_node_color(self, colored_object, single_color):
-        object_length = len(colored_object)
-        object_color = [single_color for _ in range(object_length)] if single_color else \
-            [[uniform(0.0, 1.0) for _ in range(3)] for _ in range(object_length)]
-
-        return object_color
-
     def change_color(self, colored_object):
         # change node color based on objects, e.g., cluster, k-clique, or valid k-cliques
-        object_color = self.set_node_color(colored_object, [])
+        object_color = self.__set_node_color(colored_object, [])
         for index, objects in enumerate(colored_object):
             node_attributes = {'r': object_color[index][0], 'g': object_color[index][1],
                                'b': object_color[index][2]}
@@ -63,3 +56,10 @@ class GraphStreaming:
                 self.gstream.delete_edge(self.edges[(removed_edge[0], removed_edge[1])])
             except KeyError:
                 self.gstream.delete_edge(self.edges[(removed_edge[1], removed_edge[0])])
+
+    def __set_node_color(self, colored_object, single_color):
+        object_length = len(colored_object)
+        object_color = [single_color for _ in range(object_length)] if single_color else \
+            [[uniform(0.0, 1.0) for _ in range(3)] for _ in range(object_length)]
+
+        return object_color
