@@ -129,5 +129,3 @@ class PreprocessLog:
             length += pow(ti[1], 2)
 
         return sqrt(length)
-
-
