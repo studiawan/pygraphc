@@ -11,6 +11,10 @@ from pygraphc.clustering.ClusterEvaluation import ClusterEvaluation
 
 
 def main():
+    standard_path = '/home/hudan/Git/labeled-authlog/dataset/161.166.232.18/'
+    standard_file = standard_path + 'auth.log.anon.labeled'
+    analyzed_file = standard_path + 'auth.log.anon'
+
     parser = OptionParser(usage='usage: %prog [options] ')
     parser.add_option('-m', '--method',
                       type='choice',
@@ -18,27 +22,27 @@ def main():
                       dest='method',
                       choices=['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
                                'kclique_percolation', 'kclique_percolation_weighted'],
-                      default='maxclique_percolation_weighted',
+                      default='connected_components',
                       help='Graph clustering method to run',)
     parser.add_option("-l", "--logfile",
                       action="store",
                       dest="logfile",
-                      default="./data/auth.log.anon.16",
+                      default=analyzed_file,
                       help="Log file to analyze",)
     parser.add_option("-k", "--kpercolation",
                       action="store",
                       dest="k",
-                      default=5,
+                      default=3,
                       help="Number of k for clique percolation",)
     parser.add_option("-g", "--geometric",
                       action="store",
                       dest="g",
-                      default=0.3,
+                      default=0.2,
                       help="Threshold of geometric mean")
     parser.add_option("-c", "--cosine",
                       action="store",
                       dest="c",
-                      default=0.0,
+                      default=0.9,
                       help="Threshold for cosine similarity while creating graph edges")
 
     (options, args) = parser.parse_args()
@@ -63,8 +67,10 @@ def main():
     # k-clique percolation
     clusters, removed_edges = None, None
     maxcliques = None
-    standard_file = '/home/hudan/Git/labeled-authlog/dataset/161.166.232.16/auth.log.anon.labeled'
-    prediction_file = './results-k=' + str(k) + 'g=' + str(geometric_mean_threshold) + '.log'
+
+    # prediction result file
+    # prediction_file = './results-k=' + str(k) + 'g=' + str(geometric_mean_threshold) + '.log'
+    prediction_file = './results-c=' + str(options.c) + '.log'
     if options.method == 'kclique_percolation':
         kcp = KCliquePercolation(graph, edges_weight, nodes_id, k)
         clusters = kcp.get_kclique_percolation()
@@ -82,7 +88,9 @@ def main():
         mcpw = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id, k, geometric_mean_threshold)
         clusters = mcpw.get_maxcliques_percolation_weighted()
         maxcliques = mcpw.get_maxcliques()
-        ClusterUtility.set_cluster_label_id(graph, clusters, logs, prediction_file)
+
+    # get prediction file
+    ClusterUtility.set_cluster_label_id(graph, clusters, logs, prediction_file)
 
     # graph streaming
     stream_flag = False
@@ -96,6 +104,7 @@ def main():
             # sleep(120)
             stream.remove_outcluster(removed_edges)
 
+    # get evaluation of clustering performance
     adj_rand_score = ClusterEvaluation.get_adjusted_rand_score(standard_file, prediction_file)
     adj_mutual_info_score = ClusterEvaluation.get_adjusted_mutual_info_score(standard_file, prediction_file)
     norm_mutual_info_score = ClusterEvaluation.get_normalized_mutual_info_score(standard_file, prediction_file)
