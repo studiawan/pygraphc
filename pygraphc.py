@@ -22,7 +22,7 @@ def main():
                       dest='method',
                       choices=['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
                                'kclique_percolation', 'kclique_percolation_weighted'],
-                      default='connected_components',
+                      default='kclique_percolation_weighted',
                       help='Graph clustering method to run',)
     parser.add_option("-l", "--logfile",
                       action="store",
@@ -32,17 +32,17 @@ def main():
     parser.add_option("-k", "--kpercolation",
                       action="store",
                       dest="k",
-                      default=3,
+                      default=4,
                       help="Number of k for clique percolation",)
     parser.add_option("-g", "--geometric",
                       action="store",
                       dest="g",
-                      default=0.2,
+                      default=0.5,
                       help="Threshold of geometric mean")
     parser.add_option("-c", "--cosine",
                       action="store",
                       dest="c",
-                      default=0.9,
+                      default=0.1,
                       help="Threshold for cosine similarity while creating graph edges")
 
     (options, args) = parser.parse_args()
@@ -69,8 +69,8 @@ def main():
     maxcliques = None
 
     # prediction result file
-    # prediction_file = './results-k=' + str(k) + 'g=' + str(geometric_mean_threshold) + '.log'
-    prediction_file = './results-c=' + str(options.c) + '.log'
+    prediction_file = './results-k=' + str(k) + 'g=' + str(geometric_mean_threshold) + '.log'
+    # prediction_file = './results-c=' + str(options.c) + '.log'
     if options.method == 'kclique_percolation':
         kcp = KCliquePercolation(graph, edges_weight, nodes_id, k)
         clusters = kcp.get_kclique_percolation()
@@ -98,7 +98,7 @@ def main():
         stream = GraphStreaming(graph, edges, 0)
         stream.gephi_streaming()
         # sleep(120)
-        stream.change_color(maxcliques)
+        # stream.change_color(maxcliques)
         if removed_edges:
             # print 'sleeping for 120 seconds ...'
             # sleep(120)
