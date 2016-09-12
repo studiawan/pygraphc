@@ -33,11 +33,14 @@ class Event:
 
 class Para:
     """
-    maxEventLen: the length of the longest log/event, which is used in step 1 to split logs into partitions according to their length
-    path: the path of the input file
-    step2Support: the support threshold to create a new partition, partitions which contains less than step2Support logs will not go through step 2
-    PST: Partition support ratio threshold
-    CT: Cluster goodness threshold used in DetermineP1P2 in step3. If the columns with unique term more than CT, we skip step 3
+    maxEventLen     : the length of the longest log/event, which is used in step 1 to split logs into partitions
+                      according to their length
+    path            : the path of the input file
+    step2Support    : the support threshold to create a new partition, partitions which contains less than step2Support logs
+                      will not go through step 2
+    PST             : Partition support ratio threshold
+    CT              : Cluster goodness threshold used in DetermineP1P2 in step3. If the columns with unique term
+                      more than CT, we skip step 3
     """
 
     def __init__(self, path='../Data/2kProxifier/', logname='rawlog.log', savePath='./results_2kProxifier/',
@@ -100,29 +103,29 @@ class IPLoM:
             lineCount = 1
             for line in lines:
 
-                #If line is empty, skip
+                # If line is empty, skip
                 if line.strip() == "":
                     continue
 
                 if self.para.regular:
                     for currentRex in self.para.rex:
                         line = re.sub(currentRex, '', line)
-                    line = re.sub('node-[0-9]+', 'node-', line)  #For HPC only
+                    line = re.sub('node-[0-9]+', 'node-', line)  # For HPC only
 
                 wordSeq = line.strip().split('\t')[1].split()
-                #print (wordSeq)
+                # print (wordSeq)
                 if self.para.removable:
                     wordSeq = [word for i, word in enumerate(wordSeq) if i not in self.para.removeCol]
-                #print (wordSeq)
+                # print (wordSeq)
 
-                #Generate terms list, with ID in the end
+                # Generate terms list, with ID in the end
                 wordSeq.append(str(lineCount))
-                #print (wordSeq)
+                # print (wordSeq)
                 lineCount += 1
                 # if lineCount%100 == 0:
                 # 	print(lineCount)
 
-                #Add current log to the corresponding partition
+                # Add current log to the corresponding partition
                 self.partitionsL[len(wordSeq) - 1].logLL.append(wordSeq)
                 self.partitionsL[len(wordSeq) - 1].numOfLogs += 1
 
@@ -137,23 +140,21 @@ class IPLoM:
                     partition.valid = False
 
     def Step2(self):
-
         for partition in self.partitionsL:
-
             if not partition.valid:
                 continue
 
             if partition.numOfLogs <= self.para.step2Support:
                 continue
 
-            #Avoid going through newly generated partitions
+            # Avoid going through newly generated partitions
             if partition.stepNo == 2:
                 break
 
             """
-			For each column, create a set to hold the unique tokens in that column. 
-			And finally, calculate the number of the unique tokens in each column
-			"""
+            For each column, create a set to hold the unique tokens in that column.
+            And finally, calculate the number of the unique tokens in each column
+            """
             uniqueTokensCountLS = []
             for columnIdx in range(partition.lenOfLogs):
                 uniqueTokensCountLS.append(set())
@@ -162,8 +163,7 @@ class IPLoM:
                 for columnIdx in range(partition.lenOfLogs):
                     uniqueTokensCountLS[columnIdx].add(logL[columnIdx])
 
-
-            #Find the column with minimum unique tokens
+            # Find the column with minimum unique tokens
             minColumnIdx = 0
             minColumnCount = len(uniqueTokensCountLS[0])
 
@@ -172,11 +172,11 @@ class IPLoM:
                     minColumnCount = len(uniqueTokensCountLS[columnIdx])
                     minColumnIdx = columnIdx
 
-            #If there is one column with one unique term, do not split this partition
+            # If there is one column with one unique term, do not split this partition
             if minColumnCount == 1:
                 continue
 
-            #From split-token to log list
+            # From split-token to log list
             logDLL = {}
             for logL in partition.logLL:
                 if logL[minColumnIdx] not in logDLL:
@@ -195,23 +195,21 @@ class IPLoM:
             partition.valid = False
 
     def Step3(self):
-
         for partition in self.partitionsL:
-
             if not partition.valid:
                 continue
 
             if partition.stepNo == 3:
                 break
 
-            #Debug
+            # Debug
             # print ("*******************************************")
             # print ("Step 2 Partition:")
             # print ("*******************************************")
             # for logL in partition.logLL:
             # 	print (' '.join(logL))
 
-            #Find two columns that my cause split in this step
+            # Find two columns that my cause split in this step
             p1, p2 = self.DetermineP1P2(partition)
 
             if p1 == -1 or p2 == -1:
@@ -224,7 +222,7 @@ class IPLoM:
                 mapRelation1DS = {}
                 mapRelation2DS = {}
 
-                #Construct token sets for p1 and p2, dictionary to record the mapping relations between p1 and p2
+                # Construct token sets for p1 and p2, dictionary to record the mapping relations between p1 and p2
                 for logL in partition.logLL:
                     p1Set.add(logL[p1])
                     p2Set.add(logL[p2])
@@ -243,12 +241,13 @@ class IPLoM:
                 # originp1S = copy.deepcopy(p1Set)
                 # originp2S = copy.deepcopy(p2Set)
 
-                #Construct sets to record the tokens in 1-1, 1-M, M-1 relationships, the left-tokens in p1Set & p2Set are in M-M relationships
+                # Construct sets to record the tokens in 1-1, 1-M, M-1 relationships, the left-tokens in p1Set & p2Set
+                # are in M-M relationships
                 oneToOneS = set()
                 oneToMP1D = {}
                 oneToMP2D = {}
 
-                #select 1-1 and 1-M relationships
+                # select 1-1 and 1-M relationships
                 for p1Token in p1Set:
                     if len(mapRelation1DS[p1Token]) == 1:
                         if len(mapRelation2DS[list(mapRelation1DS[p1Token])[0]]) == 1:
@@ -264,7 +263,7 @@ class IPLoM:
                         if isOneToM:
                             oneToMP1D[p1Token] = 0
 
-                #delete the tokens which are picked to 1-1 and 1-M relationships from p1Set, so that the left are M-M
+                # delete the tokens which are picked to 1-1 and 1-M relationships from p1Set, so that the left are M-M
                 for deleteToken in oneToOneS:
                     p1Set.remove(deleteToken)
                     p2Set.remove(list(mapRelation1DS[deleteToken])[0])
@@ -274,7 +273,7 @@ class IPLoM:
                         p2Set.remove(deleteTokenP2)
                     p1Set.remove(deleteToken)
 
-                #select M-1 relationships
+                # select M-1 relationships
                 for p2Token in p2Set:
                     if len(mapRelation2DS[p2Token]) != 1:
                         isOneToM = True
@@ -285,13 +284,13 @@ class IPLoM:
                         if isOneToM:
                             oneToMP2D[p2Token] = 0
 
-                #delete the tokens which are picked to M-1 relationships from p2Set, so that the left are M-M
+                # delete the tokens which are picked to M-1 relationships from p2Set, so that the left are M-M
                 for deleteToken in oneToMP2D:
                     p2Set.remove(deleteToken)
                     for deleteTokenP1 in mapRelation2DS[deleteToken]:
                         p1Set.remove(deleteTokenP1)
 
-                #calculate the #Lines_that_match_S
+                # calculate the #Lines_that_match_S
                 for logL in partition.logLL:
                     if logL[p1] in oneToMP1D:
                         oneToMP1D[logL[p1]] += 1
@@ -300,9 +299,7 @@ class IPLoM:
                         oneToMP2D[logL[p2]] += 1
 
             except KeyError as er:
-
                 print (er)
-
                 print ('erre: ' + str(p1) + '\t' + str(p2))
 
             # print ('set1:')
@@ -317,17 +314,17 @@ class IPLoM:
             if partition.stepNo == 2:
                 newPartitionsD["dumpKeyforMMrelationInStep2__"] = Partition(stepNo=3, numOfLogs=0,
                                                                             lenOfLogs=partition.lenOfLogs)
-            #Split partition
+            # Split partition
             for logL in partition.logLL:
-                #If is 1-1
+                # If is 1-1
                 if logL[p1] in oneToOneS:
                     if logL[p1] not in newPartitionsD:
                         newPartitionsD[logL[p1]] = Partition(stepNo=3, numOfLogs=0, lenOfLogs=partition.lenOfLogs)
                     newPartitionsD[logL[p1]].logLL.append(logL)
                     newPartitionsD[logL[p1]].numOfLogs += 1
 
-                #This part can be improved. The split_rank can be calculated once.
-                #If is 1-M
+                # This part can be improved. The split_rank can be calculated once.
+                # If is 1-M
                 elif logL[p1] in oneToMP1D:
                     # print ('1-M: ' + str(len( mapRelation1DS[logL[p1]] )) + str(oneToMP1D[logL[p1]]))
                     split_rank = self.Get_Rank_Posistion(len(mapRelation1DS[logL[p1]]), oneToMP1D[logL[p1]], True)
@@ -343,7 +340,7 @@ class IPLoM:
                         newPartitionsD[logL[p2]].logLL.append(logL)
                         newPartitionsD[logL[p2]].numOfLogs += 1
 
-                #If is M-1
+                # If is M-1
                 elif logL[p2] in oneToMP2D:
                     # print ('M-1: ' + str(len( mapRelation2DS[logL[p2]] )) + str(oneToMP2D[logL[p2]]))
                     split_rank = self.Get_Rank_Posistion(len(mapRelation2DS[logL[p2]]), oneToMP2D[logL[p2]], False)
@@ -359,7 +356,7 @@ class IPLoM:
                         newPartitionsD[logL[p2]].logLL.append(logL)
                         newPartitionsD[logL[p2]].numOfLogs += 1
 
-                #M-M
+                # M-M
                 else:
                     if partition.stepNo == 2:
                         newPartitionsD["dumpKeyforMMrelationInStep2__"].logLL.append(logL)
@@ -378,7 +375,7 @@ class IPLoM:
                             newPartitionsD[logL[p2]].logLL.append(logL)
                             newPartitionsD[logL[p2]].numOfLogs += 1
 
-            #debug
+            # debug
             # print ('p1: ' + str(p1) + '\t' + 'p2: ' + str(p2))
             # print ("*******************************************")
             # print ("Step 3 1-1:")
@@ -413,10 +410,10 @@ class IPLoM:
 
             # print ("Debug End")
 
-            if "dumpKeyforMMrelationInStep2__" in newPartitionsD and newPartitionsD[
-                "dumpKeyforMMrelationInStep2__"].numOfLogs == 0:
+            if "dumpKeyforMMrelationInStep2__" in newPartitionsD and \
+                            newPartitionsD["dumpKeyforMMrelationInStep2__"].numOfLogs == 0:
                 newPartitionsD["dumpKeyforMMrelationInStep2__"].valid = False
-            #Add all the new partitions to collection
+            # Add all the new partitions to collection
             for key in newPartitionsD:
                 if self.para.usePST and 1.0 * newPartitionsD[key].numOfLogs / partition.numOfLogs < self.para.PST:
                     self.partitionsL[0].logLL += newPartitionsD[key].logLL
@@ -474,10 +471,8 @@ class IPLoM:
                 continue
             for logL in partition.logLL:
                 self.output.append(logL[-2:] + logL[:-2])
-
                 # self.output.sort(key = lambda logL:int(logL[0]))
-
-                #print ("output log length: " + str(len(self.output)))
+                # print ("output log length: " + str(len(self.output)))
 
     def WriteEventToFile(self, eventFilePath):
         writeEvent = open(eventFilePath, 'w')
@@ -494,14 +489,14 @@ class IPLoM:
             writeOutput.write(logStr + '\n')
             writeOutput.close()
 
-
     """
-	For 1-M and M-1 mappings, you need to decide whether M side are constants or variables. This method is to decide which side to split
+    For 1-M and M-1 mappings, you need to decide whether M side are constants or variables.
+    This method is to decide which side to split
 
-	cardOfS           : The number of unique values in this set
-	Lines_that_match_S: The number of lines that have these values
-	one_m             : If the mapping is 1-M, this value is True. Otherwise, False
-	"""
+    cardOfS           : The number of unique values in this set
+    Lines_that_match_S: The number of lines that have these values
+    one_m             : If the mapping is 1-M, this value is True. Otherwise, False
+    """
 
     def Get_Rank_Posistion(self, cardOfS, Lines_that_match_S, one_m):
         try:
@@ -540,18 +535,18 @@ class IPLoM:
                 for columnIdx in range(partition.lenOfLogs):
                     uniqueTokensCountLS[columnIdx].add(logL[columnIdx])
 
-            #Count how many columns have only one unique term
+            # Count how many columns have only one unique term
             for columnIdx in range(partition.lenOfLogs):
                 if len(uniqueTokensCountLS[columnIdx]) == 1:
                     count_1 += 1
 
-            #Debug
+            # Debug
             # strDebug = ''
             # for columnIdx in range(partition.lenOfLogs):
             # 	strDebug += str(len(uniqueTokensCountLS[columnIdx])) + ' '
             # print (strDebug)
 
-            #If the columns with unique term more than a threshold, we return (-1, -1) to skip step 3
+            # If the columns with unique term more than a threshold, we return (-1, -1) to skip step 3
             GC = 1.0 * count_1 / partition.lenOfLogs
 
             if GC < self.para.CT:
@@ -568,7 +563,7 @@ class IPLoM:
     def Get_Mapping_Position(self, partition, uniqueTokensCountLS):
         p1 = p2 = -1
 
-        #Caculate #unqiueterms in each column, and record how many column with each #uniqueterms
+        # Caculate #unqiueterms in each column, and record how many column with each #uniqueterms
         numOfUniqueTokensD = {}
         for columnIdx in range(partition.lenOfLogs):
             if len(uniqueTokensCountLS[columnIdx]) not in numOfUniqueTokensD:
@@ -577,7 +572,7 @@ class IPLoM:
 
         if partition.stepNo == 2:
 
-            #Find the largest card and second largest card
+            # Find the largest card and second largest card
             maxIdx = secondMaxIdx = -1
             maxCount = secondMaxCount = 0
             for key in numOfUniqueTokensD:
@@ -590,11 +585,11 @@ class IPLoM:
                     secondMaxIdx = key
                     secondMaxCount = numOfUniqueTokensD[key]
 
-            #Debug
+            # Debug
             # print ("largestIdx: " + str(maxIdx) + '\t' + "secondIdx: " + str(secondMaxIdx) + '\t')
             # print ("largest: " + str(maxCount) + '\t' + "second: " + str(secondMaxCount) + '\t')
 
-            #If the frequency of the freq_card>1 then
+            # If the frequency of the freq_card>1 then
             if maxIdx > 1:
                 for columnIdx in range(partition.lenOfLogs):
                     if numOfUniqueTokensD[len(uniqueTokensCountLS[columnIdx])] == maxCount:
@@ -613,7 +608,7 @@ class IPLoM:
                         p2 = columnIdx
                         break
 
-            #If the frequency of the freq_card==1 then
+            # If the frequency of the freq_card==1 then
             else:
                 for columnIdx in range(len(uniqueTokensCountLS)):
                     if numOfUniqueTokensD[len(uniqueTokensCountLS[columnIdx])] == maxCount:
@@ -632,7 +627,7 @@ class IPLoM:
             else:
                 return (p1, p2)
 
-        #If it is from step 1
+        # If it is from step 1
         else:
             minIdx = secondMinIdx = -1
             minCount = secondMinCount = sys.maxsize
@@ -646,7 +641,7 @@ class IPLoM:
                     secondMinIdx = key
                     secondMinCount = numOfUniqueTokensD[key]
 
-            #Debug
+            # Debug
             # print ("smallestIdx: " + str(minIdx) + '\t' + "secondIdx: " + str(secondMinIdx) + '\t')
             # print ("smallest: " + str(minCount) + '\t' + "second: " + str(secondMinCount) + '\t')
 
