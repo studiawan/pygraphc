@@ -1,2 +1,2 @@
 # pygraphc
-Graph clustering tool using Python and NetworkX.
+Event log clustering tool using Python and NetworkX.
