@@ -1,5 +1,16 @@
 # Original source of IPLoM from Pinjia He (https://github.com/PunyTitan)
 # https://github.com/cuhk-cse/logparser
+# 
+# IPLoM was proposed by Makanju et al. in this paper:
+# @inproceedings{makanju2009clustering,
+#  title={Clustering event logs using iterative partitioning},
+#  author={Makanju, Adetokunbo AO and Zincir-Heywood, A Nur and Milios, Evangelos E},
+#  booktitle={Proceedings of the 15th ACM SIGKDD international conference on Knowledge discovery and data mining},
+#  pages={1255--1264},
+#  year={2009},
+#  organization={ACM}
+# }
+
 
 import copy
 import sys
@@ -91,6 +102,8 @@ class IPLoM:
 
         self.WriteEventToFile(self.para.savePath + 'logTemplates.txt')
         self.WriteLogWithEventID(self.para.savePath + self.para.saveFileName)
+        
+        self.PrintPartitions()
 
         print('this process takes', t2 - t1)
         print('*********************************************')
@@ -376,39 +389,39 @@ class IPLoM:
                             newPartitionsD[logL[p2]].numOfLogs += 1
 
             # debug
-            print ('p1: ' + str(p1) + '\t' + 'p2: ' + str(p2))
-            print ("*******************************************")
-            print ("Step 3 1-1:")
-            print ("*******************************************")
-            for logL in partition.logLL:
-                if logL[p1] in oneToOneS:
-                    print (' '.join(logL))
+            #print ('p1: ' + str(p1) + '\t' + 'p2: ' + str(p2))
+            #print ("*******************************************")
+            #print ("Step 3 1-1:")
+            #print ("*******************************************")
+            #for logL in partition.logLL:
+                #if logL[p1] in oneToOneS:
+                    #print (' '.join(logL))
 
-            print ("*******************************************")
-            print ("Step 3 1-M:")
-            print ("*******************************************")
-            for logL in partition.logLL:
-                if logL[p1] in oneToMP1D:
-                    print (' '.join(logL))
+            #print ("*******************************************")
+            #print ("Step 3 1-M:")
+            #print ("*******************************************")
+            #for logL in partition.logLL:
+                #if logL[p1] in oneToMP1D:
+                    #print (' '.join(logL))
 
-            print ("*******************************************")
-            print ("Step 3 M-1:")
-            print ("*******************************************")
-            for logL in partition.logLL:
-                if logL[p2] in oneToMP2D:
-                    print (' '.join(logL))
+            #print ("*******************************************")
+            #print ("Step 3 M-1:")
+            #print ("*******************************************")
+            #for logL in partition.logLL:
+                #if logL[p2] in oneToMP2D:
+                    #print (' '.join(logL))
 
-            if partition.stepNo == 2:
-                print ("*******************************************")
-                print ("Step 3 M-M: from 2")
-                print ("*******************************************")
-                for logL in newPartitionsD["dumpKeyforMMrelationInStep2__"].logLL:
-                    print (' '.join(logL))
+            #if partition.stepNo == 2:
+                #print ("*******************************************")
+                #print ("Step 3 M-M: from 2")
+                #print ("*******************************************")
+                #for logL in newPartitionsD["dumpKeyforMMrelationInStep2__"].logLL:
+                    #print (' '.join(logL))
 
-            else:
-                print ("$$$$$$$$$$$$From step 1 and split for M-M$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+            #else:
+                #print ("$$$$$$$$$$$$From step 1 and split for M-M$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 
-            print ("Debug End")
+            #print ("Debug End")
 
             if "dumpKeyforMMrelationInStep2__" in newPartitionsD and \
                             newPartitionsD["dumpKeyforMMrelationInStep2__"].numOfLogs == 0:
@@ -662,13 +675,14 @@ class IPLoM:
 
     def PrintPartitions(self):
         for idx in range(len(self.partitionsL)):
-            print ('Partition {}:(from step {})    Valid:{}'.format(idx, self.partitionsL[idx].stepNo,
-                                                                    self.partitionsL[idx].valid))
+			if self.partitionsL[idx].valid:
+				# print ('Partition {}:(from step {})    Valid:{}'.format(idx, self.partitionsL[idx].stepNo,
+				#														self.partitionsL[idx].valid))
 
-            for log in self.partitionsL[idx].logLL:
-                print (log)
+				for log in self.partitionsL[idx].logLL:
+					print (log)
 
-            print ("*****************************************")
+				print ("*****************************************")
 
     def PrintEventStats(self):
         for event in self.eventsL:
