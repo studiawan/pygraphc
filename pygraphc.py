@@ -21,7 +21,7 @@ def main():
                       action='store',
                       dest='method',
                       choices=['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
-                               'kclique_percolation', 'kclique_percolation_weighted'],
+                               'kclique_percolation', 'kclique_percolation_weighted', 'IPLoM', 'LKE'],
                       default='kclique_percolation_weighted',
                       help='Graph clustering method to run',)
     parser.add_option("-l", "--logfile",
