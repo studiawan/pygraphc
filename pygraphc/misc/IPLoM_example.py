@@ -2,7 +2,7 @@ from IPLoM import *
 
 RawLogPath = './'
 RawLogFile = 'rawlog.log'
-OutputPath = './results/'
+OutputPath = './results'
 para=Para(path=RawLogPath, logname=RawLogFile, savePath=OutputPath)
 
 myparser=IPLoM(para)
