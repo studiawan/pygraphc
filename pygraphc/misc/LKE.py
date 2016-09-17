@@ -127,7 +127,7 @@ class LKE:
 		print('================get the initial groups splitting=============')
 		wordLenArray=array(self.wordLen)
 		for row in self.loglinesOfGroups:
-			print row						
+			print row
 			eachLineLogList=[]
 			self.wordLenPerGroup.append(max(wordLenArray[row]))
 			for colu in row:								
@@ -145,6 +145,13 @@ class LKE:
 			for row in rows:
 				print self.logs[row].strip()
 			print('========================================================================')
+	
+	def get_clusters(self):
+		clusters = []
+		for rows in self.loglinesOfGroups:
+			clusters.append(rows)
+		
+		return clusters
 	
 	#split the current group recursively.
 	def splitting(self):
@@ -196,7 +203,9 @@ class LKE:
 		self.paraErasing()
 		t1=time.time()
 		loadDataTime,calDataTime=self.clustering(t1)
-		self.print_each_cluster()
+		#self.print_each_cluster()
+		clusters = self.get_clusters()
+		print clusters
 		#self.splitting()
 		#self.extracting()
 		timeInterval=time.time()-t1
