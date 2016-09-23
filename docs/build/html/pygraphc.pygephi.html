@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pygraphc.pygephi package &mdash; pygraphc 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pygraphc 0.0.1 documentation" href="index.html" />
+    <link rel="up" title="pygraphc package" href="pygraphc.html" />
+    <link rel="next" title="pygraphc.visualization package" href="pygraphc.visualization.html" />
+    <link rel="prev" title="pygraphc.preprocess package" href="pygraphc.preprocess.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pygraphc.visualization.html" title="pygraphc.visualization package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pygraphc.preprocess.html" title="pygraphc.preprocess package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >pygraphc</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="pygraphc.html" accesskey="U">pygraphc package</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pygraphc-pygephi-package">
+<h1>pygraphc.pygephi package<a class="headerlink" href="#pygraphc-pygephi-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pygraphc.pygephi.client">
+<span id="pygraphc-pygephi-client-module"></span><h2>pygraphc.pygephi.client module<a class="headerlink" href="#module-pygraphc.pygephi.client" title="Permalink to this headline">¶</a></h2>
+<p>Allow a Python script to communicate with Gephi using the Gephi Graph Streaming protocol and plugin.</p>
+<dl class="class">
+<dt id="pygraphc.pygephi.client.GephiClient">
+<em class="property">class </em><code class="descname">GephiClient</code><span class="sig-paren">(</span><em>url='http://127.0.0.1:8080/workspace0'</em>, <em>autoflush=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/pygephi/client.html#GephiClient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.pygephi.client.GephiClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pygraphc.pygephi.client.JSONClient" title="pygraphc.pygephi.client.JSONClient"><code class="xref py py-class docutils literal"><span class="pre">pygraphc.pygephi.client.JSONClient</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pygraphc.pygephi.client.GephiFileHandler">
+<em class="property">class </em><code class="descname">GephiFileHandler</code><span class="sig-paren">(</span><em>out</em>, <em>**params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/pygephi/client.html#GephiFileHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.pygephi.client.GephiFileHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pygraphc.pygephi.client.JSONClient" title="pygraphc.pygephi.client.JSONClient"><code class="xref py py-class docutils literal"><span class="pre">pygraphc.pygephi.client.JSONClient</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pygraphc.pygephi.client.JSONClient">
+<em class="property">class </em><code class="descname">JSONClient</code><span class="sig-paren">(</span><em>autoflush=False</em>, <em>enable_timestamps=False</em>, <em>process_event_hook=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/pygephi/client.html#JSONClient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.pygephi.client.JSONClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="pygraphc.pygephi.client.JSONClient.add_edge">
+<code class="descname">add_edge</code><span class="sig-paren">(</span><em>id</em>, <em>source</em>, <em>target</em>, <em>directed=True</em>, <em>**attributes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/pygephi/client.html#JSONClient.add_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.pygephi.client.JSONClient.add_edge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.pygephi.client.JSONClient.add_node">
+<code class="descname">add_node</code><span class="sig-paren">(</span><em>id</em>, <em>flush=True</em>, <em>**attributes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/pygephi/client.html#JSONClient.add_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.pygephi.client.JSONClient.add_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.pygephi.client.JSONClient.change_node">
+<code class="descname">change_node</code><span class="sig-paren">(</span><em>id</em>, <em>flush=True</em>, <em>**attributes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/pygephi/client.html#JSONClient.change_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.pygephi.client.JSONClient.change_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.pygephi.client.JSONClient.clean">
+<code class="descname">clean</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/pygephi/client.html#JSONClient.clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.pygephi.client.JSONClient.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.pygephi.client.JSONClient.delete_edge">
+<code class="descname">delete_edge</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/pygephi/client.html#JSONClient.delete_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.pygephi.client.JSONClient.delete_edge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.pygephi.client.JSONClient.delete_node">
+<code class="descname">delete_node</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/pygephi/client.html#JSONClient.delete_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.pygephi.client.JSONClient.delete_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.pygephi.client.JSONClient.flush">
+<code class="descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/pygephi/client.html#JSONClient.flush"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.pygephi.client.JSONClient.flush" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pygraphc.pygephi">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pygraphc.pygephi" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">pygraphc.pygephi package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-pygraphc.pygephi.client">pygraphc.pygephi.client module</a></li>
+<li><a class="reference internal" href="#module-pygraphc.pygephi">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pygraphc.preprocess.html"
+                        title="previous chapter">pygraphc.preprocess package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pygraphc.visualization.html"
+                        title="next chapter">pygraphc.visualization package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pygraphc.pygephi.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pygraphc.visualization.html" title="pygraphc.visualization package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pygraphc.preprocess.html" title="pygraphc.preprocess package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >pygraphc</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="pygraphc.html" >pygraphc package</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hudan Studiawan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

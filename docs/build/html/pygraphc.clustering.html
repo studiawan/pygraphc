@@ -1,0 +1,519 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pygraphc.clustering package &mdash; pygraphc 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pygraphc 0.0.1 documentation" href="index.html" />
+    <link rel="up" title="pygraphc package" href="pygraphc.html" />
+    <link rel="next" title="pygraphc.misc package" href="pygraphc.misc.html" />
+    <link rel="prev" title="pygraphc package" href="pygraphc.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pygraphc.misc.html" title="pygraphc.misc package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pygraphc.html" title="pygraphc package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >pygraphc</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="pygraphc.html" accesskey="U">pygraphc package</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pygraphc-clustering-package">
+<h1>pygraphc.clustering package<a class="headerlink" href="#pygraphc-clustering-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pygraphc.clustering.ClusterDistance">
+<span id="pygraphc-clustering-clusterdistance-module"></span><h2>pygraphc.clustering.ClusterDistance module<a class="headerlink" href="#module-pygraphc.clustering.ClusterDistance" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pygraphc.clustering.ClusterDistance.ClusterDistance">
+<em class="property">class </em><code class="descname">ClusterDistance</code><a class="reference internal" href="_modules/pygraphc/clustering/ClusterDistance.html#ClusterDistance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterDistance.ClusterDistance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="staticmethod">
+<dt id="pygraphc.clustering.ClusterDistance.ClusterDistance.get_cosine_similarity">
+<em class="property">static </em><code class="descname">get_cosine_similarity</code><span class="sig-paren">(</span><em>tfidf1</em>, <em>tfidf2</em>, <em>length1</em>, <em>length2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ClusterDistance.html#ClusterDistance.get_cosine_similarity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterDistance.ClusterDistance.get_cosine_similarity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pygraphc.clustering.ClusterEvaluation">
+<span id="pygraphc-clustering-clusterevaluation-module"></span><h2>pygraphc.clustering.ClusterEvaluation module<a class="headerlink" href="#module-pygraphc.clustering.ClusterEvaluation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pygraphc.clustering.ClusterEvaluation.ClusterEvaluation">
+<em class="property">class </em><code class="descname">ClusterEvaluation</code><a class="reference internal" href="_modules/pygraphc/clustering/ClusterEvaluation.html#ClusterEvaluation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterEvaluation.ClusterEvaluation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="staticmethod">
+<dt id="pygraphc.clustering.ClusterEvaluation.ClusterEvaluation.get_adjusted_mutual_info_score">
+<em class="property">static </em><code class="descname">get_adjusted_mutual_info_score</code><span class="sig-paren">(</span><em>standard_file</em>, <em>prediction_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ClusterEvaluation.html#ClusterEvaluation.get_adjusted_mutual_info_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterEvaluation.ClusterEvaluation.get_adjusted_mutual_info_score" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="pygraphc.clustering.ClusterEvaluation.ClusterEvaluation.get_adjusted_rand_score">
+<em class="property">static </em><code class="descname">get_adjusted_rand_score</code><span class="sig-paren">(</span><em>standard_file</em>, <em>prediction_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ClusterEvaluation.html#ClusterEvaluation.get_adjusted_rand_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterEvaluation.ClusterEvaluation.get_adjusted_rand_score" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="pygraphc.clustering.ClusterEvaluation.ClusterEvaluation.get_evaluated">
+<em class="property">static </em><code class="descname">get_evaluated</code><span class="sig-paren">(</span><em>evaluated_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ClusterEvaluation.html#ClusterEvaluation.get_evaluated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterEvaluation.ClusterEvaluation.get_evaluated" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="pygraphc.clustering.ClusterEvaluation.ClusterEvaluation.get_homogeneity_completeness_vmeasure">
+<em class="property">static </em><code class="descname">get_homogeneity_completeness_vmeasure</code><span class="sig-paren">(</span><em>standard_file</em>, <em>prediction_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ClusterEvaluation.html#ClusterEvaluation.get_homogeneity_completeness_vmeasure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterEvaluation.ClusterEvaluation.get_homogeneity_completeness_vmeasure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="pygraphc.clustering.ClusterEvaluation.ClusterEvaluation.get_normalized_mutual_info_score">
+<em class="property">static </em><code class="descname">get_normalized_mutual_info_score</code><span class="sig-paren">(</span><em>standard_file</em>, <em>prediction_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ClusterEvaluation.html#ClusterEvaluation.get_normalized_mutual_info_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterEvaluation.ClusterEvaluation.get_normalized_mutual_info_score" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pygraphc.clustering.ClusterUtility">
+<span id="pygraphc-clustering-clusterutility-module"></span><h2>pygraphc.clustering.ClusterUtility module<a class="headerlink" href="#module-pygraphc.clustering.ClusterUtility" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pygraphc.clustering.ClusterUtility.ClusterUtility">
+<em class="property">class </em><code class="descname">ClusterUtility</code><a class="reference internal" href="_modules/pygraphc/clustering/ClusterUtility.html#ClusterUtility"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterUtility.ClusterUtility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="staticmethod">
+<dt id="pygraphc.clustering.ClusterUtility.ClusterUtility.get_geometric_mean">
+<em class="property">static </em><code class="descname">get_geometric_mean</code><span class="sig-paren">(</span><em>weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ClusterUtility.html#ClusterUtility.get_geometric_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterUtility.ClusterUtility.get_geometric_mean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="pygraphc.clustering.ClusterUtility.ClusterUtility.get_weighted_cliques">
+<em class="property">static </em><code class="descname">get_weighted_cliques</code><span class="sig-paren">(</span><em>graph</em>, <em>cliques</em>, <em>threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ClusterUtility.html#ClusterUtility.get_weighted_cliques"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterUtility.ClusterUtility.get_weighted_cliques" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="pygraphc.clustering.ClusterUtility.ClusterUtility.set_cluster_id">
+<em class="property">static </em><code class="descname">set_cluster_id</code><span class="sig-paren">(</span><em>graph</em>, <em>clusters</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ClusterUtility.html#ClusterUtility.set_cluster_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterUtility.ClusterUtility.set_cluster_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="pygraphc.clustering.ClusterUtility.ClusterUtility.set_cluster_label_id">
+<em class="property">static </em><code class="descname">set_cluster_label_id</code><span class="sig-paren">(</span><em>graph</em>, <em>clusters</em>, <em>original_logs</em>, <em>analysis_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ClusterUtility.html#ClusterUtility.set_cluster_label_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ClusterUtility.ClusterUtility.set_cluster_label_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pygraphc.clustering.ConnectedComponents">
+<span id="pygraphc-clustering-connectedcomponents-module"></span><h2>pygraphc.clustering.ConnectedComponents module<a class="headerlink" href="#module-pygraphc.clustering.ConnectedComponents" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pygraphc.clustering.ConnectedComponents.ConnectedComponents">
+<em class="property">class </em><code class="descname">ConnectedComponents</code><span class="sig-paren">(</span><em>g</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ConnectedComponents.html#ConnectedComponents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ConnectedComponents.ConnectedComponents" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a class for connected component detection method to cluster event logs <a href="#id9"><span class="problematic" id="id10"><span id="id1"></span>[1]_</span></a>.</p>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>H. Studiawan, B. A. Pratomo, and R. Anggoro, Connected component detection for authentication log
+clustering, in Proceedings of the International Seminar on Science and Technology, 2016, pp. 495-496.</td></tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pygraphc.clustering.ConnectedComponents.ConnectedComponents.get_clusters">
+<code class="descname">get_clusters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/ConnectedComponents.html#ConnectedComponents.get_clusters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.ConnectedComponents.ConnectedComponents.get_clusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method find any connected component in a graph.</p>
+<p>A component represents a cluster and each component will be given a cluster identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>clusters</strong> &#8211;
+List of cluster list, where each list contains index (line number) of event log.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[list]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pygraphc.clustering.KCliquePercolation">
+<span id="pygraphc-clustering-kcliquepercolation-module"></span><h2>pygraphc.clustering.KCliquePercolation module<a class="headerlink" href="#module-pygraphc.clustering.KCliquePercolation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation">
+<em class="property">class </em><code class="descname">KCliquePercolation</code><span class="sig-paren">(</span><em>graph</em>, <em>edges_weight</em>, <em>nodes_id</em>, <em>k</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This is a class for graph clustering based on k-clique percolation.</p>
+<p>The procedure will find k-clique. If there is any percolation between k-cliques, it will be set as a cluster.
+The unnecessary edges will be removed. The use of this method for event log clustering was presented in <a href="#id11"><span class="problematic" id="id12"><span id="id3"></span>[1]_</span></a>.</p>
+<div class="admonition-references admonition">
+<p class="first admonition-title">References</p>
+<table class="last docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>H. Studiawan, B. A. Pratomo, and R. Anggoro, Clustering of SSH brute-force attack logs using
+k-clique percolation, in Proceedings of the 10th International Conference on Information Communication
+Technology and Systems, 2016.</td></tr>
+</tbody>
+</table>
+</div>
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation._build_temp_graph">
+<code class="descname">_build_temp_graph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation._build_temp_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation._build_temp_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a temporary graph to get a percolation between individual k-clique.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation._enumerate_all_cliques">
+<code class="descname">_enumerate_all_cliques</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation._enumerate_all_cliques"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation._enumerate_all_cliques" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all cliques in an undirected graph.</p>
+<p>This method returns cliques of size (cardinality)
+k = 1, 2, 3, ..., maxDegree - 1. Where maxDegree is the maximal
+degree of any node in the graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>generator of lists</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">generator of list for each clique.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Based on the algorithm published by Zhang et al. (2005) <a href="#id13"><span class="problematic" id="id14"><span id="id5"></span>[1]_</span></a>
+and adapted to output all cliques discovered.
+This algorithm is not applicable on directed graphs.
+This algorithm ignores self-loops and parallel edges as
+clique is not conventionally defined with such edges.
+There are often many cliques in graphs.
+This algorithm however, hopefully, does not run out of memory
+since it only keeps candidate sublists in memory and
+continuously removes exhausted sublists.</p>
+<p>The original source code is taken from NetworkX development branch <a class="footnote-reference" href="#id8" id="id6">[2]</a>.</p>
+<div class="admonition-references admonition">
+<p class="first admonition-title">References</p>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Yun Zhang, Abu-Khzam, F.N., Baldwin, N.E., Chesler, E.J.,
+Langston, M.A., Samatova, N.F.,
+Genome-Scale Computational Approaches to Memory-Intensive
+Applications in Systems Biology.
+Supercomputing, 2005. Proceedings of the ACM/IEEE SC 2005
+Conference, pp. 12, 12-18 Nov. 2005.
+doi: 10.1109/SC.2005.29.
+<a class="reference external" href="http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;arnumber=1559964&amp;isnumber=33129">http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;arnumber=1559964&amp;isnumber=33129</a></td></tr>
+</tbody>
+</table>
+<table class="last docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[2]</a></td><td>Dan Schult, Source code for networkx.algorithms.clique.
+<a class="reference external" href="https://networkx.github.io/documentation/development/_modules/networkx/algorithms/clique.html">https://networkx.github.io/documentation/development/_modules/networkx/algorithms/clique.html</a></td></tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation._find_kcliques">
+<code class="descname">_find_kcliques</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation._find_kcliques"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation._find_kcliques" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all k-cliques in a graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>kcliques</strong> &#8211;
+List of k-cliques found but only return specified k. The frozenset contains nodes identifier.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[frozenset]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation._get_clusters">
+<code class="descname">_get_clusters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation._get_clusters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation._get_clusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get final result of the k-clique percolation clustering.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>clusters</strong> &#8211;
+List of list containing nodes identifier for each cluster.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[list]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation._get_percolation_graph">
+<code class="descname">_get_percolation_graph</code><span class="sig-paren">(</span><em>kcliques</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation._get_percolation_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation._get_percolation_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get percolation graph.</p>
+<p>This temporary graph also well known as percolation graph in the literatures. A node represents a k-clique
+and an edge will be drawn if there is any intersection between two k-cliques.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kcliques</strong> (<em>list[frozenset]</em>) &#8211; List of all k-cliques found with user-specified k.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation._remove_outcluster">
+<code class="descname">_remove_outcluster</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation._remove_outcluster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation._remove_outcluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove edges that connect to other clusters.</p>
+<p>This method will first find any edges in the cluster member. If edges connecting to a node does not belong to
+the current cluster, then it will be removed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_clique_percolation">
+<code class="descname">get_clique_percolation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation.get_clique_percolation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_clique_percolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all cluster in percolation (temporary) graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>clique_percolation</strong> &#8211;
+List of nodes in each cluster in frozenset.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[frozenset]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_kclique_percolation">
+<code class="descname">get_kclique_percolation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation.get_kclique_percolation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_kclique_percolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the main method to call all k-clique percolation clustering.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>clusters</strong> &#8211;
+List of list containing nodes identifier for each cluster.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[list]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_percolation_nodes">
+<code class="descname">get_percolation_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation.get_percolation_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_percolation_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get percolation nodes after finished clustering.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>percolated_nodes</strong> &#8211;
+List of all percolated nodes</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_removed_edges">
+<code class="descname">get_removed_edges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolation.get_removed_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_removed_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get removed edges after clustering process.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>removed_edges</strong> &#8211;
+List of tuple containing edge from (node1, node2)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[tuple]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolationWeighted">
+<em class="property">class </em><code class="descname">KCliquePercolationWeighted</code><span class="sig-paren">(</span><em>graph</em>, <em>edges_weight</em>, <em>nodes_id</em>, <em>k</em>, <em>threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolationWeighted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolationWeighted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation" title="pygraphc.clustering.KCliquePercolation.KCliquePercolation"><code class="xref py py-class docutils literal"><span class="pre">pygraphc.clustering.KCliquePercolation.KCliquePercolation</span></code></a></p>
+<p>This a class derived from KCliquePercolation for the case of weighted graph.</p>
+<dl class="method">
+<dt id="pygraphc.clustering.KCliquePercolation.KCliquePercolationWeighted._find_kcliques">
+<code class="descname">_find_kcliques</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/KCliquePercolation.html#KCliquePercolationWeighted._find_kcliques"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolationWeighted._find_kcliques" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method will find weighted k-clique.</p>
+<p>The weight of k-clique is calculated based on the geometric mean of its weights.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>weighted_kcliques</strong> &#8211;
+List of frozenset containing nodes identifier for each k-clique found.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[frozenset]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pygraphc.clustering.MaxCliquesPercolation">
+<span id="pygraphc-clustering-maxcliquespercolation-module"></span><h2>pygraphc.clustering.MaxCliquesPercolation module<a class="headerlink" href="#module-pygraphc.clustering.MaxCliquesPercolation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolation">
+<em class="property">class </em><code class="descname">MaxCliquesPercolation</code><span class="sig-paren">(</span><em>graph</em>, <em>edges_weight</em>, <em>nodes_id</em>, <em>k</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/MaxCliquesPercolation.html#MaxCliquesPercolation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pygraphc.clustering.KCliquePercolation.KCliquePercolation" title="pygraphc.clustering.KCliquePercolation.KCliquePercolation"><code class="xref py py-class docutils literal"><span class="pre">pygraphc.clustering.KCliquePercolation.KCliquePercolation</span></code></a></p>
+<dl class="method">
+<dt id="pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolation.get_maxcliques">
+<code class="descname">get_maxcliques</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/MaxCliquesPercolation.html#MaxCliquesPercolation.get_maxcliques"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolation.get_maxcliques" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolation.get_maxcliques_percolation">
+<code class="descname">get_maxcliques_percolation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/MaxCliquesPercolation.html#MaxCliquesPercolation.get_maxcliques_percolation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolation.get_maxcliques_percolation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolationWeighted">
+<em class="property">class </em><code class="descname">MaxCliquesPercolationWeighted</code><span class="sig-paren">(</span><em>graph</em>, <em>edges_weight</em>, <em>nodes_id</em>, <em>k</em>, <em>threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/MaxCliquesPercolation.html#MaxCliquesPercolationWeighted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolationWeighted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolation" title="pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolation"><code class="xref py py-class docutils literal"><span class="pre">pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolation</span></code></a></p>
+<dl class="method">
+<dt id="pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolationWeighted.get_maxcliques_percolation_weighted">
+<code class="descname">get_maxcliques_percolation_weighted</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/clustering/MaxCliquesPercolation.html#MaxCliquesPercolationWeighted.get_maxcliques_percolation_weighted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.clustering.MaxCliquesPercolation.MaxCliquesPercolationWeighted.get_maxcliques_percolation_weighted" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pygraphc.clustering">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pygraphc.clustering" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">pygraphc.clustering package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-pygraphc.clustering.ClusterDistance">pygraphc.clustering.ClusterDistance module</a></li>
+<li><a class="reference internal" href="#module-pygraphc.clustering.ClusterEvaluation">pygraphc.clustering.ClusterEvaluation module</a></li>
+<li><a class="reference internal" href="#module-pygraphc.clustering.ClusterUtility">pygraphc.clustering.ClusterUtility module</a></li>
+<li><a class="reference internal" href="#module-pygraphc.clustering.ConnectedComponents">pygraphc.clustering.ConnectedComponents module</a></li>
+<li><a class="reference internal" href="#module-pygraphc.clustering.KCliquePercolation">pygraphc.clustering.KCliquePercolation module</a></li>
+<li><a class="reference internal" href="#module-pygraphc.clustering.MaxCliquesPercolation">pygraphc.clustering.MaxCliquesPercolation module</a></li>
+<li><a class="reference internal" href="#module-pygraphc.clustering">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pygraphc.html"
+                        title="previous chapter">pygraphc package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pygraphc.misc.html"
+                        title="next chapter">pygraphc.misc package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pygraphc.clustering.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pygraphc.misc.html" title="pygraphc.misc package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pygraphc.html" title="pygraphc package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >pygraphc</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="pygraphc.html" >pygraphc package</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hudan Studiawan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

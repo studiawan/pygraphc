@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pygraphc.clustering.ClusterUtility &mdash; pygraphc 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pygraphc 0.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pygraphc.clustering.ClusterUtility</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+
+
+<div class="viewcode-block" id="ClusterUtility"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterUtility.ClusterUtility">[docs]</a><span class="k">class</span> <span class="nc">ClusterUtility</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ClusterUtility.get_geometric_mean"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterUtility.ClusterUtility.get_geometric_mean">[docs]</a>    <span class="k">def</span> <span class="nf">get_geometric_mean</span><span class="p">(</span><span class="n">weights</span><span class="p">):</span>
+        <span class="n">multiplication</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">:</span>
+            <span class="n">multiplication</span> <span class="o">=</span> <span class="n">multiplication</span> <span class="o">*</span> <span class="n">weight</span>
+
+        <span class="n">gmean</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">multiplication</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">))</span>
+            <span class="n">gmean</span> <span class="o">=</span> <span class="n">multiplication</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">k</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">gmean</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ClusterUtility.get_weighted_cliques"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterUtility.ClusterUtility.get_weighted_cliques">[docs]</a>    <span class="k">def</span> <span class="nf">get_weighted_cliques</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">cliques</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+        <span class="n">weighted_kcliques</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">clique</span> <span class="ow">in</span> <span class="n">cliques</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">clique</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">reduced_precision</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">graph</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">],</span> <span class="mi">5</span><span class="p">)</span>
+                <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reduced_precision</span><span class="p">)</span>
+            <span class="n">gmean</span> <span class="o">=</span> <span class="n">ClusterUtility</span><span class="o">.</span><span class="n">get_geometric_mean</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">gmean</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">:</span>
+                <span class="n">weighted_kcliques</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">clique</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">weighted_kcliques</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ClusterUtility.set_cluster_id"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterUtility.ClusterUtility.set_cluster_id">[docs]</a>    <span class="k">def</span> <span class="nf">set_cluster_id</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">clusters</span><span class="p">):</span>
+        <span class="n">cluster_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_id</span>
+            <span class="n">cluster_id</span> <span class="o">+=</span> <span class="mi">1</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ClusterUtility.set_cluster_label_id"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterUtility.ClusterUtility.set_cluster_label_id">[docs]</a>    <span class="k">def</span> <span class="nf">set_cluster_label_id</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">clusters</span><span class="p">,</span> <span class="n">original_logs</span><span class="p">,</span> <span class="n">analysis_dir</span><span class="p">):</span>
+        <span class="n">new_cluster_member_label</span> <span class="o">=</span> <span class="p">{}</span>   <span class="c"># store individiual cluster id for each cluster member</span>
+        <span class="n">dominant_cluster_labels</span> <span class="o">=</span> <span class="p">{}</span>    <span class="c"># store dominant cluster label from all clusters</span>
+        <span class="n">cluster_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;accepted password&#39;</span><span class="p">,</span> <span class="s">&#39;accepted publickey&#39;</span><span class="p">,</span> <span class="s">&#39;authentication failure&#39;</span><span class="p">,</span> <span class="s">&#39;check pass&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;connection closed&#39;</span><span class="p">,</span> <span class="s">&#39;connection reset by peer&#39;</span><span class="p">,</span> <span class="s">&#39;did not receive identification string&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;failed password&#39;</span><span class="p">,</span> <span class="s">&#39;ignoring max retries&#39;</span><span class="p">,</span> <span class="s">&#39;invalid user&#39;</span><span class="p">,</span> <span class="s">&#39;pam adding faulty module&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;pam unable to dlopen&#39;</span><span class="p">,</span> <span class="s">&#39;received disconnect&#39;</span><span class="p">,</span> <span class="s">&#39;received signal&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;reverse mapping checking getaddrinfo&#39;</span><span class="p">,</span> <span class="s">&#39;server listening&#39;</span><span class="p">,</span> <span class="s">&#39;session closed&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;session opened&#39;</span><span class="p">,</span> <span class="s">&#39;this does not map back to the address&#39;</span><span class="p">,</span> <span class="s">&#39;unknown option&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;error connect&#39;</span><span class="p">,</span> <span class="s">&#39;open failed&#39;</span><span class="p">,</span> <span class="s">&#39;root login refused&#39;</span><span class="p">,</span> <span class="s">&#39;bad protocol version identification&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;subsystem request&#39;</span><span class="p">,</span> <span class="s">&#39;protocol major versions differ&#39;</span><span class="p">,</span> <span class="s">&#39;failed none&#39;</span><span class="p">,</span> <span class="s">&#39;expired password&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;unable open env file&#39;</span><span class="p">,</span> <span class="s">&#39;dispatch protocol error&#39;</span><span class="p">,</span> <span class="s">&#39;syslogin perform logout&#39;</span><span class="p">]</span>
+        <span class="n">max_cluster_id</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_labels</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">:</span>
+            <span class="n">logs_per_cluster</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">label_counter</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">cl</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="n">cluster_labels</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
+                <span class="c"># get all original_logs per cluster</span>
+                <span class="n">members</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s">&#39;member&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+                    <span class="n">logs_per_cluster</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">original_logs</span><span class="p">[</span><span class="n">member</span><span class="p">])</span>
+
+                <span class="c"># get dominant label in cluster</span>
+                <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">cluster_labels</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs_per_cluster</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                            <span class="n">label_counter</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c"># get most dominant cluster label</span>
+            <span class="n">dominant_label_counter</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">label_counter</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+            <span class="c"># if cluster label has already used</span>
+            <span class="k">if</span> <span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">dominant_cluster_labels</span><span class="o">.</span><span class="n">values</span><span class="p">()]:</span>
+                <span class="c"># get existing counter</span>
+                <span class="n">existing_counter</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">ec</span> <span class="ow">in</span> <span class="n">dominant_cluster_labels</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">ec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                        <span class="n">existing_counter</span> <span class="o">=</span> <span class="n">ec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+                <span class="c"># check for which one is more dominant</span>
+                <span class="k">if</span> <span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">existing_counter</span><span class="p">:</span>
+                    <span class="c"># get existing cluster with lower existing counter</span>
+                    <span class="n">existing_cluster</span> <span class="o">=</span> \
+                        <span class="n">dominant_cluster_labels</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="n">dominant_cluster_labels</span><span class="o">.</span><span class="n">values</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">existing_counter</span><span class="p">)]</span>
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
+                        <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="c"># set old cluster to max_cluster_id + 1</span>
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">existing_cluster</span><span class="p">:</span>
+                        <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_cluster_id</span> <span class="o">+</span> <span class="mi">1</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
+                        <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_cluster_id</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="c"># if cluster label has not used</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dominant_cluster_labels</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">cluster</span><span class="p">)]</span> <span class="o">=</span> <span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
+                    <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c"># set new cluster label</span>
+        <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">new_label</span> <span class="ow">in</span> <span class="n">new_cluster_member_label</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_label</span>
+
+        <span class="c"># get sorted log line id - cluster id results</span>
+        <span class="n">analysis_result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="n">members</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;member&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+                <span class="n">analysis_result</span><span class="p">[</span><span class="n">member</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="nb">sorted</span><span class="p">(</span><span class="n">analysis_result</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+        <span class="c"># write clustering result to file (clustering result for all members in a node)</span>
+        <span class="n">fopen</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">analysis_dir</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">rowid</span><span class="p">,</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="n">analysis_result</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">cluster_label</span> <span class="o">=</span> <span class="s">&#39;undefined&#39;</span> <span class="k">if</span> <span class="n">cluster_id</span> <span class="o">&gt;</span> <span class="n">max_cluster_id</span> <span class="k">else</span> <span class="n">cluster_labels</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span>
+            <span class="n">fopen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cluster_id</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;; &#39;</span> <span class="o">+</span> <span class="n">cluster_label</span> <span class="o">+</span> <span class="s">&#39;; &#39;</span> <span class="o">+</span> <span class="n">original_logs</span><span class="p">[</span><span class="n">rowid</span><span class="p">])</span>
+        <span class="n">fopen</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hudan Studiawan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

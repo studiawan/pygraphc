@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pygraphc.visualization.GraphStreaming &mdash; pygraphc 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pygraphc 0.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pygraphc.visualization.GraphStreaming</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">pygraphc.pygephi</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">uniform</span>
+
+
+<div class="viewcode-block" id="GraphStreaming"><a class="viewcode-back" href="../../../pygraphc.visualization.html#pygraphc.visualization.GraphStreaming.GraphStreaming">[docs]</a><span class="k">class</span> <span class="nc">GraphStreaming</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_clusters</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">sleep_time</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">graph_clusters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">edges</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sleep_time</span> <span class="o">=</span> <span class="n">sleep_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gstream</span> <span class="o">=</span> <span class="n">pygraphc</span><span class="o">.</span><span class="n">pygephi</span><span class="o">.</span><span class="n">GephiClient</span><span class="p">(</span><span class="s">&#39;http://localhost:8080/workspace0&#39;</span><span class="p">,</span> <span class="n">autoflush</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gstream</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+
+<div class="viewcode-block" id="GraphStreaming.change_color"><a class="viewcode-back" href="../../../pygraphc.visualization.html#pygraphc.visualization.GraphStreaming.GraphStreaming.change_color">[docs]</a>    <span class="k">def</span> <span class="nf">change_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">colored_object</span><span class="p">):</span>
+        <span class="c"># change node color based on objects, e.g., cluster, k-clique, or valid k-cliques</span>
+        <span class="n">object_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__set_node_color</span><span class="p">(</span><span class="n">colored_object</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">objects</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">colored_object</span><span class="p">):</span>
+            <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;r&#39;</span><span class="p">:</span> <span class="n">object_color</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;g&#39;</span><span class="p">:</span> <span class="n">object_color</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="n">object_color</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">2</span><span class="p">]}</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gstream</span><span class="o">.</span><span class="n">change_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">node_attributes</span><span class="p">)</span>
+
+            <span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sleep_time</span><span class="p">)</span>
+
+            <span class="c"># back to normal node size</span>
+            <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;r&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s">&#39;g&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gstream</span><span class="o">.</span><span class="n">change_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">node_attributes</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GraphStreaming.gephi_streaming"><a class="viewcode-back" href="../../../pygraphc.visualization.html#pygraphc.visualization.GraphStreaming.GraphStreaming.gephi_streaming">[docs]</a>    <span class="k">def</span> <span class="nf">gephi_streaming</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># streaming nodes</span>
+        <span class="k">print</span> <span class="s">&#39;streaming node ...&#39;</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;size&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s">&#39;g&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+                               <span class="s">&#39;preprocessed_event&#39;</span><span class="p">:</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;preprocessed_event&#39;</span><span class="p">],</span>
+                               <span class="s">&#39;frequency&#39;</span><span class="p">:</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;frequency&#39;</span><span class="p">],</span> <span class="s">&#39;cluster&#39;</span><span class="p">:</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gstream</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">node_attributes</span><span class="p">)</span>
+
+        <span class="c"># streaming edges</span>
+        <span class="k">print</span> <span class="s">&#39;streaming edge ...&#39;</span>
+        <span class="n">edges_only</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges_only</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="n">edge_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">[(</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]][</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="n">edge_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">[(</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">gstream</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">edge_index</span><span class="p">,</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">],</span> <span class="n">directed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GraphStreaming.remove_outcluster"><a class="viewcode-back" href="../../../pygraphc.visualization.html#pygraphc.visualization.GraphStreaming.GraphStreaming.remove_outcluster">[docs]</a>    <span class="k">def</span> <span class="nf">remove_outcluster</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">removed_edges</span><span class="p">):</span>
+        <span class="c"># remove edge outside cluster</span>
+        <span class="k">for</span> <span class="n">removed_edge</span> <span class="ow">in</span> <span class="n">removed_edges</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gstream</span><span class="o">.</span><span class="n">delete_edge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">[(</span><span class="n">removed_edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">removed_edge</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gstream</span><span class="o">.</span><span class="n">delete_edge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">[(</span><span class="n">removed_edge</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">removed_edge</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>
+</div>
+    <span class="k">def</span> <span class="nf">__set_node_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">colored_object</span><span class="p">,</span> <span class="n">single_color</span><span class="p">):</span>
+        <span class="n">object_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">colored_object</span><span class="p">)</span>
+        <span class="n">object_color</span> <span class="o">=</span> <span class="p">[</span><span class="n">single_color</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">object_length</span><span class="p">)]</span> <span class="k">if</span> <span class="n">single_color</span> <span class="k">else</span> \
+            <span class="p">[[</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">object_length</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">object_color</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hudan Studiawan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

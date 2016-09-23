@@ -1,0 +1,810 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pygraphc.misc.IPLoM &mdash; pygraphc 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pygraphc 0.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pygraphc.misc.IPLoM</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;This is implementation of IPLoM method proposed by Makanju et al. in [1]_ and [2]_.</span>
+
+<span class="sd">Original source of IPLoM from He et al. based on the reference [3]_ and it is available</span>
+<span class="sd">on GitHub [4]_. We modify the original source to comply Python code style and add some methods</span>
+<span class="sd">to get cluster.</span>
+
+<span class="sd">References</span>
+<span class="sd">----------</span>
+<span class="sd">.. [1] M. Adetokunbo, A. N. Zincir-Heywood, and E. E. Milios, Clustering event logs using iterative partitioning,</span>
+<span class="sd">       Proceedings of the 15th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2009,</span>
+<span class="sd">       pp. 1255-1264.</span>
+<span class="sd">.. [2] M. Adetokunbo, A. N. Zincir-Heywood, and E. E. Milios, A lightweight algorithm for message type extraction</span>
+<span class="sd">       in system application logs, IEEE Transactions on Knowledge and Data Engineering, 2012, 24(11), pp. 1921-1936.</span>
+<span class="sd">.. [3] P. He, J. Zhu, S. He, J. Li, and R. Lyu, An evaluation study on log parsing and its use in log mining,</span>
+<span class="sd">       Proceedings of the 46th Annual IEEE/IFIP International Conference on Dependable Systems and Networks.</span>
+<span class="sd">.. [4] P. He, Logparser: A python package of log parsers with benchmarks for log template extraction.</span>
+<span class="sd">       https://github.com/cuhk-cse/logparser.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+
+<div class="viewcode-block" id="Partition"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.Partition">[docs]</a><span class="k">class</span> <span class="nc">Partition</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Wrap around the logs and the step number</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_no</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">len_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logLL</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stepNo</span> <span class="o">=</span> <span class="n">step_no</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">=</span> <span class="n">num_of_logs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lenOfLogs</span> <span class="o">=</span> <span class="n">len_of_logs</span>
+
+</div>
+<div class="viewcode-block" id="Event"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.Event">[docs]</a><span class="k">class</span> <span class="nc">Event</span><span class="p">:</span>
+    <span class="n">eventId</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventStr</span> <span class="o">=</span> <span class="n">event_str</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventId</span> <span class="o">=</span> <span class="n">Event</span><span class="o">.</span><span class="n">eventId</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventCount</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">Event</span><span class="o">.</span><span class="n">eventId</span> <span class="o">+=</span> <span class="mi">1</span>
+
+</div>
+<div class="viewcode-block" id="Para"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.Para">[docs]</a><span class="k">class</span> <span class="nc">Para</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">logname</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">save_file_name</span><span class="o">=</span><span class="s">&#39;template&#39;</span><span class="p">,</span> <span class="n">max_event_len</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">step2support</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pst</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                 <span class="n">ct</span><span class="o">=</span><span class="mf">0.175</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">use_pst</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                 <span class="n">removable</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">remove_col</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">regular</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">rex</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;([0-9]+\.){3}[0-9]&#39;</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;This is the constructor of class Para.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        max_event_len   : int</span>
+<span class="sd">            The length of the longest log/event, which is used in step 1 to split logs into partitions</span>
+<span class="sd">            according to their length.</span>
+<span class="sd">        path            : str</span>
+<span class="sd">            The path of the input file.</span>
+<span class="sd">        step2support    : int</span>
+<span class="sd">            The support threshold to create a new partition, partitions which contains less than step2Support logs</span>
+<span class="sd">            will not go through step 2.</span>
+<span class="sd">        pst             : float</span>
+<span class="sd">            Partition support ratio threshold.</span>
+<span class="sd">        ct              : float</span>
+<span class="sd">            Cluster goodness threshold used in DetermineP1P2 in step 3. If the columns with unique term</span>
+<span class="sd">            more than ct, we skip step 3.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxEventLen</span> <span class="o">=</span> <span class="n">max_event_len</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logname</span> <span class="o">=</span> <span class="n">logname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">savePath</span> <span class="o">=</span> <span class="n">save_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveFileName</span> <span class="o">=</span> <span class="n">save_file_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step2Support</span> <span class="o">=</span> <span class="n">step2support</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PST</span> <span class="o">=</span> <span class="n">pst</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CT</span> <span class="o">=</span> <span class="n">ct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lowerBound</span> <span class="o">=</span> <span class="n">lower_bound</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upperBound</span> <span class="o">=</span> <span class="n">upper_bound</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">usePST</span> <span class="o">=</span> <span class="n">use_pst</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removable</span> <span class="o">=</span> <span class="n">removable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removeCol</span> <span class="o">=</span> <span class="n">remove_col</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regular</span> <span class="o">=</span> <span class="n">regular</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rex</span> <span class="o">=</span> <span class="n">rex</span>
+
+</div>
+<div class="viewcode-block" id="IPLoM"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM">[docs]</a><span class="k">class</span> <span class="nc">IPLoM</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">para</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">para</span> <span class="o">=</span> <span class="n">para</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventsL</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c"># Initialize some partitions which contain logs with different length</span>
+        <span class="k">for</span> <span class="n">logLen</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">maxEventLen</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Partition</span><span class="p">(</span><span class="n">step_no</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">len_of_logs</span><span class="o">=</span><span class="n">logLen</span><span class="p">))</span>
+
+<div class="viewcode-block" id="IPLoM.main_process"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.main_process">[docs]</a>    <span class="k">def</span> <span class="nf">main_process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step1</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step2</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step3</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step4</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_output</span><span class="p">()</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_all_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_event_tofile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="s">&#39;logTemplates.txt&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_log_with_eventid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">saveFileName</span><span class="p">)</span>
+        
+        <span class="c"># self.PrintPartitions()</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_clusters</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">cluster</span>
+
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;this process takes&#39;</span><span class="p">,</span> <span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;*********************************************&#39;</span><span class="p">)</span>
+        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+        <span class="n">Event</span><span class="o">.</span><span class="n">eventId</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span>
+</div>
+<div class="viewcode-block" id="IPLoM.step1"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.step1">[docs]</a>    <span class="k">def</span> <span class="nf">step1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">logname</span><span class="p">)</span> <span class="k">as</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="n">line_count</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+
+                <span class="c"># If line is empty, skip</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;&quot;</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">regular</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">currentRex</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">rex</span><span class="p">:</span>
+                        <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">currentRex</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;node-[0-9]+&#39;</span><span class="p">,</span> <span class="s">&#39;node-&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>  <span class="c"># For HPC only</span>
+
+                <span class="n">word_seq</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="c"># word_seq = line.strip().split(&#39;\t&#39;)[1].split()</span>
+                <span class="c"># print (wordSeq)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">removable</span><span class="p">:</span>
+                    <span class="n">word_seq</span> <span class="o">=</span> <span class="p">[</span><span class="n">word</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_seq</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">removeCol</span><span class="p">]</span>
+                <span class="c"># print (wordSeq)</span>
+
+                <span class="c"># Generate terms list, with ID in the end</span>
+                <span class="n">word_seq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">line_count</span><span class="p">))</span>
+                <span class="c"># print (wordSeq)</span>
+                <span class="n">line_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c"># if lineCount%100 == 0:</span>
+                <span class="c"># 	print(lineCount)</span>
+
+                <span class="c"># Add current log to the corresponding partition</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">word_seq</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">logLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word_seq</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">word_seq</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">for</span> <span class="n">partition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">partition</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">partition</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="bp">False</span>
+
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">usePST</span> <span class="ow">and</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">partition</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">/</span> <span class="n">line_count</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">PST</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">logLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">partition</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="IPLoM.step2"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.step2">[docs]</a>    <span class="k">def</span> <span class="nf">step2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">partition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">partition</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">partition</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">step2Support</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c"># Avoid going through newly generated partitions</span>
+            <span class="k">if</span> <span class="n">partition</span><span class="o">.</span><span class="n">stepNo</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            For each column, create a set to hold the unique tokens in that column.</span>
+<span class="sd">            And finally, calculate the number of the unique tokens in each column</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">unique_tokens_count_ls</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                <span class="n">unique_tokens_count_ls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">())</span>
+
+            <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                    <span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])</span>
+
+            <span class="c"># Find the column with minimum unique tokens</span>
+            <span class="n">min_column_idx</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">min_column_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">min_column_count</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">]):</span>
+                    <span class="n">min_column_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])</span>
+                    <span class="n">min_column_idx</span> <span class="o">=</span> <span class="n">columnIdx</span>
+
+            <span class="c"># If there is one column with one unique term, do not split this partition</span>
+            <span class="k">if</span> <span class="n">min_column_count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c"># From split-token to log list</span>
+            <span class="n">log_dll</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">min_column_idx</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">log_dll</span><span class="p">:</span>
+                    <span class="n">log_dll</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">min_column_idx</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">log_dll</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">min_column_idx</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">log_dll</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">usePST</span> <span class="ow">and</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">log_dll</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">/</span> <span class="n">partition</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">PST</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">logLL</span> <span class="o">+=</span> <span class="n">log_dll</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">log_dll</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_partition</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">(</span><span class="n">step_no</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">log_dll</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span> <span class="n">len_of_logs</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">)</span>
+                    <span class="n">new_partition</span><span class="o">.</span><span class="n">logLL</span> <span class="o">=</span> <span class="n">log_dll</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_partition</span><span class="p">)</span>
+
+            <span class="n">partition</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="IPLoM.step3"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.step3">[docs]</a>    <span class="k">def</span> <span class="nf">step3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">partition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">partition</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">partition</span><span class="o">.</span><span class="n">stepNo</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="c"># Debug</span>
+            <span class="c"># print (&quot;*******************************************&quot;)</span>
+            <span class="c"># print (&quot;Step 2 Partition:&quot;)</span>
+            <span class="c"># print (&quot;*******************************************&quot;)</span>
+            <span class="c"># for logL in partition.logLL:</span>
+            <span class="c"># 	print (&#39; &#39;.join(logL))</span>
+
+            <span class="c"># Find two columns that my cause split in this step</span>
+            <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">determine_p1p2</span><span class="p">(</span><span class="n">partition</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">p2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">p1_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="n">p2_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="n">map_relation_1ds</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">map_relation_2ds</span> <span class="o">=</span> <span class="p">{}</span>
+
+                <span class="c"># Construct token sets for p1 and p2, dictionary to record the mapping relations between p1 and p2</span>
+                <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                    <span class="n">p1_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">])</span>
+                    <span class="n">p2_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">])</span>
+
+                    <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="o">==</span> <span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]:</span>
+                        <span class="k">print</span> <span class="p">(</span><span class="s">&quot;!!  p1 may be equal to p2&quot;</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">map_relation_1ds</span><span class="p">:</span>
+                        <span class="n">map_relation_1ds</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                    <span class="n">map_relation_1ds</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">])</span>
+
+                    <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">map_relation_2ds</span><span class="p">:</span>
+                        <span class="n">map_relation_2ds</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                    <span class="n">map_relation_2ds</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">])</span>
+
+                <span class="c"># originp1S = copy.deepcopy(p1Set)</span>
+                <span class="c"># originp2S = copy.deepcopy(p2Set)</span>
+
+                <span class="c"># Construct sets to record the tokens in 1-1, 1-M, M-1 relationships, the left-tokens in p1Set &amp; p2Set</span>
+                <span class="c"># are in M-M relationships</span>
+                <span class="n">one_to_one_s</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="n">one_to_m_p1d</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">one_to_m_p2d</span> <span class="o">=</span> <span class="p">{}</span>
+
+                <span class="c"># select 1-1 and 1-M relationships</span>
+                <span class="k">for</span> <span class="n">p1Token</span> <span class="ow">in</span> <span class="n">p1_set</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">map_relation_1ds</span><span class="p">[</span><span class="n">p1Token</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">map_relation_2ds</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">map_relation_1ds</span><span class="p">[</span><span class="n">p1Token</span><span class="p">])[</span><span class="mi">0</span><span class="p">]])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">one_to_one_s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p1Token</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">is_one_to_m</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="k">for</span> <span class="n">p2Token</span> <span class="ow">in</span> <span class="n">map_relation_1ds</span><span class="p">[</span><span class="n">p1Token</span><span class="p">]:</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">map_relation_2ds</span><span class="p">[</span><span class="n">p2Token</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">is_one_to_m</span> <span class="o">=</span> <span class="bp">False</span>
+                                <span class="k">break</span>
+                        <span class="k">if</span> <span class="n">is_one_to_m</span><span class="p">:</span>
+                            <span class="n">one_to_m_p1d</span><span class="p">[</span><span class="n">p1Token</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="c"># delete the tokens which are picked to 1-1 and 1-M relationships from p1Set, so that the left are M-M</span>
+                <span class="k">for</span> <span class="n">deleteToken</span> <span class="ow">in</span> <span class="n">one_to_one_s</span><span class="p">:</span>
+                    <span class="n">p1_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">deleteToken</span><span class="p">)</span>
+                    <span class="n">p2_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">map_relation_1ds</span><span class="p">[</span><span class="n">deleteToken</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+
+                <span class="k">for</span> <span class="n">deleteToken</span> <span class="ow">in</span> <span class="n">one_to_m_p1d</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">deleteTokenP2</span> <span class="ow">in</span> <span class="n">map_relation_1ds</span><span class="p">[</span><span class="n">deleteToken</span><span class="p">]:</span>
+                        <span class="n">p2_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">deleteTokenP2</span><span class="p">)</span>
+                    <span class="n">p1_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">deleteToken</span><span class="p">)</span>
+
+                <span class="c"># select M-1 relationships</span>
+                <span class="k">for</span> <span class="n">p2Token</span> <span class="ow">in</span> <span class="n">p2_set</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">map_relation_2ds</span><span class="p">[</span><span class="n">p2Token</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">is_one_to_m</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="k">for</span> <span class="n">p1Token</span> <span class="ow">in</span> <span class="n">map_relation_2ds</span><span class="p">[</span><span class="n">p2Token</span><span class="p">]:</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">map_relation_1ds</span><span class="p">[</span><span class="n">p1Token</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">is_one_to_m</span> <span class="o">=</span> <span class="bp">False</span>
+                                <span class="k">break</span>
+                        <span class="k">if</span> <span class="n">is_one_to_m</span><span class="p">:</span>
+                            <span class="n">one_to_m_p2d</span><span class="p">[</span><span class="n">p2Token</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="c"># delete the tokens which are picked to M-1 relationships from p2Set, so that the left are M-M</span>
+                <span class="k">for</span> <span class="n">deleteToken</span> <span class="ow">in</span> <span class="n">one_to_m_p2d</span><span class="p">:</span>
+                    <span class="n">p2_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">deleteToken</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">deleteTokenP1</span> <span class="ow">in</span> <span class="n">map_relation_2ds</span><span class="p">[</span><span class="n">deleteToken</span><span class="p">]:</span>
+                        <span class="n">p1_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">deleteTokenP1</span><span class="p">)</span>
+
+                <span class="c"># calculate the #Lines_that_match_S</span>
+                <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">one_to_m_p1d</span><span class="p">:</span>
+                        <span class="n">one_to_m_p1d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                    <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]</span> <span class="ow">in</span> <span class="n">one_to_m_p2d</span><span class="p">:</span>
+                        <span class="n">one_to_m_p2d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">er</span><span class="p">:</span>
+                <span class="k">print</span> <span class="p">(</span><span class="n">er</span><span class="p">)</span>
+                <span class="k">print</span> <span class="p">(</span><span class="s">&#39;erre: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">p2</span><span class="p">))</span>
+
+            <span class="c"># print (&#39;set1:&#39;)</span>
+            <span class="c"># for setTerm in originp1S:</span>
+            <span class="c"># 	print (setTerm)</span>
+
+            <span class="c"># print (&#39;set2:&#39;)</span>
+            <span class="c"># for setTerm in originp2S:</span>
+            <span class="c"># 	print (setTerm)</span>
+
+            <span class="n">new_partitions_d</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">partition</span><span class="o">.</span><span class="n">stepNo</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">new_partitions_d</span><span class="p">[</span><span class="s">&quot;dumpKeyforMMrelationInStep2__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">(</span><span class="n">step_no</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                                              <span class="n">len_of_logs</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">)</span>
+            <span class="c"># Split partition</span>
+            <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                <span class="c"># If is 1-1</span>
+                <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">one_to_one_s</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_partitions_d</span><span class="p">:</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">(</span><span class="n">step_no</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                               <span class="n">len_of_logs</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">)</span>
+                    <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span><span class="o">.</span><span class="n">logLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">)</span>
+                    <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="c"># This part can be improved. The split_rank can be calculated once.</span>
+                <span class="c"># If is 1-M</span>
+                <span class="k">elif</span> <span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">one_to_m_p1d</span><span class="p">:</span>
+                    <span class="c"># print (&#39;1-M: &#39; + str(len( mapRelation1DS[logL[p1]] )) + str(oneToMP1D[logL[p1]]))</span>
+                    <span class="n">split_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rank_posistion</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">map_relation_1ds</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]),</span> <span class="n">one_to_m_p1d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]],</span> <span class="bp">True</span><span class="p">)</span>
+                    <span class="c"># print (&#39;result: &#39; + str(split_rank))</span>
+                    <span class="k">if</span> <span class="n">split_rank</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_partitions_d</span><span class="p">:</span>
+                            <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">(</span><span class="n">step_no</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                                   <span class="n">len_of_logs</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">)</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span><span class="o">.</span><span class="n">logLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">)</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_partitions_d</span><span class="p">:</span>
+                            <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">(</span><span class="n">step_no</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                                   <span class="n">len_of_logs</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">)</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span><span class="o">.</span><span class="n">logLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">)</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="c"># If is M-1</span>
+                <span class="k">elif</span> <span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]</span> <span class="ow">in</span> <span class="n">one_to_m_p2d</span><span class="p">:</span>
+                    <span class="c"># print (&#39;M-1: &#39; + str(len( mapRelation2DS[logL[p2]] )) + str(oneToMP2D[logL[p2]]))</span>
+                    <span class="n">split_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rank_posistion</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">map_relation_2ds</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]),</span> <span class="n">one_to_m_p2d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]],</span> <span class="bp">False</span><span class="p">)</span>
+                    <span class="c"># print (&#39;result: &#39; + str(split_rank))</span>
+                    <span class="k">if</span> <span class="n">split_rank</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_partitions_d</span><span class="p">:</span>
+                            <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">(</span><span class="n">step_no</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                                   <span class="n">len_of_logs</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">)</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span><span class="o">.</span><span class="n">logLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">)</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_partitions_d</span><span class="p">:</span>
+                            <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">(</span><span class="n">step_no</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                                   <span class="n">len_of_logs</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">)</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span><span class="o">.</span><span class="n">logLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">)</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="c"># M-M</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">partition</span><span class="o">.</span><span class="n">stepNo</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="s">&quot;dumpKeyforMMrelationInStep2__&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">logLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">)</span>
+                        <span class="n">new_partitions_d</span><span class="p">[</span><span class="s">&quot;dumpKeyforMMrelationInStep2__&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p1_set</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">p2_set</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_partitions_d</span><span class="p">:</span>
+                                <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">(</span><span class="n">step_no</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                                       <span class="n">len_of_logs</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">)</span>
+                            <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span><span class="o">.</span><span class="n">logLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">)</span>
+                            <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p1</span><span class="p">]]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_partitions_d</span><span class="p">:</span>
+                                <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">(</span><span class="n">step_no</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_of_logs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                                       <span class="n">len_of_logs</span><span class="o">=</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">)</span>
+                            <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span><span class="o">.</span><span class="n">logLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">)</span>
+                            <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">logL</span><span class="p">[</span><span class="n">p2</span><span class="p">]]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c"># debug</span>
+            <span class="c"># print (&#39;p1: &#39; + str(p1) + &#39;\t&#39; + &#39;p2: &#39; + str(p2))</span>
+            <span class="c"># print (&quot;*******************************************&quot;)</span>
+            <span class="c"># print (&quot;Step 3 1-1:&quot;)</span>
+            <span class="c"># print (&quot;*******************************************&quot;)</span>
+            <span class="c"># for logL in partition.logLL:</span>
+                <span class="c"># if logL[p1] in oneToOneS:</span>
+                    <span class="c"># print (&#39; &#39;.join(logL))</span>
+
+            <span class="c"># print (&quot;*******************************************&quot;)</span>
+            <span class="c"># print (&quot;Step 3 1-M:&quot;)</span>
+            <span class="c"># print (&quot;*******************************************&quot;)</span>
+            <span class="c"># for logL in partition.logLL:</span>
+                <span class="c"># if logL[p1] in oneToMP1D:</span>
+                    <span class="c"># print (&#39; &#39;.join(logL))</span>
+
+            <span class="c"># print (&quot;*******************************************&quot;)</span>
+            <span class="c"># print (&quot;Step 3 M-1:&quot;)</span>
+            <span class="c"># print (&quot;*******************************************&quot;)</span>
+            <span class="c"># for logL in partition.logLL:</span>
+                <span class="c"># if logL[p2] in oneToMP2D:</span>
+                    <span class="c"># print (&#39; &#39;.join(logL))</span>
+
+            <span class="c"># if partition.stepNo == 2:</span>
+                <span class="c"># print (&quot;*******************************************&quot;)</span>
+                <span class="c"># print (&quot;Step 3 M-M: from 2&quot;)</span>
+                <span class="c"># print (&quot;*******************************************&quot;)</span>
+                <span class="c"># for logL in newPartitionsD[&quot;dumpKeyforMMrelationInStep2__&quot;].logLL:</span>
+                    <span class="c"># print (&#39; &#39;.join(logL))</span>
+            <span class="c"># else:</span>
+                <span class="c"># print (&quot;$$$$$$$$$$$$From step 1 and split for M-M$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$&quot;)</span>
+
+            <span class="c"># print (&quot;Debug End&quot;)</span>
+
+            <span class="k">if</span> <span class="s">&quot;dumpKeyforMMrelationInStep2__&quot;</span> <span class="ow">in</span> <span class="n">new_partitions_d</span> \
+                    <span class="ow">and</span> <span class="n">new_partitions_d</span><span class="p">[</span><span class="s">&quot;dumpKeyforMMrelationInStep2__&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">new_partitions_d</span><span class="p">[</span><span class="s">&quot;dumpKeyforMMrelationInStep2__&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="c"># Add all the new partitions to collection</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">new_partitions_d</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">usePST</span> <span class="ow">and</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">/</span> <span class="n">partition</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">PST</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">logLL</span> <span class="o">+=</span> <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">logLL</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">+=</span> <span class="n">new_partitions_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_partitions_d</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+            <span class="n">partition</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="IPLoM.step4"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.step4">[docs]</a>    <span class="k">def</span> <span class="nf">step4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">usePST</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">([</span><span class="s">&#39;Outlier&#39;</span><span class="p">])</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">eventCount</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eventsL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                <span class="n">logL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">eventId</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">partition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">partition</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">partition</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">print</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">stepNo</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">)</span>
+
+            <span class="n">unique_tokens_count_ls</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                <span class="n">unique_tokens_count_ls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">())</span>
+
+            <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                    <span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])</span>
+
+            <span class="n">e</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">[</span><span class="mi">0</span><span class="p">])[:</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">e</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;*&#39;</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">eventCount</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">numOfLogs</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">eventsL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                <span class="n">logL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">eventId</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="IPLoM.get_output"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.get_output">[docs]</a>    <span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">usePST</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numOfLogs</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">+</span> <span class="n">logL</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">partition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">partition</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">+</span> <span class="n">logL</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+                <span class="c"># self.output.sort(key = lambda logL:int(logL[0]))</span>
+                <span class="c"># print (&quot;output log length: &quot; + str(len(self.output)))</span>
+</div>
+<div class="viewcode-block" id="IPLoM.write_event_tofile"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.write_event_tofile">[docs]</a>    <span class="k">def</span> <span class="nf">write_event_tofile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_file_path</span><span class="p">):</span>
+        <span class="n">write_event</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">event_file_path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">eventsL</span><span class="p">:</span>
+            <span class="n">write_event</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">eventId</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">eventStr</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">write_event</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="IPLoM.write_log_with_eventid"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.write_log_with_eventid">[docs]</a>    <span class="k">def</span> <span class="nf">write_log_with_eventid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+            <span class="n">current_event_id</span> <span class="o">=</span> <span class="n">logL</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">write_output</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">current_event_id</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;.txt&#39;</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">)</span>
+            <span class="n">log_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+            <span class="n">write_output</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">log_str</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="n">write_output</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    For 1-M and M-1 mappings, you need to decide whether M side are constants or variables.</span>
+<span class="sd">    This method is to decide which side to split</span>
+
+<span class="sd">    cardOfS           : The number of unique values in this set</span>
+<span class="sd">    Lines_that_match_S: The number of lines that have these values</span>
+<span class="sd">    one_m             : If the mapping is 1-M, this value is True. Otherwise, False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IPLoM.get_rank_posistion"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.get_rank_posistion">[docs]</a>    <span class="k">def</span> <span class="nf">get_rank_posistion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">card_of_s</span><span class="p">,</span> <span class="n">lines_that_match_s</span><span class="p">,</span> <span class="n">one_m</span><span class="p">):</span>
+        <span class="n">distance</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">card_of_s</span> <span class="o">/</span> <span class="n">lines_that_match_s</span>
+        <span class="k">except</span> <span class="ne">ZeroDivisionError</span> <span class="k">as</span> <span class="n">er1</span><span class="p">:</span>
+            <span class="k">print</span> <span class="p">(</span><span class="n">er1</span><span class="p">)</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s">&quot;card_of_s: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">card_of_s</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span> <span class="o">+</span> <span class="s">&#39;lines_that_match_s: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">lines_that_match_s</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">distance</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">lowerBound</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">one_m</span><span class="p">:</span>
+                <span class="n">split_rank</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">split_rank</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">distance</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">upperBound</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">one_m</span><span class="p">:</span>
+                <span class="n">split_rank</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">split_rank</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">one_m</span><span class="p">:</span>
+                <span class="n">split_rank</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">split_rank</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="k">return</span> <span class="n">split_rank</span>
+</div>
+<div class="viewcode-block" id="IPLoM.determine_p1p2"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.determine_p1p2">[docs]</a>    <span class="k">def</span> <span class="nf">determine_p1p2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">count_1</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">unique_tokens_count_ls</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                <span class="n">unique_tokens_count_ls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">())</span>
+
+            <span class="k">for</span> <span class="n">logL</span> <span class="ow">in</span> <span class="n">partition</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                    <span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">logL</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])</span>
+
+            <span class="c"># Count how many columns have only one unique term</span>
+            <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">count_1</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c"># Debug</span>
+            <span class="c"># strDebug = &#39;&#39;</span>
+            <span class="c"># for columnIdx in range(partition.lenOfLogs):</span>
+            <span class="c"># 	strDebug += str(len(uniqueTokensCountLS[columnIdx])) + &#39; &#39;</span>
+            <span class="c"># print (strDebug)</span>
+            <span class="c"># If the columns with unique term more than a threshold, we return (-1, -1) to skip step 3</span>
+            <span class="n">gc</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">count_1</span> <span class="o">/</span> <span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span>
+
+            <span class="k">if</span> <span class="n">gc</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">CT</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mapping_position</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="n">unique_tokens_count_ls</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">elif</span> <span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="IPLoM.get_mapping_position"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.get_mapping_position">[docs]</a>    <span class="k">def</span> <span class="nf">get_mapping_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">unique_tokens_count_ls</span><span class="p">):</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">p2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="c"># Caculate #unqiueterms in each column, and record how many column with each #uniqueterms</span>
+        <span class="n">num_of_unique_tokens_d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">num_of_unique_tokens_d</span><span class="p">:</span>
+                <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">partition</span><span class="o">.</span><span class="n">stepNo</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Find the largest card and second largest card</span>
+            <span class="n">max_idx</span> <span class="o">=</span> <span class="n">second_max_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">max_count</span> <span class="o">=</span> <span class="n">second_max_count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">num_of_unique_tokens_d</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">max_count</span><span class="p">:</span>
+                    <span class="n">second_max_idx</span> <span class="o">=</span> <span class="n">max_idx</span>
+                    <span class="n">second_max_count</span> <span class="o">=</span> <span class="n">max_count</span>
+                    <span class="n">max_idx</span> <span class="o">=</span> <span class="n">key</span>
+                    <span class="n">max_count</span> <span class="o">=</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">second_max_count</span> <span class="ow">and</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">max_count</span><span class="p">:</span>
+                    <span class="n">second_max_idx</span> <span class="o">=</span> <span class="n">key</span>
+                    <span class="n">second_max_count</span> <span class="o">=</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="c"># Debug</span>
+            <span class="c"># print (&quot;largestIdx: &quot; + str(maxIdx) + &#39;\t&#39; + &quot;secondIdx: &quot; + str(secondMaxIdx) + &#39;\t&#39;)</span>
+            <span class="c"># print (&quot;largest: &quot; + str(maxCount) + &#39;\t&#39; + &quot;second: &quot; + str(secondMaxCount) + &#39;\t&#39;)</span>
+
+            <span class="c"># If the frequency of the freq_card&gt;1 then</span>
+            <span class="k">if</span> <span class="n">max_idx</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])]</span> <span class="o">==</span> <span class="n">max_count</span><span class="p">:</span>
+                        <span class="c"># if len( unique_tokens_count_ls[columnIdx] ) == maxIdx:</span>
+                        <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                            <span class="n">p1</span> <span class="o">=</span> <span class="n">columnIdx</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">p2</span> <span class="o">=</span> <span class="n">columnIdx</span>
+                            <span class="k">break</span>
+
+                <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">lenOfLogs</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">p2</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="k">break</span>
+                    <span class="k">if</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])]</span> <span class="o">==</span> <span class="n">second_max_count</span><span class="p">:</span>
+                        <span class="c"># if len( unique_tokens_count_ls[columnIdx] ) == secondMaxIdx:</span>
+                        <span class="n">p2</span> <span class="o">=</span> <span class="n">columnIdx</span>
+                        <span class="k">break</span>
+
+            <span class="c"># If the frequency of the freq_card==1 then</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])]</span> <span class="o">==</span> <span class="n">max_count</span><span class="p">:</span>
+                        <span class="c"># if len( unique_tokens_count_ls[columnIdx] ) == maxIdx:</span>
+                        <span class="n">p1</span> <span class="o">=</span> <span class="n">columnIdx</span>
+                        <span class="k">break</span>
+
+                <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])]</span> <span class="o">==</span> <span class="n">second_max_count</span><span class="p">:</span>
+                        <span class="c"># if len( unique_tokens_count_ls[columnIdx] ) == secondMaxIdx:</span>
+                        <span class="n">p2</span> <span class="o">=</span> <span class="n">columnIdx</span>
+                        <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">p2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span>
+
+        <span class="c"># If it is from step 1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">min_idx</span> <span class="o">=</span> <span class="n">second_min_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">min_count</span> <span class="o">=</span> <span class="n">second_min_count</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">num_of_unique_tokens_d</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_count</span><span class="p">:</span>
+                    <span class="n">second_min_idx</span> <span class="o">=</span> <span class="n">min_idx</span>
+                    <span class="n">second_min_count</span> <span class="o">=</span> <span class="n">min_count</span>
+                    <span class="n">min_idx</span> <span class="o">=</span> <span class="n">key</span>
+                    <span class="n">min_count</span> <span class="o">=</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">second_min_count</span> <span class="ow">and</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">min_count</span><span class="p">:</span>
+                    <span class="n">second_min_idx</span> <span class="o">=</span> <span class="n">key</span>
+                    <span class="n">second_min_count</span> <span class="o">=</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="c"># Debug</span>
+            <span class="c"># print (&quot;smallestIdx: &quot; + str(minIdx) + &#39;\t&#39; + &quot;secondIdx: &quot; + str(secondMinIdx) + &#39;\t&#39;)</span>
+            <span class="c"># print (&quot;smallest: &quot; + str(minCount) + &#39;\t&#39; + &quot;second: &quot; + str(secondMinCount) + &#39;\t&#39;)</span>
+
+            <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])]</span> <span class="o">==</span> <span class="n">min_count</span><span class="p">:</span>
+                    <span class="c"># if len( unique_tokens_count_ls[columnIdx] ) == minIdx:</span>
+                    <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">p1</span> <span class="o">=</span> <span class="n">columnIdx</span>
+                        <span class="k">break</span>
+
+            <span class="k">for</span> <span class="n">columnIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">num_of_unique_tokens_d</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens_count_ls</span><span class="p">[</span><span class="n">columnIdx</span><span class="p">])]</span> <span class="o">==</span> <span class="n">second_min_count</span><span class="p">:</span>
+                    <span class="c"># if len( unique_tokens_count_ls[columnIdx] ) == secondMinIdx:</span>
+                    <span class="n">p2</span> <span class="o">=</span> <span class="n">columnIdx</span>
+                    <span class="k">break</span>
+
+            <span class="k">return</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span>
+</div>
+<div class="viewcode-block" id="IPLoM.print_partitions"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.print_partitions">[docs]</a>    <span class="k">def</span> <span class="nf">print_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+                <span class="c"># print (&#39;Partition {}:(from step {}) Valid:{}&#39;.format(idx, self.partitions_L[idx].stepNo,</span>
+                <span class="c">#                                                     self.partitions_L[idx].valid))</span>
+
+                <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="n">log</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>   <span class="c"># get log line number</span>
+                <span class="k">print</span> <span class="p">(</span><span class="s">&quot;*****************************************&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IPLoM.get_clusters"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.get_clusters">[docs]</a>    <span class="k">def</span> <span class="nf">get_clusters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+                <span class="n">cluster</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions_L</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">logLL</span><span class="p">:</span>
+                    <span class="n">cluster</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">log</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+                <span class="n">clusters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">clusters</span>
+</div>
+<div class="viewcode-block" id="IPLoM.print_event_stats"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.print_event_stats">[docs]</a>    <span class="k">def</span> <span class="nf">print_event_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">eventsL</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">eventCount</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">print</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">eventId</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">eventCount</span><span class="p">))</span>
+                <span class="k">print</span> <span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">eventStr</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IPLoM.delete_all_files"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.IPLoM.IPLoM.delete_all_files">[docs]</a>    <span class="k">def</span> <span class="nf">delete_all_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_path</span><span class="p">):</span>
+        <span class="n">file_list</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">fileName</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">dir_path</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">fileName</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hudan Studiawan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

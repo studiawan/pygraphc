@@ -1,0 +1,366 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pygraphc.clustering.KCliquePercolation &mdash; pygraphc 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pygraphc 0.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pygraphc.clustering.KCliquePercolation</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">islice</span><span class="p">,</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">ClusterUtility</span> <span class="kn">import</span> <span class="n">ClusterUtility</span>
+
+
+<div class="viewcode-block" id="KCliquePercolation"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation">[docs]</a><span class="k">class</span> <span class="nc">KCliquePercolation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This is a class for graph clustering based on k-clique percolation.</span>
+
+<span class="sd">    The procedure will find k-clique. If there is any percolation between k-cliques, it will be set as a cluster.</span>
+<span class="sd">    The unnecessary edges will be removed. The use of this method for event log clustering was presented in [1]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] H. Studiawan, B. A. Pratomo, and R. Anggoro, Clustering of SSH brute-force attack logs using</span>
+<span class="sd">           k-clique percolation, in Proceedings of the 10th International Conference on Information Communication</span>
+<span class="sd">           Technology and Systems, 2016.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">edges_weight</span><span class="p">,</span> <span class="n">nodes_id</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This is a constructor for class KCliquePercolation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        graph           : graph</span>
+<span class="sd">            Graph to be clustered.</span>
+<span class="sd">        edges_weight    : list[tuple]</span>
+<span class="sd">            List of tuple containing (node1, node2, cosine similarity between these two).</span>
+<span class="sd">        nodes_id        : list</span>
+<span class="sd">            List of all node identifier.</span>
+<span class="sd">        k               : int</span>
+<span class="sd">            Number of percolation or intersection between an individual clique.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="s">&#39;kclique_percolation: initialization ...&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges_weight</span> <span class="o">=</span> <span class="n">edges_weight</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes_id</span> <span class="o">=</span> <span class="n">nodes_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">percolated_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removed_edges</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="KCliquePercolation.get_percolation_nodes"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_percolation_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_percolation_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get percolation nodes after finished clustering.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        percolated_nodes    : list</span>
+<span class="sd">            List of all percolated nodes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">percolated_nodes</span>
+</div>
+<div class="viewcode-block" id="KCliquePercolation.get_removed_edges"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_removed_edges">[docs]</a>    <span class="k">def</span> <span class="nf">get_removed_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get removed edges after clustering process.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            removed_edges   : list[tuple]</span>
+<span class="sd">                List of tuple containing edge from (node1, node2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">removed_edges</span>
+</div>
+<div class="viewcode-block" id="KCliquePercolation.get_clique_percolation"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_clique_percolation">[docs]</a>    <span class="k">def</span> <span class="nf">get_clique_percolation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all cluster in percolation (temporary) graph.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        clique_percolation  : list[frozenset]</span>
+<span class="sd">            List of nodes in each cluster in frozenset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span>
+</div>
+<div class="viewcode-block" id="KCliquePercolation.get_kclique_percolation"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_kclique_percolation">[docs]</a>    <span class="k">def</span> <span class="nf">get_kclique_percolation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This is the main method to call all k-clique percolation clustering.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        clusters    : list[list]</span>
+<span class="sd">            List of list containing nodes identifier for each cluster.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="s">&#39;get_kclique_percolation ...&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_temp_graph</span><span class="p">()</span>
+        <span class="n">kcliques</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_kcliques</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_percolation_graph</span><span class="p">(</span><span class="n">kcliques</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_outcluster</span><span class="p">()</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_clusters</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">clusters</span>
+</div>
+<div class="viewcode-block" id="KCliquePercolation._find_kcliques"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation._find_kcliques">[docs]</a>    <span class="k">def</span> <span class="nf">_find_kcliques</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find all k-cliques in a graph.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        kcliques    : list[frozenset]</span>
+<span class="sd">            List of k-cliques found but only return specified k. The frozenset contains nodes identifier.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">k_cliques</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_enumerate_all_cliques</span><span class="p">())</span>
+        <span class="n">kcliques</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">clique</span><span class="p">)</span> <span class="k">for</span> <span class="n">clique</span> <span class="ow">in</span> <span class="n">k_cliques</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">clique</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">kcliques</span>
+</div>
+<div class="viewcode-block" id="KCliquePercolation._build_temp_graph"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation._build_temp_graph">[docs]</a>    <span class="k">def</span> <span class="nf">_build_temp_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Build a temporary graph to get a percolation between individual k-clique.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edges_weight</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="KCliquePercolation._enumerate_all_cliques"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation._enumerate_all_cliques">[docs]</a>    <span class="k">def</span> <span class="nf">_enumerate_all_cliques</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns all cliques in an undirected graph.</span>
+
+<span class="sd">        This method returns cliques of size (cardinality)</span>
+<span class="sd">        k = 1, 2, 3, ..., maxDegree - 1. Where maxDegree is the maximal</span>
+<span class="sd">        degree of any node in the graph.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        generator of lists: generator of list for each clique.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Based on the algorithm published by Zhang et al. (2005) [1]_</span>
+<span class="sd">        and adapted to output all cliques discovered.</span>
+<span class="sd">        This algorithm is not applicable on directed graphs.</span>
+<span class="sd">        This algorithm ignores self-loops and parallel edges as</span>
+<span class="sd">        clique is not conventionally defined with such edges.</span>
+<span class="sd">        There are often many cliques in graphs.</span>
+<span class="sd">        This algorithm however, hopefully, does not run out of memory</span>
+<span class="sd">        since it only keeps candidate sublists in memory and</span>
+<span class="sd">        continuously removes exhausted sublists.</span>
+
+<span class="sd">        The original source code is taken from NetworkX development branch [2]_.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [1] Yun Zhang, Abu-Khzam, F.N., Baldwin, N.E., Chesler, E.J.,</span>
+<span class="sd">               Langston, M.A., Samatova, N.F.,</span>
+<span class="sd">               Genome-Scale Computational Approaches to Memory-Intensive</span>
+<span class="sd">               Applications in Systems Biology.</span>
+<span class="sd">               Supercomputing, 2005. Proceedings of the ACM/IEEE SC 2005</span>
+<span class="sd">               Conference, pp. 12, 12-18 Nov. 2005.</span>
+<span class="sd">               doi: 10.1109/SC.2005.29.</span>
+<span class="sd">               http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;arnumber=1559964&amp;isnumber=33129</span>
+<span class="sd">        .. [2] Dan Schult, Source code for networkx.algorithms.clique.</span>
+<span class="sd">               https://networkx.github.io/documentation/development/_modules/networkx/algorithms/clique.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">print</span> <span class="s">&#39;enumerate_all_cliques ...&#39;</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">nbrs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">:</span>
+            <span class="n">index</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="c"># Neighbors of u that appear after u in the iteration order of G.</span>
+            <span class="n">nbrs</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index</span><span class="p">}</span>
+
+        <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(([</span><span class="n">u</span><span class="p">],</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">nbrs</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="n">index</span><span class="o">.</span><span class="n">__getitem__</span><span class="p">))</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
+        <span class="c"># Loop invariants:</span>
+        <span class="c"># 1. len(base) is nondecreasing.</span>
+        <span class="c"># 2. (base + cnbrs) is sorted with respect to the iteration order of G.</span>
+        <span class="c"># 3. cnbrs is a set of common neighbors of nodes in base.</span>
+        <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">,</span> <span class="n">cnbrs</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">())</span>
+            <span class="k">yield</span> <span class="n">base</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cnbrs</span><span class="p">):</span>
+                <span class="c"># Use generators to reduce memory consumption.</span>
+                <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">chain</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="p">[</span><span class="n">u</span><span class="p">]),</span>
+                              <span class="nb">filter</span><span class="p">(</span><span class="n">nbrs</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">__contains__</span><span class="p">,</span>
+                                     <span class="n">islice</span><span class="p">(</span><span class="n">cnbrs</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">None</span><span class="p">))))</span>
+</div>
+<div class="viewcode-block" id="KCliquePercolation._get_percolation_graph"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation._get_percolation_graph">[docs]</a>    <span class="k">def</span> <span class="nf">_get_percolation_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kcliques</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get percolation graph.</span>
+
+<span class="sd">        This temporary graph also well known as percolation graph in the literatures. A node represents a k-clique</span>
+<span class="sd">        and an edge will be drawn if there is any intersection between two k-cliques.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kcliques    : list[frozenset]</span>
+<span class="sd">            List of all k-cliques found with user-specified k.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">percolation_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+        <span class="n">percolation_graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">kcliques</span><span class="p">)</span>
+
+        <span class="c"># Add an edge in the percolation graph for each pair of cliques that percolate</span>
+        <span class="k">for</span> <span class="n">clique1</span><span class="p">,</span> <span class="n">clique2</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">kcliques</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">percolation</span> <span class="o">=</span> <span class="n">clique1</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">clique2</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">percolated_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">percolation</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">percolation</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">percolation_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">clique1</span><span class="p">,</span> <span class="n">clique2</span><span class="p">)</span>
+
+        <span class="c"># Get all connected component in percolation graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">percolation_graph</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">component</span><span class="p">))</span>
+
+        <span class="c"># set cluster id</span>
+        <span class="n">ClusterUtility</span><span class="o">.</span><span class="n">set_cluster_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="KCliquePercolation._remove_outcluster"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation._remove_outcluster">[docs]</a>    <span class="k">def</span> <span class="nf">_remove_outcluster</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove edges that connect to other clusters.</span>
+
+<span class="sd">        This method will first find any edges in the cluster member. If edges connecting to a node does not belong to</span>
+<span class="sd">        the current cluster, then it will be removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># remove edge outside cluster</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span>
+                <span class="c"># if cluster id of current node is not the same of the connecting node</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">neighbor</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neighbor</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">exception</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">removed_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neighbor</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="KCliquePercolation._get_clusters"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation._get_clusters">[docs]</a>    <span class="k">def</span> <span class="nf">_get_clusters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get final result of the k-clique percolation clustering.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        clusters    : list[list]</span>
+<span class="sd">            List of list containing nodes identifier for each cluster.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">):</span>
+            <span class="n">clusters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+
+        <span class="c"># refine cluster id</span>
+        <span class="n">ClusterUtility</span><span class="o">.</span><span class="n">set_cluster_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">clusters</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">clusters</span>
+
+</div></div>
+<div class="viewcode-block" id="KCliquePercolationWeighted"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolationWeighted">[docs]</a><span class="k">class</span> <span class="nc">KCliquePercolationWeighted</span><span class="p">(</span><span class="n">KCliquePercolation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This a class derived from KCliquePercolation for the case of weighted graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">edges_weight</span><span class="p">,</span> <span class="n">nodes_id</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This is the constructor for class KCliquePercolationWeighted.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        graph           : graph</span>
+<span class="sd">            A graph to be processed for its cluster.</span>
+<span class="sd">        edges_weight    : list[tuple]</span>
+<span class="sd">            List of tuple containing (node1, node2, cosine similarity between these two).</span>
+<span class="sd">        nodes_id        : list</span>
+<span class="sd">            List of all node identifier.</span>
+<span class="sd">        k               : int</span>
+<span class="sd">            Number of percolation or intersection between an individual clique.</span>
+<span class="sd">        threshold       : float</span>
+<span class="sd">            Threshold for the geometric mean.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="s">&#39;kclique_percolation_weighted: initialization ...&#39;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">KCliquePercolationWeighted</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">edges_weight</span><span class="p">,</span> <span class="n">nodes_id</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+
+<div class="viewcode-block" id="KCliquePercolationWeighted._find_kcliques"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolationWeighted._find_kcliques">[docs]</a>    <span class="k">def</span> <span class="nf">_find_kcliques</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This method will find weighted k-clique.</span>
+
+<span class="sd">        The weight of k-clique is calculated based on the geometric mean of its weights.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        weighted_kcliques   : list[frozenset]</span>
+<span class="sd">            List of frozenset containing nodes identifier for each k-clique found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="s">&#39;find_weighted_kclique ...&#39;</span>
+        <span class="n">kcliques</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">KCliquePercolationWeighted</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_find_kcliques</span><span class="p">()</span>
+        <span class="n">weighted_kcliques</span> <span class="o">=</span> <span class="n">ClusterUtility</span><span class="o">.</span><span class="n">get_weighted_cliques</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">kcliques</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">weighted_kcliques</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hudan Studiawan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

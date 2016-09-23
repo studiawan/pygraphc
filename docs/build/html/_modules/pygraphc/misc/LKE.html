@@ -1,0 +1,596 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pygraphc.misc.LKE &mdash; pygraphc 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pygraphc 0.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pygraphc.misc.LKE</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+
+<div class="viewcode-block" id="Para"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.Para">[docs]</a><span class="k">class</span> <span class="nc">Para</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s">&#39;../Sca/&#39;</span><span class="p">,</span> <span class="n">data_name</span><span class="o">=</span><span class="s">&#39;Sca_BGL600&#39;</span><span class="p">,</span> <span class="n">logname</span><span class="o">=</span><span class="s">&#39;rawlog.log&#39;</span><span class="p">,</span> <span class="n">removable</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">remove_col</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">],</span> <span class="n">threshold2</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">regular</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">rex</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;core\.[0-9]*&#39;</span><span class="p">],</span>
+                 <span class="n">save_path</span><span class="o">=</span><span class="s">&#39;./results/&#39;</span><span class="p">,</span> <span class="n">save_filename</span><span class="o">=</span><span class="s">&#39;template&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logname</span> <span class="o">=</span> <span class="n">logname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataName</span> <span class="o">=</span> <span class="n">data_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removable</span> <span class="o">=</span> <span class="n">removable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removeCol</span> <span class="o">=</span> <span class="n">remove_col</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold2</span> <span class="o">=</span> <span class="n">threshold2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rex</span> <span class="o">=</span> <span class="n">rex</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">savePath</span> <span class="o">=</span> <span class="n">save_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveFileName</span> <span class="o">=</span> <span class="n">save_filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regular</span> <span class="o">=</span> <span class="n">regular</span>
+
+</div>
+<div class="viewcode-block" id="LKE"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.LKE">[docs]</a><span class="k">class</span> <span class="nc">LKE</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">para</span><span class="p">,</span> <span class="n">wordLL</span><span class="o">=</span><span class="p">[],</span> <span class="n">wordLen</span><span class="o">=</span><span class="p">[],</span> <span class="n">groups</span><span class="o">=</span><span class="p">[],</span> <span class="n">loglineNumPerGroup</span><span class="o">=</span><span class="p">[],</span> <span class="n">wordLenPerGroup</span><span class="o">=</span><span class="p">[],</span>
+         <span class="n">wordOccuOfPosiLLD</span><span class="o">=</span><span class="p">[],</span> <span class="n">loglinesOfGroups</span><span class="o">=</span><span class="p">[],</span> <span class="n">flatLogLineGroups</span><span class="o">=</span><span class="p">[],</span> <span class="n">newGroups</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">para</span> <span class="o">=</span> <span class="n">para</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wordLL</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wordLen</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># the list of list of words list, each group-&gt;each log lines-&gt;each words</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loglineNumPerGroup</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># how many lines in each groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wordLenPerGroup</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># maximum word positions in one group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wordOccuOfPosiLLD</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># each word in each position in each group occurance/frequency</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loglinesOfGroups</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flatLogLineGroups</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newGroups</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logs</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="LKE.para_erasing"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.LKE.para_erasing">[docs]</a>    <span class="k">def</span> <span class="nf">para_erasing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;Loading log files and split into words lists...&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;threshold2 is:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">threshold2</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">logname</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">logname</span><span class="p">)</span> <span class="k">as</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">regular</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">currentRex</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">rex</span><span class="p">:</span>
+                        <span class="n">line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">currentRex</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                    <span class="c"># line=re.sub(currentRex,&#39;core.&#39;,line) # For BGL data only</span>
+                    <span class="c"># line=re.sub(&#39;node-[0-9]+&#39;,&#39;node-&#39;,line) #For HPC only</span>
+                <span class="n">word_seq</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">removable</span><span class="p">:</span>
+                    <span class="n">word_seq</span> <span class="o">=</span> <span class="p">[</span><span class="n">word</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_seq</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">removeCol</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wordLen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">word_seq</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wordLL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">word_seq</span><span class="p">))</span>
+        <span class="c"># delete all the files insidd this directory</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">delete_all_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LKE.clustering"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.LKE.clustering">[docs]</a>    <span class="k">def</span> <span class="nf">clustering</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t1</span><span class="p">):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">setrecursionlimit</span><span class="p">(</span><span class="mi">100000000</span><span class="p">)</span>  <span class="c"># set the recursion limits number</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wordLen</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wordLen</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;the parameter v is: </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">v</span><span class="p">)</span>
+        <span class="n">log_num</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wordLen</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;there are about </span><span class="si">%d</span><span class="s"> loglines&#39;</span> <span class="o">%</span> <span class="n">log_num</span><span class="p">)</span>
+        <span class="n">load_data_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">cal_data_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c"># In order to save time, load distArraydata, if exist, do not calculate the edit distance again:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span> <span class="o">+</span> <span class="s">&#39;editDistance.csv&#39;</span><span class="p">):</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;Loading data instead of calculating..&#39;</span><span class="p">)</span>
+            <span class="n">dist_mat</span> <span class="o">=</span> <span class="n">genfromtxt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span> <span class="o">+</span> <span class="s">&#39;editDistance.csv&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+            <span class="n">dist_list</span> <span class="o">=</span> <span class="n">genfromtxt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span> <span class="o">+</span> <span class="s">&#39;distArray.csv&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+            <span class="n">load_data_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;calculating distance....&#39;</span><span class="p">)</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span>
+            <span class="n">dist_mat</span><span class="p">,</span> <span class="n">dist_list</span> <span class="o">=</span> <span class="n">cal_distance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wordLL</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">cal_data_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t1</span>
+        <span class="n">dist_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">dist_list</span><span class="p">)</span>
+        <span class="n">threshold1</span> <span class="o">=</span> <span class="n">getk_means_threshold</span><span class="p">(</span><span class="n">dist_array</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;the threshold1 is: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">threshold1</span><span class="p">)</span>
+
+        <span class="c"># connect two loglines with distance &lt; threshold, log_dict is a dictionary</span>
+        <span class="c"># where the key is line num while</span>
+        <span class="n">log_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">log_num</span><span class="p">):</span>
+            <span class="n">log_line_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">log_num</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">dist_mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">threshold1</span><span class="p">:</span>
+                    <span class="n">log_line_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">log_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">log_line_set</span>
+
+        <span class="c"># use DFS to get the initial group.</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">log_num</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c"># used to label whether line has been visited, 0 represents not visited</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">log_dict</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">flag</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">group_loglist</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">group_loglist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>  <span class="c"># add the key of dict into the list firstly, and then add others</span>
+            <span class="n">flag</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c"># line is visited</span>
+            <span class="n">dfs_traversal</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">log_dict</span><span class="p">,</span> <span class="n">flag</span><span class="p">,</span> <span class="n">group_loglist</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loglinesOfGroups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group_loglist</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loglineNumPerGroup</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group_loglist</span><span class="p">))</span>
+
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;================get the initial groups splitting=============&#39;</span><span class="p">)</span>
+        <span class="n">word_len_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wordLen</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loglinesOfGroups</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">row</span>
+            <span class="n">each_line_log_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wordLenPerGroup</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">word_len_array</span><span class="p">[</span><span class="n">row</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">colu</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+                <span class="n">each_line_log_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wordLL</span><span class="p">[</span><span class="n">colu</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each_line_log_list</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;========================================================================&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;there are </span><span class="si">%s</span><span class="s"> groups&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wordLenPerGroup</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">load_data_time</span><span class="p">,</span> <span class="n">cal_data_time</span>
+</div>
+<div class="viewcode-block" id="LKE.print_each_cluster"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.LKE.print_each_cluster">[docs]</a>    <span class="k">def</span> <span class="nf">print_each_cluster</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cluster_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">rows</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loglinesOfGroups</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Cluster #&#39;</span><span class="p">,</span> <span class="n">cluster_index</span>
+            <span class="n">cluster_index</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+                <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">logs</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;========================================================================&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LKE.get_clusters"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.LKE.get_clusters">[docs]</a>    <span class="k">def</span> <span class="nf">get_clusters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">rows</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loglinesOfGroups</span><span class="p">:</span>
+            <span class="n">clusters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">clusters</span>
+
+    <span class="c"># split the current group recursively.</span></div>
+<div class="viewcode-block" id="LKE.splitting"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.LKE.splitting">[docs]</a>    <span class="k">def</span> <span class="nf">splitting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="p">(</span><span class="s">&#39;splitting into different groups...&#39;</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39;the threshold2 is </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">threshold2</span>
+        <span class="n">group_num</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>  <span class="c"># how many groups initially</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">group_num</span><span class="p">):</span>
+            <span class="n">split_each_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">threshold2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loglinesOfGroups</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c"># to flat the list of list of list to list of many lists, that is only one layer lists nested</span>
+        <span class="n">merge_lists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">newGroups</span><span class="p">)</span>
+        <span class="n">merge_lists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loglinesOfGroups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flatLogLineGroups</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;Merge the lists together...&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;there are </span><span class="si">%s</span><span class="s"> different groups&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flatLogLineGroups</span><span class="p">)))</span>
+
+    <span class="c"># extract the templates according to the logs in each group</span></div>
+<div class="viewcode-block" id="LKE.extracting"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.LKE.extracting">[docs]</a>    <span class="k">def</span> <span class="nf">extracting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">templates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flatLogLineGroups</span><span class="p">)):</span>
+            <span class="n">group_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flatLogLineGroups</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">each_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">newGroups</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">group_len</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">templates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each_group</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">common_part</span> <span class="o">=</span> <span class="n">lcs</span><span class="p">(</span><span class="n">each_group</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">each_group</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">group_len</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">com_exit</span><span class="p">(</span><span class="n">common_part</span><span class="p">,</span> <span class="n">each_group</span><span class="p">[</span><span class="n">k</span><span class="p">]):</span>
+                        <span class="n">common_part</span> <span class="o">=</span> <span class="n">lcs</span><span class="p">(</span><span class="n">common_part</span><span class="p">,</span> <span class="n">each_group</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_part</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">print</span><span class="p">(</span><span class="s">&#39;there is no common part in this group&#39;</span><span class="p">)</span>
+                            <span class="n">common_part</span> <span class="o">=</span> <span class="p">[]</span>
+                            <span class="k">break</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_part</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">templates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">common_part</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="s">&#39;logTemplates.txt&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fi</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">templates</span><span class="p">)):</span>
+                <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">templates</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+    <span class="c"># save to logs in groups into different template txt</span></div>
+<div class="viewcode-block" id="LKE.templatetxt"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.LKE.templatetxt">[docs]</a>    <span class="k">def</span> <span class="nf">templatetxt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flatLogLineGroups</span><span class="p">)):</span>
+            <span class="n">group_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flatLogLineGroups</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">num_log_of_each_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flatLogLineGroups</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">savePath</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">dataName</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">para</span><span class="o">.</span><span class="n">saveFileName</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;.txt&#39;</span><span class="p">,</span>
+                      <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">group_len</span><span class="p">):</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">num_log_of_each_group</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LKE.main_process"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.LKE.main_process">[docs]</a>    <span class="k">def</span> <span class="nf">main_process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">para_erasing</span><span class="p">()</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">load_data_time</span><span class="p">,</span> <span class="n">cal_data_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span>
+        <span class="c"># self.print_each_cluster()</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_clusters</span><span class="p">()</span>
+        <span class="k">print</span> <span class="n">clusters</span>
+        <span class="c"># self.splitting()</span>
+        <span class="c"># self.extracting()</span>
+        <span class="n">time_interval</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t1</span>
+        <span class="c"># self.templatetxt()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;this process takes&#39;</span><span class="p">,</span> <span class="n">time_interval</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;*********************************************&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">load_data_time</span><span class="p">,</span> <span class="n">cal_data_time</span><span class="p">,</span> <span class="n">time_interval</span>
+
+
+<span class="c"># merge the list of lists(many layer) into one list of list</span></div></div>
+<div class="viewcode-block" id="merge_lists"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.merge_lists">[docs]</a><span class="k">def</span> <span class="nf">merge_lists</span><span class="p">(</span><span class="n">init_group</span><span class="p">,</span> <span class="n">flat_log_line_groups</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">init_group</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">list_contained</span><span class="p">(</span><span class="n">init_group</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="n">flat_log_line_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">init_group</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">merge_lists</span><span class="p">(</span><span class="n">init_group</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">flat_log_line_groups</span><span class="p">)</span>
+
+
+<span class="c"># find out whether a list contained a list</span></div>
+<div class="viewcode-block" id="list_contained"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.list_contained">[docs]</a><span class="k">def</span> <span class="nf">list_contained</span><span class="p">(</span><span class="n">group</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="o">==</span> <span class="s">&quot;&lt;type &#39;list&#39;&gt;&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+
+<span class="c"># for each group, According to the splittable and groupLen, decide whether to split</span>
+<span class="c"># it iteratively until it cannot be splitted any more</span></div>
+<div class="viewcode-block" id="split_each_group"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.split_each_group">[docs]</a><span class="k">def</span> <span class="nf">split_each_group</span><span class="p">(</span><span class="n">each_group</span><span class="p">,</span> <span class="n">threshold2</span><span class="p">,</span> <span class="n">loglines_each_group</span><span class="p">):</span>
+    <span class="n">group_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">each_group</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">group_len</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">return_values</span> <span class="o">=</span> <span class="n">posi_to_split</span><span class="p">(</span><span class="n">each_group</span><span class="p">,</span> <span class="n">threshold2</span><span class="p">)</span>
+    <span class="n">splittable</span> <span class="o">=</span> <span class="n">return_values</span><span class="p">[</span><span class="s">&#39;splittable&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">splittable</span> <span class="o">==</span> <span class="s">&#39;yes&#39;</span><span class="p">:</span>
+        <span class="n">diffwords</span> <span class="o">=</span> <span class="n">return_values</span><span class="p">[</span><span class="s">&#39;diffWordList&#39;</span><span class="p">]</span>
+        <span class="n">posi</span> <span class="o">=</span> <span class="n">return_values</span><span class="p">[</span><span class="s">&#39;minIndex&#39;</span><span class="p">]</span>
+        <span class="n">con_or_para_divi</span> <span class="o">=</span> <span class="n">return_values</span><span class="p">[</span><span class="s">&#39;con_or_para_divi&#39;</span><span class="p">]</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;the different words are:&#39;</span><span class="p">,</span> <span class="n">diffwords</span><span class="p">)</span>
+        <span class="c"># each item in the diffwords corresponds to a group</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">diffwords</span><span class="p">)):</span>
+            <span class="n">newgroups</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">newlogline_group</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">group_len</span><span class="p">):</span>  <span class="c"># each line in a group</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">con_or_para_divi</span><span class="p">[</span><span class="n">t</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">posi</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">newgroups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each_group</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                    <span class="n">newlogline_group</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loglines_each_group</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="n">con_or_para_divi</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">posi</span><span class="p">]</span> <span class="o">==</span> <span class="n">diffwords</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+                    <span class="n">newgroups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each_group</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                    <span class="n">newlogline_group</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loglines_each_group</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+
+            <span class="n">each_group</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newgroups</span><span class="p">)</span>
+            <span class="n">loglines_each_group</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newlogline_group</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">group_len</span><span class="p">):</span>
+            <span class="n">each_group</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">loglines_each_group</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">diffwords</span><span class="p">)):</span>
+            <span class="n">split_each_group</span><span class="p">(</span><span class="n">each_group</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">threshold2</span><span class="p">,</span> <span class="n">loglines_each_group</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="delete_all_files"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.delete_all_files">[docs]</a><span class="k">def</span> <span class="nf">delete_all_files</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
+    <span class="n">file_list</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">fileName</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">dir_path</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">fileName</span><span class="p">)</span>
+
+
+<span class="c"># find the position that should be splitted, that is to find minimum num of different variable parts of each position</span>
+<span class="c"># or find the entropy</span></div>
+<div class="viewcode-block" id="posi_to_split"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.posi_to_split">[docs]</a><span class="k">def</span> <span class="nf">posi_to_split</span><span class="p">(</span><span class="n">each_group</span><span class="p">,</span> <span class="n">threshold2</span><span class="p">):</span>
+    <span class="n">group_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">each_group</span><span class="p">)</span>
+    <span class="n">word_label</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">no_common</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">common_part</span> <span class="o">=</span> <span class="n">lcs</span><span class="p">(</span><span class="n">each_group</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">each_group</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">splittable</span> <span class="o">=</span> <span class="s">&#39;yes&#39;</span>
+    <span class="n">return_values</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">group_len</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">com_exit</span><span class="p">(</span><span class="n">common_part</span><span class="p">,</span> <span class="n">each_group</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="n">common_part</span> <span class="o">=</span> <span class="n">lcs</span><span class="p">(</span><span class="n">common_part</span><span class="p">,</span> <span class="n">each_group</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_part</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">no_common</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;there is no common part in this group&#39;</span><span class="p">)</span>
+                <span class="k">break</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">group_len</span><span class="p">):</span>
+        <span class="n">new_word_label</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">each_group</span><span class="p">[</span><span class="n">k</span><span class="p">])):</span>
+            <span class="k">if</span> <span class="n">each_group</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">t</span><span class="p">]</span> <span class="ow">in</span> <span class="n">common_part</span><span class="p">:</span>
+                <span class="n">new_word_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c"># 1 represent constant</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_word_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c"># 0 represents variable</span>
+        <span class="n">word_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_word_label</span><span class="p">)</span>
+
+    <span class="n">con_or_para_divi</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">part_label</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">seq_len</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c"># connect the continuous constant words or variable words as a big part(be a sequence)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">group_len</span><span class="p">):</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">newcon_or_para_ll</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">new_part_label</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">each_group</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">word_label</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">word_label</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]:</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">newcon_or_para</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">newcon_or_para</span> <span class="o">=</span> <span class="n">newappend</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">each_group</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">newcon_or_para</span><span class="p">)</span>
+                <span class="n">newcon_or_para_ll</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newcon_or_para</span><span class="p">)</span>
+                <span class="n">new_part_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word_label</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">end</span><span class="p">])</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">j</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">lastnewcon_or_para</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">each_group</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">lastnewcon_or_para</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each_group</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+        <span class="n">newcon_or_para_ll</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lastnewcon_or_para</span><span class="p">)</span>
+        <span class="n">new_part_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word_label</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">con_or_para_divi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newcon_or_para_ll</span><span class="p">)</span>
+        <span class="n">part_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_part_label</span><span class="p">)</span>
+        <span class="n">seq_len</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_part_label</span><span class="p">))</span>
+
+    <span class="n">max_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">seq_len</span><span class="p">)</span>
+
+    <span class="c"># convert list into tuple as list could not be the key of dict</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">group_len</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">con_or_para_divi</span><span class="p">[</span><span class="n">i</span><span class="p">])):</span>
+            <span class="n">con_or_para_divi</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">con_or_para_divi</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+
+    <span class="c"># initialize the list of dict of (part: occurance)</span>
+    <span class="n">part_occu_ld</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_len</span><span class="p">):</span>  <span class="c"># wordLenPerGroup is the maximum number of positions in one group</span>
+        <span class="n">word_occu_d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">part_occu_ld</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word_occu_d</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">group_len</span><span class="p">):</span>  <span class="c"># the j-th word sequence</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">con_or_para_divi</span><span class="p">[</span><span class="n">j</span><span class="p">])):</span>  <span class="c"># the k-th word in word sequence</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">con_or_para_divi</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">part_occu_ld</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+                <span class="n">part_occu_ld</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">continue</span>
+            <span class="n">part_occu_ld</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">num_of_diff_parts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">num_of_posi</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">part_occu_ld</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_posi</span><span class="p">):</span>
+        <span class="n">num_of_diff_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">part_occu_ld</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+    <span class="n">min_num</span> <span class="o">=</span> <span class="n">inf</span>
+    <span class="n">min_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_posi</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">num_of_diff_parts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">num_of_diff_parts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">threshold2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">num_of_diff_parts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_num</span><span class="p">:</span>
+                <span class="n">min_num</span> <span class="o">=</span> <span class="n">num_of_diff_parts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">min_num</span> <span class="o">==</span> <span class="n">inf</span><span class="p">:</span>
+        <span class="n">splittable</span> <span class="o">=</span> <span class="s">&#39;no&#39;</span>
+        <span class="c"># no minmum that smaller than threshold2, which means all position except are parameters, no need to split</span>
+        <span class="n">return_values</span><span class="p">[</span><span class="s">&#39;splittable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;no&#39;</span>
+        <span class="k">return</span> <span class="n">return_values</span>
+
+    <span class="n">index_of_min_item</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_posi</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">num_of_diff_parts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">min_num</span><span class="p">:</span>
+            <span class="n">index_of_min_item</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">index_of_min_item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">min_index</span> <span class="o">=</span> <span class="n">index_of_min_item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c"># minmum position</span>
+
+    <span class="c"># multiple position that has same minmum num of words</span>
+    <span class="n">min_entropy</span> <span class="o">=</span> <span class="n">inf</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">index_of_min_item</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">index_of_min_item</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">entropy_j</span> <span class="o">=</span> <span class="n">entropy</span><span class="p">(</span><span class="n">part_occu_ld</span><span class="p">[</span><span class="n">index_of_min_item</span><span class="p">[</span><span class="n">j</span><span class="p">]],</span> <span class="n">num_of_diff_parts</span><span class="p">[</span><span class="n">index_of_min_item</span><span class="p">[</span><span class="n">j</span><span class="p">]])</span>
+            <span class="k">if</span> <span class="n">entropy_j</span> <span class="o">&lt;</span> <span class="n">min_entropy</span><span class="p">:</span>
+                <span class="n">min_entropy</span> <span class="o">=</span> <span class="n">entropy_j</span>
+                <span class="n">min_index</span> <span class="o">=</span> <span class="n">j</span>
+
+    <span class="n">diff_word_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">part_occu_ld</span><span class="p">[</span><span class="n">min_index</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">return_values</span><span class="p">[</span><span class="s">&#39;splittable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;yes&#39;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">diff_word_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">return_values</span><span class="p">[</span><span class="s">&#39;splittable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;no&#39;</span>
+    <span class="n">return_values</span><span class="p">[</span><span class="s">&#39;minIndex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_index</span>
+    <span class="n">return_values</span><span class="p">[</span><span class="s">&#39;diffWordList&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff_word_list</span>
+    <span class="n">return_values</span><span class="p">[</span><span class="s">&#39;conOrParaDivi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">con_or_para_divi</span>
+    <span class="k">return</span> <span class="n">return_values</span>
+
+</div>
+<div class="viewcode-block" id="com_exit"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.com_exit">[docs]</a><span class="k">def</span> <span class="nf">com_exit</span><span class="p">(</span><span class="n">common_part</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">itemI</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">itemI</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">common_part</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+
+<span class="c"># find the common part of two sequences</span></div>
+<div class="viewcode-block" id="lcs"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.lcs">[docs]</a><span class="k">def</span> <span class="nf">lcs</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="n">seq2</span><span class="p">):</span>
+    <span class="n">lengths</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="c"># row 0 and column 0 are initialized to 0 already</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq1</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq2</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">seq1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">seq2</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                <span class="n">lengths</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">lengths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lengths</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">lengths</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">lengths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="c"># read the substring out from the matrix</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">len_of_seq1</span><span class="p">,</span> <span class="n">len_of_seq2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq1</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq2</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">len_of_seq1</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">len_of_seq2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lengths</span><span class="p">[</span><span class="n">len_of_seq1</span><span class="p">][</span><span class="n">len_of_seq2</span><span class="p">]</span> <span class="o">==</span> <span class="n">lengths</span><span class="p">[</span><span class="n">len_of_seq1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="n">len_of_seq2</span><span class="p">]:</span>
+            <span class="n">len_of_seq1</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">lengths</span><span class="p">[</span><span class="n">len_of_seq1</span><span class="p">][</span><span class="n">len_of_seq2</span><span class="p">]</span> <span class="o">==</span> <span class="n">lengths</span><span class="p">[</span><span class="n">len_of_seq1</span><span class="p">][</span><span class="n">len_of_seq2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="n">len_of_seq2</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">seq1</span><span class="p">[</span><span class="n">len_of_seq1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">seq2</span><span class="p">[</span><span class="n">len_of_seq2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">seq1</span><span class="p">[</span><span class="n">len_of_seq1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">len_of_seq1</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">len_of_seq2</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="newappend"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.newappend">[docs]</a><span class="k">def</span> <span class="nf">newappend</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">word_list</span><span class="p">,</span> <span class="n">newcon_or_para</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">newcon_or_para</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">newcon_or_para</span>
+
+</div>
+<div class="viewcode-block" id="entropy"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.entropy">[docs]</a><span class="k">def</span> <span class="nf">entropy</span><span class="p">(</span><span class="n">words_on_posit</span><span class="p">,</span> <span class="n">total_num</span><span class="p">):</span>
+    <span class="n">entropy</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">words_on_posit</span><span class="p">:</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">words_on_posit</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">/</span> <span class="n">total_num</span>
+        <span class="n">entropy</span> <span class="o">-=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">*</span> <span class="n">temp</span>
+    <span class="k">return</span> <span class="n">entropy</span>
+
+</div>
+<div class="viewcode-block" id="dfs_traversal"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.dfs_traversal">[docs]</a><span class="k">def</span> <span class="nf">dfs_traversal</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">log_dict</span><span class="p">,</span> <span class="n">flag</span><span class="p">,</span> <span class="n">group_loglist</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">log_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">group_loglist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+            <span class="n">flag</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">dfs_traversal</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">log_dict</span><span class="p">,</span> <span class="n">flag</span><span class="p">,</span> <span class="n">group_loglist</span><span class="p">)</span>
+
+
+<span class="c"># k-means where k equals 2 to divide the edit distance into two groups</span></div>
+<div class="viewcode-block" id="getk_means_threshold"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.getk_means_threshold">[docs]</a><span class="k">def</span> <span class="nf">getk_means_threshold</span><span class="p">(</span><span class="n">dist_array</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;kMeans calculation...&#39;</span><span class="p">)</span>
+    <span class="n">dist_array_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_array</span><span class="p">)</span>
+    <span class="c"># random choose two centroids</span>
+    <span class="n">min_value</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">dist_array</span><span class="p">)</span>
+    <span class="n">centroids</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">range_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">dist_array</span><span class="p">)</span> <span class="o">-</span> <span class="n">min_value</span><span class="p">)</span>
+    <span class="n">centroids</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">range_value</span> <span class="o">+</span> <span class="n">min_value</span>
+    <span class="n">max_inner_dist</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">cluster_changed</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">cluster_assment</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">dist_array_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">while</span> <span class="n">cluster_changed</span><span class="p">:</span>
+        <span class="n">cluster_changed</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dist_array_size</span><span class="p">):</span>
+            <span class="n">min_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">dist_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">centroids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">dist_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">centroids</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">min_index</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">min_index</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">cluster_assment</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">min_index</span><span class="p">:</span>
+                <span class="n">cluster_changed</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">cluster_assment</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_index</span>
+        <span class="k">for</span> <span class="n">cent</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">indexs</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">cluster_assment</span> <span class="o">==</span> <span class="n">cent</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dis_in_clust</span> <span class="o">=</span> <span class="n">dist_array</span><span class="p">[</span><span class="n">indexs</span><span class="p">]</span>
+            <span class="n">max_inner_dist</span><span class="p">[</span><span class="n">cent</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">dis_in_clust</span><span class="p">)</span>
+            <span class="n">centroids</span><span class="p">[</span><span class="n">cent</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">dis_in_clust</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_inner_dist</span><span class="p">)</span>
+
+
+<span class="c"># calculate the distance betweent each two logs and save into a matrix</span></div>
+<div class="viewcode-block" id="cal_distance"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.cal_distance">[docs]</a><span class="k">def</span> <span class="nf">cal_distance</span><span class="p">(</span><span class="n">word_ll</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;calculate distance between every two logs...&#39;</span><span class="p">)</span>
+    <span class="n">log_num</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_ll</span><span class="p">)</span>
+    <span class="n">dist_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dist_mat</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">log_num</span><span class="p">,</span> <span class="n">log_num</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">log_num</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">log_num</span><span class="p">):</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">edit_dist_of_seq</span><span class="p">(</span><span class="n">word_ll</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">word_ll</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">v</span><span class="p">)</span>
+            <span class="n">dist_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist_mat</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span>
+            <span class="n">dist_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+    <span class="n">dist_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">dist_list</span><span class="p">)</span>
+    <span class="n">savetxt</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s">&#39;editDistance.csv&#39;</span><span class="p">,</span> <span class="n">dist_mat</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+    <span class="n">savetxt</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s">&#39;distArray.csv&#39;</span><span class="p">,</span> <span class="n">dist_array</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dist_mat</span><span class="p">,</span> <span class="n">dist_array</span>
+
+
+<span class="c"># the edit distance of two logs</span></div>
+<div class="viewcode-block" id="edit_dist_of_seq"><a class="viewcode-back" href="../../../pygraphc.misc.html#pygraphc.misc.LKE.edit_dist_of_seq">[docs]</a><span class="k">def</span> <span class="nf">edit_dist_of_seq</span><span class="p">(</span><span class="n">word_list1</span><span class="p">,</span> <span class="n">word_list2</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_list2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">t</span><span class="p">])</span>
+        <span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">word_list1</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">word_list2</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">weight</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">minimum</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">weight</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">weight</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">weight</span><span class="p">)</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">minimum</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">d</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hudan Studiawan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>
