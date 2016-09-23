@@ -50,7 +50,7 @@ class Para:
     def __init__(self, path='', logname='', save_path='',
                  save_file_name='template', max_event_len=120, step2support=0, pst=0.0,
                  ct=0.175, lower_bound=0.25, upper_bound=0.9, use_pst=False,
-                 removable=True, remove_col=[0], regular=True, rex=['([0-9]+\.){3}[0-9]']):
+                 removable=True, remove_col=[], regular=True, rex=['([0-9]+\.){3}[0-9]']):
         """This is the constructor of class Para.
 
         Parameters
