@@ -17,3 +17,4 @@
 
 from client import GephiClient, GephiFileHandler
 
+import pygraphc.pygephi.client
