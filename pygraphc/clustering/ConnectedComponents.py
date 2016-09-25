@@ -4,8 +4,10 @@ import networkx as nx
 class ConnectedComponents:
     """This is a class for connected component detection method to cluster event logs [1]_.
 
+    References
+    ----------
     .. [1] H. Studiawan, B. A. Pratomo, and R. Anggoro, Connected component detection for authentication log
-       clustering, in Proceedings of the International Seminar on Science and Technology, 2016, pp. 495-496.
+           clustering, in Proceedings of the International Seminar on Science and Technology, 2016, pp. 495-496.
     """
     def __init__(self, g):
         """This is a constructor for ConnectedComponent class
