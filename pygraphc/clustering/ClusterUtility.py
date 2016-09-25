@@ -59,9 +59,14 @@ class ClusterUtility(object):
             label_counter = dict((cl, 0) for cl in cluster_labels)
             for c in cluster:
                 # get all original_logs per cluster
-                members = graph.node[c]['member']
-                for member in members:
-                    logs_per_cluster.append(original_logs[member])
+                # for graph-based clustering
+                if graph:
+                    members = graph.node[c]['member']
+                    for member in members:
+                        logs_per_cluster.append(original_logs[member])
+                # for non graph-based clustering
+                elif graph is None:
+                    logs_per_cluster.append(original_logs[c])
 
                 # get dominant label in cluster
                 for label in cluster_labels:
@@ -76,15 +81,20 @@ class ClusterUtility(object):
             if dominant_label_counter[0][0] in [labels[0] for labels in dominant_cluster_labels.values()]:
                 # get existing counter
                 existing_counter = 0
+                existing_label = ''
                 for ec in dominant_cluster_labels.values():
                     if ec[0] == dominant_label_counter[0][0]:
                         existing_counter = ec[1]
+                        existing_label = ec[0]
 
                 # check for which one is more dominant
                 if dominant_label_counter[0][1] > existing_counter:
                     # get existing cluster with lower existing counter
+                    print dominant_cluster_labels.keys()
+                    print dominant_cluster_labels.values()
                     existing_cluster = \
-                        dominant_cluster_labels.keys()[dominant_cluster_labels.values().index(existing_counter)]
+                        dominant_cluster_labels.keys()[dominant_cluster_labels.values().index((existing_label,
+                                                                                              existing_counter))]
                     for c in cluster:
                         new_cluster_member_label[c] = cluster_labels.index(dominant_label_counter[0][0])
                     # set old cluster to max_cluster_id + 1
@@ -100,16 +110,22 @@ class ClusterUtility(object):
                 for c in cluster:
                     new_cluster_member_label[c] = cluster_labels.index(dominant_label_counter[0][0])
 
-        # set new cluster label
-        for node_id, new_label in new_cluster_member_label.iteritems():
-            graph.node[node_id]['cluster'] = new_label
-
-        # get sorted log line id - cluster id results
         analysis_result = {}
-        for node in graph.nodes_iter(data=True):
-            members = node[1]['member']
-            for member in members:
-                analysis_result[member] = new_cluster_member_label[node[0]]
+        if graph:
+            # set new cluster label
+            for node_id, new_label in new_cluster_member_label.iteritems():
+                graph.node[node_id]['cluster'] = new_label
+
+            # set new cluster id for each cluster member
+            for node in graph.nodes_iter(data=True):
+                members = node[1]['member']
+                for member in members:
+                    analysis_result[member] = new_cluster_member_label[node[0]]
+        elif graph is None:
+            for cluster in clusters:
+                for c in cluster:
+                    analysis_result[c] = new_cluster_member_label[c]
+        # get sorted log line id - cluster id results
         sorted(analysis_result.items(), key=itemgetter(0))
 
         # write clustering result to file (clustering result for all members in a node)
