@@ -92,6 +92,7 @@ class IPLoM:
         self.partitions_L = []
         self.eventsL = []
         self.output = []
+        self.logs = []
 
         # Initialize some partitions which contain logs with different length
         for logLen in range(self.para.maxEventLen + 1):
@@ -129,7 +130,7 @@ class IPLoM:
         with open(self.para.path + self.para.logname) as lines:
             line_count = 1
             for line in lines:
-
+                self.logs.append(line)
                 # If line is empty, skip
                 if line.strip() == "":
                     continue
@@ -700,10 +701,13 @@ class IPLoM:
             if self.partitions_L[idx].valid:
                 cluster = []
                 for log in self.partitions_L[idx].logLL:
-                    cluster.append(log[-2])
+                    cluster.append(int(log[-2])-1)          # zero-based index
                 clusters.append(cluster)
 
         return clusters
+
+    def get_logs(self):
+        return self.logs
 
     def print_event_stats(self):
         for event in self.eventsL:
