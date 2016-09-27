@@ -134,6 +134,9 @@ class LKE:
 
         return clusters
 
+    def get_logs(self):
+        return self.logs
+
     # split the current group recursively.
     def splitting(self):
         print ('splitting into different groups...')
