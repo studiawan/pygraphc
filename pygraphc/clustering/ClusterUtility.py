@@ -90,8 +90,6 @@ class ClusterUtility(object):
                 # check for which one is more dominant
                 if dominant_label_counter[0][1] > existing_counter:
                     # get existing cluster with lower existing counter
-                    print dominant_cluster_labels.keys()
-                    print dominant_cluster_labels.values()
                     existing_cluster = \
                         dominant_cluster_labels.keys()[dominant_cluster_labels.values().index((existing_label,
                                                                                               existing_counter))]
