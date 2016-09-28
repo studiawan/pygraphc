@@ -5,11 +5,49 @@ from ClusterUtility import ClusterUtility
 
 
 class MaxCliquesPercolation(KCliquePercolation):
+    """This class find maximal cliques and their percolation in a graph.
+
+    The procedure will find any intersection (percolation) between any maximal cliques found.
+    The cluster is defined as percolated maximal cliques.
+
+    References
+    ----------
+    .. [1] Guimei Liu, Limsoon Wong, and Hon Nian Chua. Complex discovery from weighted PPI networks.
+           Bioinformatics, 25(15):1891-1897, 2009.
+    .. [2] Fergal Reid, Aaron McDaid, and Neil Hurley. Percolation computation in complex networks.
+           In Proceedings of the 2012 IEEE/ACM International Conference on Advances in Social Networks
+           Analysis and Mining, pp. 274-281, 2012.
+    """
     def __init__(self, graph, edges_weight, nodes_id, k):
+        """This is the constructor of class MaxCliquesPercolation
+
+        Parameters
+        ----------
+        graph           : graph
+            Graph to be clustered.
+        edges_weight    : list[tuple]
+            List of tuple containing (node1, node2, cosine similarity between these two).
+        nodes_id        : list
+            List of all node identifier.
+        k               : int
+            Number of percolation or intersection between an individual clique.
+        """
         super(MaxCliquesPercolation, self).__init__(graph, edges_weight, nodes_id, k)
         self.max_cliques = None
 
     def get_maxcliques_percolation(self):
+        """The main method to find clusters based on maximal clique percolation.
+
+        The first step is to build temporary graph (percolation graph). Then the procedure finds
+        all maximal cliques in the graph. Next, it looks for percolation between cliques.
+        This method then remove any edges that connecting two vertices but has different clusters.
+
+        Returns
+        -------
+        clusters    : list[frozenset]
+            List of frozenset containing node identifier (node id in integer).
+
+        """
         print 'get_maxcliques_percolation ...'
         super(MaxCliquesPercolation, self)._build_temp_graph()
         maxcliques = self._find_maxcliques()
@@ -21,9 +59,23 @@ class MaxCliquesPercolation(KCliquePercolation):
         return clusters
 
     def get_maxcliques(self):
+        """Get enumerated maximal cliques.
+
+        Returns
+        -------
+        max_cliques : list[frozenset]
+            List of frozenset containing node id for each maximal clique.
+        """
         return self.max_cliques
 
     def _find_maxcliques(self):
+        """Find maximal cliques using `find_clique` function from NetworkX.
+
+        Returns
+        -------
+        maxcliques  : list[frozenset]
+            List of frozenset containing node id for each maximal clique.
+        """
         maxcliques = list(frozenset(c) for c in nx.find_cliques(self.graph) if len(c) >= self.k)
         self.max_cliques = maxcliques
         return maxcliques
