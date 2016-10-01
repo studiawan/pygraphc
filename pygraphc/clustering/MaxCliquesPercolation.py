@@ -46,7 +46,6 @@ class MaxCliquesPercolation(KCliquePercolation):
         -------
         clusters    : list[frozenset]
             List of frozenset containing node identifier (node id in integer).
-
         """
         print 'get_maxcliques_percolation ...'
         super(MaxCliquesPercolation, self)._build_temp_graph()
@@ -82,16 +81,56 @@ class MaxCliquesPercolation(KCliquePercolation):
 
 
 class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
+    """This is a class for maximal clique percolation with edge weight [1]_.
+
+    Edge weight is evaluated using intensity threshold or the geometric mean
+    for all edge weights in a maximal clique [2]_. We then remove the overlapping nodes
+    where a node only follow the weighter neighboring cluster [2]_.
+
+    References
+    ----------
+    .. [1] Guimei Liu, Limsoon Wong, and Hon Nian Chua. Complex discovery from
+           weighted PPI networks. Bioinformatics, 25(15):1891-1897, 2009.
+    .. [2] H. Studiawan, C. Payne, F. Sohel, SSH log clustering using weighted
+           maximal clique percolation (to be submitted).
+    """
     def __init__(self, graph, edges_weight, nodes_id, k, threshold):
+        """This is the constructor of class MaxCliquePercolation Weighted.
+
+        The parameters are the same with its parent class but we add a threshold
+        for the intensity for maximal clique found.
+
+        Parameters
+        ----------
+        graph           : graph
+            Graph to be clustered.
+        edges_weight    : list[tuple]
+            List of tuple containing (node1, node2, cosine similarity between these two).
+        nodes_id        : list
+            List of all node identifier.
+        k               : int
+            Number of percolation or intersection between an individual clique.
+        threshold       : float
+            Threshold for intensity of maximal clique.
+        """
         super(MaxCliquesPercolationWeighted, self).__init__(graph, edges_weight, nodes_id, k)
         self.threshold = threshold
         self.percolation_dict = {}
 
     def get_maxcliques_percolation_weighted(self):
+        """This is the main method for maximal clique percolation for edge-weighted graph.
+
+        Returns
+        -------
+        clusters    : list[frozenset]
+            List of frozenset containing node identifier (node id in integer).
+        """
         maxcliques = self._find_maxcliques()
         super(MaxCliquesPercolationWeighted, self)._get_percolation_graph(maxcliques)
         percolations = super(MaxCliquesPercolationWeighted, self).get_clique_percolation()
         self.__set_percolation_dict(percolations)
+
+        # remove overlapping nodes
         for p1, p2 in combinations(percolations, 2):
             intersections = p1.intersection(p2)
             if intersections:
@@ -101,6 +140,7 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
                     p1_neighbors_weight = self.__get_neighbors_weight(node, p1_neighbors)
                     p2_neighbors_weight = self.__get_neighbors_weight(node, p2_neighbors)
 
+                    # follow the neighboring cluster which has bigger sum of edge-weight
                     self.percolation_dict[node] = self.percolation_dict[list(p1_neighbors)[0]] \
                         if p1_neighbors_weight > p2_neighbors_weight else self.percolation_dict[list(p2_neighbors)[0]]
 
@@ -109,6 +149,13 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         return clusters
 
     def _find_maxcliques(self):
+        """Find maximal clique which satisfy the threshold given by user.
+
+        Returns
+        -------
+        weighted_maxcliques : list[frozenset]
+            List of frozenset containing node identifier for each weighted maximal clique.
+        """
         maxcliques = super(MaxCliquesPercolationWeighted, self)._find_maxcliques()
         weighted_maxcliques = ClusterUtility.get_weighted_cliques(self.graph, maxcliques, self.threshold)
         self.max_cliques = weighted_maxcliques
@@ -116,6 +163,13 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         return weighted_maxcliques
 
     def __set_percolation_dict(self, percolations):
+        """Set dictionary of node id and its index in percolations.
+
+        Parameters
+        ----------
+        percolations    : list[frozenset]
+            List of frozenset containing nodes id for each maximal clique.
+        """
         nodes = self.graph.nodes()
         percolations_merged = []
         for index, percolation in enumerate(percolations):
@@ -133,6 +187,19 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
                 other_cluster += 1
 
     def __get_neighbors_weight(self, node, neighbors):
+        """Get all weight of neighboring cluster.
+
+        Parameters
+        ----------
+        node        : int
+            Node identifier
+        neighbors   : list[int]
+            List of node identifier of intersection between two clusters
+        Returns
+        -------
+        weight  : int
+            Sum of all edge weight from specific neighboring cluster.
+        """
         weight = 0
         for n in neighbors:
             weight += self.graph[node][n][0]['weight']
@@ -140,11 +207,25 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         return weight
 
     def __set_graph_cluster(self):
+        """Set cluster id in the given graph.
+
+        Returns
+        -------
+        self.graph  : graph
+            Graph with updated cluster identifier after cluster processing.
+        """
         for node in self.graph.nodes_iter(data=True):
             self.graph.node[node[0]]['cluster'] = self.percolation_dict[node[0]]
         return self.graph
     
     def __get_clusters(self):
+        """Get maximal clique percolation as clusters.
+
+        Returns
+        -------
+        clusters    : list[list]
+            List of list containing node identifier for each cluster found.
+        """
         cluster_ids = set(self.percolation_dict.values())
         clusters = []
         for ids in cluster_ids:
