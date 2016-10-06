@@ -11,4 +11,4 @@ Event log clustering tool using Python.
 * numpy
 
 # License
-MIT License. Please check [![LICENSE][(https://github.com/studiawan/pygraphc/blob/master/LICENSE)]]
+MIT License. Please check [LICENSE](https://github.com/studiawan/pygraphc/blob/master/LICENSE).
