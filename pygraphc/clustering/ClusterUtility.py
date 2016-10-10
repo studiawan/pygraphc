@@ -132,3 +132,14 @@ class ClusterUtility(object):
             cluster_label = 'undefined' if cluster_id > max_cluster_id else cluster_labels[cluster_id]
             fopen.write(str(cluster_id) + '; ' + cluster_label + '; ' + original_logs[rowid])
         fopen.close()
+
+    @staticmethod
+    def get_cluster_property(graph, clusters):
+        cluster_property = {}      # event log frequency per cluster
+        for cluster_id, nodes in clusters.iteritems():
+            properties = {}
+            for node_id in nodes:
+                properties['frequency'] = properties.get('frequency', 0) + graph.node[node_id]['frequency']
+            cluster_property[cluster_id] = properties
+
+        return cluster_property
