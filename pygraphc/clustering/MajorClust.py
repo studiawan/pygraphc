@@ -1,16 +1,33 @@
+from ClusterUtility import ClusterUtility
+
 
 class MajorClust(object):
+    """The implementation of MajorClust graph clustering algorithm [1]_.
+
+    References
+    ----------
+    .. [1] B. Stein and O. Niggemann, On the nature of structure and its identification,
+           Proceedings of the 25th International Workshop on Graph-Theoretic Concepts in Computer Science,
+           pp. 122-134, 1999.
+    """
     def __init__(self, graph):
         self.graph = graph
+        self.clusters = {}
+        self.cluster_property = {}
 
     def get_majorclust(self):
+        self._majorclust()
+        self._get_cluster()
+        self.cluster_property = ClusterUtility.get_cluster_property(self.graph, self.clusters)
+
+    def _majorclust(self):
         reclusters = set()
         terminate = False
         while not terminate:
             terminate = True
             for node in self.graph.nodes_iter(data=True):
                 initial_cluster = node[1]['cluster']
-                current_cluster = self._sub_majorclust(node, g)
+                current_cluster = self._re_majorclust(node)
                 recluster = (node[0], initial_cluster, current_cluster)
 
                 # if has not checked, recluster again
@@ -19,7 +36,7 @@ class MajorClust(object):
                     node[1]['cluster'] = current_cluster
                     terminate = False
 
-    def _sub_majorclust(self, node):
+    def _re_majorclust(self, node):
         # reclustering
         visited_neighbor, visited_neigbor_num, neighbor_weights = {}, {}, {}
 
@@ -38,3 +55,15 @@ class MajorClust(object):
             node[1]['cluster']
 
         return current_cluster
+
+    def _get_cluster(self):
+        cluster = [n[1]['cluster'] for n in self.graph.nodes_iter(data='cluster')]
+        unique_cluster = set(cluster)
+        cluster_id = 0
+        for uc in unique_cluster:
+            nodes = []
+            for node in self.graph.nodes_iter(data='True'):
+                if node[1]['cluster'] == uc:
+                    nodes.append(node[1]['cluster'])
+            self.clusters[cluster_id] = nodes
+            cluster_id += 1
