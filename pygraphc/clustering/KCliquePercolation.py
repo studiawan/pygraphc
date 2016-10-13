@@ -5,16 +5,18 @@ from ClusterUtility import ClusterUtility
 
 
 class KCliquePercolation(object):
-    """This is a class for graph clustering based on k-clique percolation.
+    """This is a class for graph clustering based on k-clique percolation [1]_.
 
     The procedure will find k-clique. If there is any percolation between k-cliques, it will be set as a cluster.
-    The unnecessary edges will be removed. The use of this method for event log clustering was presented in [1]_.
+    The unnecessary edges will be removed. The use of this method for event log clustering was presented in [2]_.
 
     References
     ----------
-    .. [1] H. Studiawan, B. A. Pratomo, and R. Anggoro, Clustering of SSH brute-force attack logs using
+    .. [1] I. J. Farkas, D. Abel, G. Palla, and T. Vicsek, Weighted network modules,
+           New Journal of Physics, 9(6), p. 180, 2007.
+    .. [2] H. Studiawan, B. A. Pratomo, and R. Anggoro, Clustering of SSH brute-force attack logs using
            k-clique percolation, in Proceedings of the 10th International Conference on Information Communication
-           Technology and Systems, 2016.
+           Technology and Systems, pp. 33-36, 2016.
     """
     def __init__(self, graph, edges_weight, nodes_id, k):
         """This is a constructor for class KCliquePercolation.
@@ -38,7 +40,7 @@ class KCliquePercolation(object):
         self.g = None
         self.percolated_nodes = []
         self.removed_edges = []
-        self.clique_percolation = []
+        self.clique_percolation = {}
 
     def get_percolation_nodes(self):
         """Get percolation nodes after finished clustering.
@@ -65,8 +67,8 @@ class KCliquePercolation(object):
 
         Returns
         -------
-        clique_percolation  : list[frozenset]
-            List of nodes in each cluster in frozenset.
+        clique_percolation  : dict[frozenset]
+            Dictionary of nodes in each cluster in frozenset.
         """
         return self.clique_percolation
 
@@ -75,7 +77,7 @@ class KCliquePercolation(object):
 
         Returns
         -------
-        clusters    : list[list]
+        clusters    : dict[list]
             List of list containing nodes identifier for each cluster.
         """
         print 'get_kclique_percolation ...'
@@ -190,9 +192,10 @@ class KCliquePercolation(object):
                 percolation_graph.add_edge(clique1, clique2)
 
         # Get all connected component in percolation graph
-        self.clique_percolation = []
+        cluster_id = 0
         for component in nx.connected_components(percolation_graph):
-            self.clique_percolation.append(frozenset.union(*component))
+            self.clique_percolation[cluster_id] = frozenset.union(*component)
+            cluster_id += 1
 
         # set cluster id
         ClusterUtility.set_cluster_id(self.graph, self.clique_percolation)
@@ -220,12 +223,14 @@ class KCliquePercolation(object):
 
         Returns
         -------
-        clusters    : list[list]
-            List of list containing nodes identifier for each cluster.
+        clusters    : dict[list]
+            Dictionary of list containing nodes identifier for each cluster.
         """
-        clusters = []
-        for component in nx.connected_components(self.g):
-            clusters.append(component)
+        clusters = {}
+        cluster_id = 0
+        for components in nx.connected_components(self.g):
+            clusters[cluster_id] = components
+            cluster_id += 1
 
         # refine cluster id
         ClusterUtility.set_cluster_id(self.graph, clusters)
