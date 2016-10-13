@@ -20,6 +20,8 @@ class MajorClust(object):
         self._get_cluster()
         self.cluster_property = ClusterUtility.get_cluster_property(self.graph, self.clusters)
 
+        return self.clusters
+
     def _majorclust(self):
         reclusters = set()
         terminate = False
