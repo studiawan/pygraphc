@@ -44,7 +44,7 @@ class MaxCliquesPercolation(KCliquePercolation):
 
         Returns
         -------
-        clusters    : list[frozenset]
+        clusters    : dict[frozenset]
             List of frozenset containing node identifier (node id in integer).
         """
         print 'get_maxcliques_percolation ...'
@@ -122,7 +122,7 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
 
         Returns
         -------
-        clusters    : list[frozenset]
+        clusters    : dict[frozenset]
             List of frozenset containing node identifier (node id in integer).
         """
         maxcliques = self._find_maxcliques()
@@ -131,6 +131,7 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         self.__set_percolation_dict(percolations)
 
         # remove overlapping nodes
+        percolations = percolations.values()
         for p1, p2 in combinations(percolations, 2):
             intersections = p1.intersection(p2)
             if intersections:
@@ -167,12 +168,12 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
 
         Parameters
         ----------
-        percolations    : list[frozenset]
-            List of frozenset containing nodes id for each maximal clique.
+        percolations    : dict[frozenset]
+            Dictionary of frozenset containing nodes id for each maximal clique.
         """
         nodes = self.graph.nodes()
         percolations_merged = []
-        for index, percolation in enumerate(percolations):
+        for index, percolation in percolations.iteritems():
             for p in percolation:
                 self.percolation_dict[p] = index
 
@@ -207,7 +208,7 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         return weight
 
     def __set_graph_cluster(self):
-        """Set cluster id in the given graph.
+        """Set cluster id in the given graph based on percolation dictionary.
 
         Returns
         -------
@@ -219,20 +220,22 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         return self.graph
     
     def __get_clusters(self):
-        """Get maximal clique percolation as clusters.
+        """Get maximal clique percolation as clusters with incremental cluster id.
 
         Returns
         -------
-        clusters    : list[list]
-            List of list containing node identifier for each cluster found.
+        clusters    : dict[list]
+            Dictionary of list containing node identifier for each cluster found.
         """
         cluster_ids = set(self.percolation_dict.values())
-        clusters = []
+        clusters = {}
+        cluster_idx = 0
         for ids in cluster_ids:
             cluster = []
             for node, cluster_id in self.percolation_dict.iteritems():
                 if ids == cluster_id:
                     cluster.append(node)
-            clusters.append(cluster)
+            clusters[cluster_idx] = cluster
+            cluster_idx += 1
 
         return clusters
