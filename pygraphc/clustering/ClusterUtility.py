@@ -33,11 +33,9 @@ class ClusterUtility(object):
 
     @staticmethod
     def set_cluster_id(graph, clusters):
-        cluster_id = 0
-        for cluster in clusters:
+        for cluster_id, cluster in clusters.iteritems():
             for node in cluster:
                 graph.node[node]['cluster'] = cluster_id
-            cluster_id += 1
 
     @staticmethod
     def set_cluster_label_id(graph, clusters, original_logs, analysis_dir):
@@ -54,7 +52,7 @@ class ClusterUtility(object):
                           'unable open env file', 'dispatch protocol error', 'syslogin perform logout']
         max_cluster_id = len(cluster_labels) - 1
 
-        for cluster in clusters:
+        for cluster_id, cluster in clusters.iteritems():
             logs_per_cluster = []
             label_counter = dict((cl, 0) for cl in cluster_labels)
             for c in cluster:
