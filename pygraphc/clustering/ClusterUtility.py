@@ -3,21 +3,55 @@ from operator import itemgetter
 
 
 class ClusterUtility(object):
+    """A class contains some utilities to do clustering algorithm.
+    """
     @staticmethod
     def get_geometric_mean(weights):
+        """Get geometric mean or intensity in a clique. A clique can be a k-clique or maximal clique.
+
+        Parameters
+        ----------
+        weights : list[float]
+            List of edge weight in a clique.
+
+        Returns
+        -------
+        gmean   : float
+            Geometric mean of given edge weights.
+        """
         multiplication = 1
         for weight in weights:
-            multiplication = multiplication * weight
+            multiplication *= weight
 
         gmean = 0.0
         if multiplication > 0.0:
             k = float(len(weights))
             gmean = multiplication ** (1 / k)
 
-        return round(gmean, 5)
+        gmean = round(gmean, 5)
+        return gmean
 
     @staticmethod
     def get_weighted_cliques(graph, cliques, threshold):
+        """Get weighted cliques based on given intensity threshold.
+
+        A clique which its weight are less then threshold is omiited.
+        This procedure will filter unsignificant cliques.
+
+        Parameters
+        ----------
+        graph       : graph
+            A graph to check for its weighted cliques.
+        cliques     : list[list]
+            List of clique list found.
+        threshold   : float
+            Intensity (geometric mean) threshold.
+
+        Returns
+        -------
+        weighted_cliques    : list[list]
+            List of clique with significant weight.
+        """
         weighted_kcliques = []
         for clique in cliques:
             weights = []
@@ -33,12 +67,40 @@ class ClusterUtility(object):
 
     @staticmethod
     def set_cluster_id(graph, clusters):
+        """Set incremental cluster identifier start from 0.
+
+        Parameters
+        ----------
+        graph       : graph
+            Graph to be set for its cluster id.
+        clusters    : dict[list]
+            Dictionary contains list of node in a particular cluster.
+        """
         for cluster_id, cluster in clusters.iteritems():
             for node in cluster:
                 graph.node[node]['cluster'] = cluster_id
 
     @staticmethod
     def set_cluster_label_id(graph, clusters, original_logs, analysis_dir):
+        """Get all logs per cluster, get most dominant cluster label, and write clustering result to file.
+
+        Parameters
+        ----------
+        graph           : graph
+            Graph to be analyzed.
+        clusters        : dict[list]
+            Dictionary contains sequence of nodes in all clusters.
+        original_logs   : list
+            List of event logs.
+        analysis_dir    : str
+            Path to save the analysis result.
+
+        References
+        ----------
+        .. [1] Christopher D. Manning, Prabhakar Raghavan & Hinrich Schutze, Evaluation of clustering,
+               in Introduction to Information Retrieval, 2008, Cambridge University Press.
+               http://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-clustering-1.html
+        """
         new_cluster_member_label = {}   # store individiual cluster id for each cluster member
         dominant_cluster_labels = {}    # store dominant cluster label from all clusters
         cluster_labels = ['accepted password', 'accepted publickey', 'authentication failure', 'check pass',
@@ -133,6 +195,20 @@ class ClusterUtility(object):
 
     @staticmethod
     def get_cluster_property(graph, clusters):
+        """Get cluster property.
+
+        Parameters
+        ----------
+        graph       : graph
+            Graph to be analyzed.
+        clusters    : dict[list]
+            Dictionary contains sequence of nodes in all clusters.
+
+        Returns
+        -------
+        cluster_property    : dict[dict]
+            Property of a cluster. For example: frequency of event logs.
+        """
         cluster_property = {}      # event log frequency per cluster
         for cluster_id, nodes in clusters.iteritems():
             properties = {}
