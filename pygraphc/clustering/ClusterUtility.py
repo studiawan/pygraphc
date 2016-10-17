@@ -42,7 +42,7 @@ class ClusterUtility(object):
         ----------
         graph       : graph
             A graph to check for its weighted cliques.
-        cliques     : list[list]
+        cliques     : list[frozenset]
             List of clique list found.
         threshold   : float
             Intensity (geometric mean) threshold.
@@ -90,7 +90,7 @@ class ClusterUtility(object):
             Graph to be analyzed.
         clusters        : dict[list]
             Dictionary contains sequence of nodes in all clusters.
-        original_logs   : list
+        original_logs   :
             List of event logs.
         analysis_dir    : str
             Path to save the analysis result.
