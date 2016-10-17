@@ -3,7 +3,7 @@ from time import sleep
 from random import uniform
 
 
-class GraphStreaming:
+class GraphStreaming(object):
     def __init__(self, graph_clusters, edges, sleep_time=0):
         self.g = graph_clusters
         self.edges = edges
