@@ -12,6 +12,33 @@ from pygraphc.clustering.ClusterEvaluation import ClusterEvaluation
 
 
 def main():
+    """This is the main function to run pygraphc in one line command.
+
+    Returns
+    -------
+    len(nodes_id)       : int
+        Number of nodes in the analyzed graph.
+    len(edges)          : int
+        Number of edges in the processed graph.
+    len(removed_edges)  : int
+        Number of removed edges after clustering.
+    len(clusters)       : int
+        Number of generated clusters.
+    options.k           : int
+        Number of percolation (intersection) in k-clique or maximal clique method.
+    options.g           : float
+        Threshold of geometric mean.
+    options.c           : float
+        Threshold for cosine similarity while creating edges.
+    adj_rand_score      : float
+        Adjusted rand index.
+    adj_mutual_info_score               : float
+        Adjusted mutual information.
+    norm_mutual_info_score              : float
+         Normalized mutual information.
+    homogeneity_completeness_vmeasure   : float
+        Homogeneity, completeness and V-measure.
+    """
     standard_path = '/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1/161.166.232.17/'
     standard_file = standard_path + 'auth.log.anon.labeled'
     analyzed_file = standard_path + 'auth.log.anon'
@@ -26,7 +53,7 @@ def main():
                       action='store',
                       dest='method',
                       choices=methods,
-                      default='kclique_percolation_weighted',
+                      default='maxclique_percolation_weighted',
                       help='Graph clustering method to run',)
     parser.add_option("-l", "--logfile",
                       action="store",
@@ -47,8 +74,9 @@ def main():
                       action="store",
                       dest="c",
                       default=0.0,
-                      help="Threshold for cosine similarity while creating g edges")
+                      help="Threshold for cosine similarity while creating edges")
 
+    # get options
     (options, args) = parser.parse_args()
     logfile = options.logfile
     k = options.k
@@ -76,7 +104,7 @@ def main():
         nodes_id = g.get_nodes_id()
 
         # maxcliques = None
-        stream_flag = True
+        stream_flag = False
 
         # prediction result file
         if options.method in ['maxclique_percolation', 'maxclique_percolation_weighted', 'kclique_percolation',
@@ -104,7 +132,7 @@ def main():
             cc = ConnectedComponents(graph)
             clusters = cc.get_clusters()
             if stream_flag:
-                graph_streaming(graph, edges, removed_edges)
+                graph_streaming(graph, edges, None)
         elif options.method == 'maxclique_percolation':
             mcp = MaxCliquesPercolation(graph, edges_weight, nodes_id, k)
             clusters = mcp.get_maxcliques_percolation()
