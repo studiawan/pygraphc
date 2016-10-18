@@ -10,5 +10,5 @@ Event log clustering tool using Python.
 * Gephi
 * numpy
 
-# License
+## License
 MIT License. Please check [LICENSE](https://github.com/studiawan/pygraphc/blob/master/LICENSE).
