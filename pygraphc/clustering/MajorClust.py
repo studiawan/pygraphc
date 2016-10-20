@@ -14,6 +14,13 @@ class MajorClust(object):
            pp. 122-134, 1999.
     """
     def __init__(self, graph):
+        """The constructor of class MajorClust.
+
+        Parameters
+        ----------
+        graph   : graph
+            A graph to be clustered.
+        """
         self.graph = graph
         self.clusters = {}
         self.visited_neigbor_num = {}
@@ -21,12 +28,21 @@ class MajorClust(object):
         self.current_cluster = 0
 
     def get_majorclust(self):
+        """The main method to run MajorClust algorithm.
+
+        Returns
+        -------
+        clusters = dict[list]
+            Dictionary of list containing node identifier for each cluster.
+        """
         self._majorclust()
         self._get_cluster()
 
         return self.clusters
 
     def _majorclust(self):
+        """The main procedure of MajorClust which is visiting every node to be evaluated for its neighbor cluster.
+        """
         reclusters = set()
         terminate = False
         while not terminate:
@@ -43,6 +59,13 @@ class MajorClust(object):
                     terminate = False
 
     def _re_majorclust(self, node):
+        """Evaluating the neighbor nodes.
+
+        Parameters
+        ----------
+        node    : node
+            A node in a processed graph.
+        """
         # reclustering
         visited_neighbor = {}
 
@@ -61,6 +84,8 @@ class MajorClust(object):
             if self.visited_neigbor_num else node[1]['cluster']
 
     def _get_cluster(self):
+        """Get cluster in the form of dictionary of node identifier list. The cluster id is in incremental integer.
+        """
         unique_cluster = self._get_unique_cluster()
         cluster_id = 0
         for uc in unique_cluster:
@@ -72,6 +97,13 @@ class MajorClust(object):
             cluster_id += 1
 
     def _get_unique_cluster(self):
+        """Get unique cluster identifier.
+
+        Returns
+        -------
+        unique_cluster  : set
+            A set containing unique cluster identifier.
+        """
         cluster = [n[1]['cluster'] for n in self.graph.nodes_iter(data='cluster')]
         unique_cluster = set(cluster)
 
@@ -79,10 +111,19 @@ class MajorClust(object):
 
 
 class ImprovedReMajorClust(MajorClust):
+    """A class that inherits from MajorClust. It improves the method _re_majorclust to have re-evaluation.
+    """
     def __init__(self, graph):
         super(ImprovedReMajorClust, self).__init__(graph)
 
     def _re_majorclust(self, node):
+        """Re-evaluation of a node after clustered by standard MajorClust.
+
+        Parameters
+        ----------
+        node    : node
+            An evaluated node.
+        """
         super(ImprovedReMajorClust, self)._re_majorclust(node)
         # re-evaluation
         # 1. a node must be attached to the same cluster as heaviest neighbor node
