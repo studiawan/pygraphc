@@ -135,10 +135,28 @@ class ImprovedReMajorClust(MajorClust):
 
 
 class ImprovedMajorClust(object):
+    """A class that improves MajorClust. This procedure add refine cluster step as the re-majorclust provides
+    overvitting clusters.
+    """
     def __init__(self, graph):
+        """The constructor of class ImprovedMajorClust.
+
+        Parameters
+        ----------
+        graph   : graph
+            A graph to be clustered.
+        """
         self.graph = graph
 
     def get_improved_majorclust(self):
+        """The main method to run improved MajorClust algorithm. The procedure gets the refined nodes and
+        call ImprovedMajorClust once again.
+
+        Returns
+        -------
+        clusters    : dict[list]
+            Dictionary of list containing node identifier for each cluster.
+        """
         # run majorclust
         imc = ImprovedReMajorClust(self.graph)
         imc.get_majorclust()
@@ -156,6 +174,13 @@ class ImprovedMajorClust(object):
         return clusters
 
     def _refine_cluster(self):
+        """Refine cluster by representing a previously generated cluster as a vertex.
+
+        Returns
+        -------
+        refined_nodes   : list[list]
+            List of list containing node identifier and its properties.
+        """
         # set event, cluster id, and its frequency for every cluster
         # a cluster is now represented as a node
         cluster = [n[1]['cluster'] for n in self.graph.nodes_iter(data='cluster')]
@@ -192,7 +217,8 @@ class ImprovedMajorClust(object):
         for uc in unique_cluster:
             for node in refined_nodes:
                 if node[0] == uc:
-                    preprocessed_events, tfidf = preprocess.get_tfidf(node[1]['event'], float(len(all_events)), all_events)
+                    preprocessed_events, tfidf = \
+                        preprocess.get_tfidf(node[1]['event'], float(len(all_events)), all_events)
                     if not tfidf:
                         # print node[1]['event']
                         pass
