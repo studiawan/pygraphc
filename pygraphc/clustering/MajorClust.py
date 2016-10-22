@@ -25,7 +25,7 @@ class MajorClust(object):
         self.clusters = {}
         self.visited_neigbor_num = {}
         self.neighbor_weights = {}
-        self.current_cluster = 0
+        self.current_cluster = None
 
     def get_majorclust(self):
         """The main method to run MajorClust algorithm.
@@ -35,6 +35,11 @@ class MajorClust(object):
         clusters = dict[list]
             Dictionary of list containing node identifier for each cluster.
         """
+        # set node id as initial cluster id
+        for node in self.graph.nodes_iter(data=True):
+            node[1]['cluster'] = node[0]
+
+        # run majorclust algorithm
         self._majorclust()
         self._get_cluster()
 
@@ -92,7 +97,7 @@ class MajorClust(object):
             nodes = []
             for node in self.graph.nodes_iter(data='True'):
                 if node[1]['cluster'] == uc:
-                    nodes.append(node[1]['cluster'])
+                    nodes.append(node[0])
             self.clusters[cluster_id] = nodes
             cluster_id += 1
 
@@ -195,7 +200,7 @@ class ImprovedMajorClust(object):
             timestamps = []
             for node in self.graph.nodes_iter(data=True):
                 if node[1]['cluster'] == uc:
-                    events.append(node[1]['event'])
+                    events.append(node[1]['event'])             # to be tested: not event but preprocessed_event
                     total_frequency += node[1]['frequency']
                     total_nodes += 1
                     timestamps.append(node[1]['start'])
