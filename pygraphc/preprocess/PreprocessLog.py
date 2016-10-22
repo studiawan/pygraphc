@@ -4,8 +4,8 @@ from math import log, pow, sqrt
 from re import sub
 
 
-class PreprocessLog:
-    def __init__(self, logfile):
+class PreprocessLog(object):
+    def __init__(self, logfile=None):
         self.logfile = logfile
         self.logs = []
         self.loglength = 0
@@ -29,13 +29,13 @@ class PreprocessLog:
             event = event_type + ' ' + event_desc
             events_list.append(event)
 
-            preprocessed_event, tfidf = self.__get_tfidf(event, logs_total, logs_lower)
+            preprocessed_event, tfidf = self.get_tfidf(event, logs_total, logs_lower)
             check_events_unique = [e[1]['preprocessed_event'] for e in events_unique]
 
             # if not exist, add new element
             if preprocessed_event not in check_events_unique:
                 print index, preprocessed_event
-                length = self.__get_doclength(tfidf)
+                length = self.get_doclength(tfidf)
                 events_unique.append([index, {'event': event, 'tf-idf': tfidf, 'length': length, 'status': '',
                                               'cluster': 0, 'frequency': 1, 'member': [index_log],
                                               'preprocessed_event':preprocessed_event}])
@@ -94,7 +94,7 @@ class PreprocessLog:
 
         return float(count)
 
-    def __get_tfidf(self, doc, total_docs, docs):
+    def get_tfidf(self, doc, total_docs, docs):
         # remove number, stopwords
         doc = sub('[^a-zA-Z]', ' ', doc)
         additional_stopwords = ['preauth', 'from', 'xxxxx', 'for', 'port', 'sshd', 'ssh']
@@ -112,9 +112,9 @@ class PreprocessLog:
         tfidf = []
         for t in tf.most_common():
             normalized_tf = float(t[1]) / float(words_total)    # normalized word frequency
-            wid = self.__get_wordindocs(t[0], docs)               # calculate word occurrence in all documents
+            wid = self.__get_wordindocs(t[0], docs)             # calculate word occurrence in all documents
             try:
-                idf = 1 + log(total_docs / wid)                     # calculate idf
+                idf = 1 + log(total_docs / wid)                 # calculate idf
             except ZeroDivisionError:
                 idf = 1
             tfidf_val = normalized_tf * idf                     # calculate tf-idf
@@ -122,7 +122,7 @@ class PreprocessLog:
 
         return doc, tfidf
 
-    def __get_doclength(self, tfidf):
+    def get_doclength(self, tfidf):
         # calculate doc's length for cosine similarity
         length = 0
         for ti in tfidf:
