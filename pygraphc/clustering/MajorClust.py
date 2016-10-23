@@ -35,10 +35,6 @@ class MajorClust(object):
         clusters = dict[list]
             Dictionary of list containing node identifier for each cluster.
         """
-        # set node id as initial cluster id
-        for node in self.graph.nodes_iter(data=True):
-            node[1]['cluster'] = node[0]
-
         # run majorclust algorithm
         self._majorclust()
         self._get_cluster()
@@ -139,7 +135,7 @@ class ImprovedReMajorClust(MajorClust):
                 self.current_cluster = heaviest_neighbor_cluster
 
 
-class ImprovedMajorClust(object):
+class ImprovedMajorClust(ImprovedReMajorClust):
     """A class that improves MajorClust. This procedure add refine cluster step as the re-majorclust provides
     overvitting clusters.
     """
@@ -151,7 +147,8 @@ class ImprovedMajorClust(object):
         graph   : graph
             A graph to be clustered.
         """
-        self.graph = graph
+        super(ImprovedMajorClust, self).__init__(graph)
+        self.rgraph = None
 
     def get_improved_majorclust(self):
         """The main method to run improved MajorClust algorithm. The procedure gets the refined nodes and
@@ -163,20 +160,20 @@ class ImprovedMajorClust(object):
             Dictionary of list containing node identifier for each cluster.
         """
         # run majorclust
-        imc = ImprovedReMajorClust(self.graph)
-        imc.get_majorclust()
+        super(ImprovedMajorClust, self).get_majorclust()
 
         # create new graph for refined_nodes and create edges
         refined_nodes = self._refine_cluster()
         refined_graph = CreateGraph(refined_nodes, 0)
         refined_graph.do_create()
-        rgraph = refined_graph.get_graph()
+        self.rgraph = refined_graph.get_graph()
 
         # run improved majorclust
-        improved_majorclust = ImprovedReMajorClust(rgraph)
-        clusters = improved_majorclust.get_majorclust()
+        super(ImprovedMajorClust, self).get_majorclust()
+        self._backto_prerefine()
+        super(ImprovedMajorClust, self)._get_cluster()
 
-        return clusters
+        return self.clusters
 
     def _refine_cluster(self):
         """Refine cluster by representing a previously generated cluster as a vertex.
@@ -200,7 +197,7 @@ class ImprovedMajorClust(object):
             timestamps = []
             for node in self.graph.nodes_iter(data=True):
                 if node[1]['cluster'] == uc:
-                    events.append(node[1]['event'])             # to be tested: not event but preprocessed_event
+                    events.append(node[1]['event'])    # to be tested: not event but preprocessed_event
                     total_frequency += node[1]['frequency']
                     total_nodes += 1
                     timestamps.append(node[1]['start'])
@@ -231,3 +228,13 @@ class ImprovedMajorClust(object):
                     node[1]['length'] = preprocess.get_doclength(tfidf)
 
         return refined_nodes
+
+    def _backto_prerefine(self):
+        cluster = [n[1]['cluster'] for n in self.rgraph.nodes_iter(data='cluster')]
+        unique_cluster = set(cluster)
+        for uc in unique_cluster:
+            for node in self.rgraph.nodes_iter(data=True):
+                if node[1]['cluster'] == uc:
+                    members = node[1]['member']
+                    for member in members:
+                        self.graph.node[member]['cluster'] = uc
