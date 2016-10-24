@@ -5,7 +5,16 @@ from re import sub
 
 
 class PreprocessLog(object):
+    """A class to preprocess event log before generating the graph model.
+    """
     def __init__(self, logfile=None):
+        """Constructor of class PreprocessLog.
+
+        Parameters
+        ----------
+        logfile : str
+            Name of a log file
+        """
         self.logfile = logfile
         self.logs = []
         self.loglength = 0
@@ -13,6 +22,8 @@ class PreprocessLog(object):
         self.events_unique = []
 
     def do_preprocess(self):
+        """Main method to execute preprocess log.
+        """
         # read log file
         self.__read_log()
 
@@ -31,13 +42,14 @@ class PreprocessLog(object):
 
             preprocessed_event, tfidf = self.get_tfidf(event, logs_total, logs_lower)
             check_events_unique = [e[1]['preprocessed_event'] for e in events_unique]
+            # check_events_unique = [e[1]['event'] for e in events_unique]
 
             # if not exist, add new element
             if preprocessed_event not in check_events_unique:
                 print index, preprocessed_event
                 length = self.get_doclength(tfidf)
                 events_unique.append([index, {'event': event, 'tf-idf': tfidf, 'length': length, 'status': '',
-                                              'cluster': 0, 'frequency': 1, 'member': [index_log],
+                                              'cluster': index, 'frequency': 1, 'member': [index_log],
                                               'preprocessed_event':preprocessed_event}])
                 index += 1
 
@@ -79,6 +91,8 @@ class PreprocessLog(object):
         return self.loglength
 
     def __read_log(self):
+        """Read a log file.
+        """
         with open(self.logfile, 'r') as f:
             logs = f.readlines()
 
@@ -86,15 +100,45 @@ class PreprocessLog(object):
         self.loglength = len(logs)
 
     def __get_wordindocs(self, word, docs):
-        # find word occurence in all docs (logs)
+        """Find word occurence in all logs. Logs is stated as documents (in the context of information retrieval).
+
+        Parameters
+        ----------
+        word    : str
+            A word in a single event log line.
+        docs    : list[str]
+            All logs in a file.
+
+        Returns
+        -------
+        count   : float
+            Word occurence in all logs.
+        """
         count = 0
         for doc in docs:
             if word in doc:
                 count += 1
 
-        return float(count)
+        count = float(count)
+        return count
 
     def get_tfidf(self, doc, total_docs, docs):
+        """Calculate tf-idf (term frequency-inverse document frequency).
+
+        Parameters
+        ----------
+        doc         : str
+            A single event log line.
+        total_docs  : int
+            Total number of logs or total line numbers.
+        docs        : list[str]
+            All logs in a file.
+
+        Returns
+        -------
+        doc         : str
+        tfidf       : list[tuple]
+        """
         # remove number, stopwords
         doc = sub('[^a-zA-Z]', ' ', doc)
         additional_stopwords = ['preauth', 'from', 'xxxxx', 'for', 'port', 'sshd', 'ssh']
@@ -123,9 +167,20 @@ class PreprocessLog(object):
         return doc, tfidf
 
     def get_doclength(self, tfidf):
-        # calculate doc's length for cosine similarity
+        """Calculate doc's length for cosine similarity
+
+        Parameters
+        ----------
+        tfidf   : list[tuple]
+            List of tf-idf value of each word in tuple.
+        Returns
+        -------
+        length  : float
+            Document's length.
+        """
         length = 0
         for ti in tfidf:
             length += pow(ti[1], 2)
 
-        return sqrt(length)
+        length = sqrt(length)
+        return length
