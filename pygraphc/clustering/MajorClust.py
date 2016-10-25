@@ -27,6 +27,11 @@ class MajorClust(object):
     def get_majorclust(self, graph):
         """The main method to run MajorClust algorithm.
 
+        Parameters
+        ----------
+        graph   : graph
+            A graph to be clustered.
+
         Returns
         -------
         clusters = dict[list]
@@ -38,6 +43,11 @@ class MajorClust(object):
 
     def _majorclust(self, graph):
         """The main procedure of MajorClust which is visiting every node to be evaluated for its neighbor cluster.
+
+        Parameters
+        ----------
+        graph   : graph
+            A graph to be clustered. It can be original graph or the refined one.
         """
         reclusters = set()
         terminate = False
@@ -61,6 +71,8 @@ class MajorClust(object):
         ----------
         node    : node
             A node in a processed graph.
+        graph   : graph
+            A graph to be clustered. It can be original graph or the refined one.
         """
         # reclustering
         visited_neighbor, visited_neigbor_num, neighbor_weights = {}, {}, {}
@@ -143,7 +155,7 @@ class ImprovedMajorClust(MajorClust):
         refined_graph.do_create()
         self.rgraph = refined_graph.get_graph()
 
-        # run improved majorclust
+        # run improved majorclust with refined graph
         super(ImprovedMajorClust, self).get_majorclust(self.rgraph)
         self._backto_prerefine()
         super(ImprovedMajorClust, self)._get_cluster()
@@ -157,6 +169,8 @@ class ImprovedMajorClust(MajorClust):
         ----------
         node    : node
             An evaluated node.
+        graph   : graph
+            A graph to be clustered. It can be original graph or the refined one.
         """
         # reclustering
         visited_neighbor, visited_neigbor_num, neighbor_weights = {}, {}, {}
@@ -239,6 +253,8 @@ class ImprovedMajorClust(MajorClust):
         return refined_nodes
 
     def _backto_prerefine(self):
+        """This procedure will convert the result of clustering from refined graph to original graph.
+        """
         cluster = [n[1]['cluster'] for n in self.rgraph.nodes_iter(data='cluster')]
         unique_cluster = set(cluster)
         for uc in unique_cluster:
