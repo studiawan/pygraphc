@@ -23,11 +23,8 @@ class MajorClust(object):
         """
         self.graph = graph
         self.clusters = {}
-        self.visited_neigbor_num = {}
-        self.neighbor_weights = {}
-        self.current_cluster = None
 
-    def get_majorclust(self):
+    def get_majorclust(self, graph):
         """The main method to run MajorClust algorithm.
 
         Returns
@@ -36,30 +33,28 @@ class MajorClust(object):
             Dictionary of list containing node identifier for each cluster.
         """
         # run majorclust algorithm
-        self._majorclust()
+        self._majorclust(graph)
         self._get_cluster()
 
-        return self.clusters
-
-    def _majorclust(self):
+    def _majorclust(self, graph):
         """The main procedure of MajorClust which is visiting every node to be evaluated for its neighbor cluster.
         """
         reclusters = set()
         terminate = False
         while not terminate:
             terminate = True
-            for node in self.graph.nodes_iter(data=True):
+            for node in graph.nodes_iter(data=True):
                 initial_cluster = node[1]['cluster']
-                self._re_majorclust(node)
-                recluster = (node[0], initial_cluster, self.current_cluster)
+                current_cluster = self._re_majorclust(node, graph)
+                recluster = (node[0], initial_cluster, current_cluster)
 
                 # if has not checked, recluster again
-                if initial_cluster != self.current_cluster and recluster not in reclusters:
+                if initial_cluster != current_cluster and recluster not in reclusters:
                     reclusters.add(recluster)
-                    node[1]['cluster'] = self.current_cluster
+                    node[1]['cluster'] = current_cluster
                     terminate = False
 
-    def _re_majorclust(self, node):
+    def _re_majorclust(self, node, graph):
         """Evaluating the neighbor nodes.
 
         Parameters
@@ -68,21 +63,23 @@ class MajorClust(object):
             A node in a processed graph.
         """
         # reclustering
-        visited_neighbor = {}
+        visited_neighbor, visited_neigbor_num, neighbor_weights = {}, {}, {}
 
         # observe neighboring edges and nodes
-        for current_node, neighbor_node, weight in self.graph.edges_iter([node[0]], data='weight'):
-            self.neighbor_weights[neighbor_node] = weight
-            visited_neighbor[self.graph.node[neighbor_node]['cluster']] = \
-                visited_neighbor.get(self.graph.node[neighbor_node]['cluster'], 0.0) + weight['weight']
+        for current_node, neighbor_node, weight in graph.edges_iter([node[0]], data='weight'):
+            neighbor_weights[neighbor_node] = weight
+            visited_neighbor[graph.node[neighbor_node]['cluster']] = \
+                visited_neighbor.get(graph.node[neighbor_node]['cluster'], 0.0) + weight['weight']
 
         # get the weight
         for k, v in visited_neighbor.iteritems():
-            self.visited_neigbor_num.setdefault(v, []).append(k)
+            visited_neigbor_num.setdefault(v, []).append(k)
 
         # attach a node to the cluster of majority of neighbor nodes
-        self.current_cluster = self.visited_neigbor_num[max(self.visited_neigbor_num)][0] \
-            if self.visited_neigbor_num else node[1]['cluster']
+        current_cluster = visited_neigbor_num[max(visited_neigbor_num)][0] \
+            if visited_neigbor_num else node[1]['cluster']
+
+        return current_cluster
 
     def _get_cluster(self):
         """Get cluster in the form of dictionary of node identifier list. The cluster id is in incremental integer.
@@ -332,8 +329,7 @@ class ImprovedMajorClust(MajorClust):
             Dictionary of list containing node identifier for each cluster.
         """
         # run majorclust
-        clusters = super(ImprovedMajorClust, self).get_majorclust()
-        print clusters
+        super(ImprovedMajorClust, self).get_majorclust(self.graph)
 
         # create new graph for refined_nodes and create edges
         refined_nodes = self._refine_cluster()
@@ -342,13 +338,13 @@ class ImprovedMajorClust(MajorClust):
         self.rgraph = refined_graph.get_graph()
 
         # run improved majorclust
-        super(ImprovedMajorClust, self).get_majorclust()
+        super(ImprovedMajorClust, self).get_majorclust(self.rgraph)
         self._backto_prerefine()
         super(ImprovedMajorClust, self)._get_cluster()
 
         return self.clusters
 
-    def _re_majorclust(self, node):
+    def _re_majorclust(self, node, graph):
         """Re-evaluation of a node after clustered by standard MajorClust.
 
         Parameters
@@ -356,15 +352,32 @@ class ImprovedMajorClust(MajorClust):
         node    : node
             An evaluated node.
         """
-        super(ImprovedMajorClust, self)._re_majorclust(node)
-        # re-evaluation
-        # 1. a node must be attached to the same cluster as heaviest neighbor node
-        if self.visited_neigbor_num:
-            print self.current_cluster
-            heaviest_neighbor_node = sorted(self.neighbor_weights.items(), key=itemgetter(1), reverse=True)[0][0]
-            heaviest_neighbor_cluster = self.graph.node[heaviest_neighbor_node]['cluster']
-            if self.current_cluster != heaviest_neighbor_cluster:
-                self.current_cluster = heaviest_neighbor_cluster
+        # reclustering
+        visited_neighbor, visited_neigbor_num, neighbor_weights = {}, {}, {}
+
+        # observe neighboring edges and nodes
+        for current_node, neighbor_node, weight in graph.edges_iter([node[0]], data='weight'):
+            neighbor_weights[neighbor_node] = weight
+            visited_neighbor[graph.node[neighbor_node]['cluster']] = \
+                visited_neighbor.get(graph.node[neighbor_node]['cluster'], 0.0) + weight['weight']
+
+        # get the weight
+        for k, v in visited_neighbor.iteritems():
+            visited_neigbor_num.setdefault(v, []).append(k)
+
+        # attach a node to the cluster of majority of neighbor nodes
+        current_cluster = visited_neigbor_num[max(visited_neigbor_num)][0] \
+            if visited_neigbor_num else node[1]['cluster']
+
+        # set event, cluster id, and its frequency for every cluster
+        # a cluster is now represented as a node
+        if visited_neigbor_num:
+            heaviest_neighbor_node = sorted(neighbor_weights.items(), key=itemgetter(1), reverse=True)[0][0]
+            heaviest_neighbor_cluster = graph.node[heaviest_neighbor_node]['cluster']
+            if current_cluster != heaviest_neighbor_cluster:
+                current_cluster = heaviest_neighbor_cluster
+
+        return current_cluster
 
     def _refine_cluster(self):
         """Refine cluster by representing a previously generated cluster as a vertex.
@@ -376,8 +389,7 @@ class ImprovedMajorClust(MajorClust):
         """
         # set event, cluster id, and its frequency for every cluster
         # a cluster is now represented as a node
-        cluster = [n[1]['cluster'] for n in self.graph.nodes_iter(data='cluster')]
-        unique_cluster = set(cluster)
+        unique_cluster = super(ImprovedMajorClust, self)._get_unique_cluster()
         refined_nodes = []
         all_events = []
 
