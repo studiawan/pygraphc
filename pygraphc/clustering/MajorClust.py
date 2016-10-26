@@ -41,6 +41,8 @@ class MajorClust(object):
         self._majorclust(graph)
         self._get_cluster()
 
+        return self.clusters
+
     def _majorclust(self, graph):
         """The main procedure of MajorClust which is visiting every node to be evaluated for its neighbor cluster.
 
@@ -103,6 +105,7 @@ class MajorClust(object):
             for node in self.graph.nodes_iter(data='True'):
                 if node[1]['cluster'] == uc:
                     nodes.append(node[0])
+                    node[1]['cluster'] = cluster_id
             self.clusters[cluster_id] = nodes
             cluster_id += 1
 
@@ -158,6 +161,7 @@ class ImprovedMajorClust(MajorClust):
         # run improved majorclust with refined graph
         super(ImprovedMajorClust, self).get_majorclust(self.rgraph)
         self._backto_prerefine()
+        self.clusters = {}
         super(ImprovedMajorClust, self)._get_cluster()
 
         return self.clusters
