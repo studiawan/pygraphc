@@ -46,7 +46,8 @@ class PreprocessLog(object):
 
             # if not exist, add new element
             if preprocessed_event not in check_events_unique:
-                print index, preprocessed_event
+            # if event not in check_events_unique:
+                print index, event
                 length = self.get_doclength(tfidf)
                 events_unique.append([index, {'event': event, 'tf-idf': tfidf, 'length': length, 'status': '',
                                               'cluster': index, 'frequency': 1, 'member': [index_log],
@@ -57,6 +58,7 @@ class PreprocessLog(object):
             else:
                 for e in events_unique:
                     if preprocessed_event == e[1]['preprocessed_event']:
+                    # if event == e[1]['event']:
                         member = e[1]['member']
                         member.append(index_log)
                         e[1]['member'] = member
@@ -86,9 +88,6 @@ class PreprocessLog(object):
 
     def get_logs(self):
         return self.logs
-
-    def get_loglength(self):
-        return self.loglength
 
     def __read_log(self):
         """Read a log file.
@@ -129,7 +128,7 @@ class PreprocessLog(object):
         ----------
         doc         : str
             A single event log line.
-        total_docs  : int
+        total_docs  : float
             Total number of logs or total line numbers.
         docs        : list[str]
             All logs in a file.
@@ -137,7 +136,9 @@ class PreprocessLog(object):
         Returns
         -------
         doc         : str
+            Preprocessed event logs.
         tfidf       : list[tuple]
+            List of tuple where a tuple consists of two elements: 1) word and 2) its tf-idf value.
         """
         # remove number, stopwords
         doc = sub('[^a-zA-Z]', ' ', doc)
