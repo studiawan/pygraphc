@@ -8,7 +8,7 @@
     
     <title>pygraphc.clustering.ClusterDistance &mdash; pygraphc 0.0.1 documentation</title>
     
-    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -28,30 +28,48 @@
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body role="document">
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
-      </ul>
-    </div>  
+      <div class="header" role="banner"><h1 class="heading"><a href="../../../index.html">
+          <span>pygraphc 0.0.1 documentation</span></a></h1>
+        <h2 class="heading"><span>pygraphc.clustering.ClusterDistance</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+      </div>
+      <div class="content">
+        
+        
   <h1>Source code for pygraphc.clustering.ClusterDistance</h1><div class="highlight"><pre>
 <span class="k">class</span> <span class="nc">ClusterDistance</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<div class="viewcode-block" id="ClusterDistance"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterDistance.ClusterDistance">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ClusterDistance"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterDistance.ClusterDistance">[docs]</a>    <span class="sd">&quot;&quot;&quot;Class for distance measurement between two vertices.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_cosine_similarity</span><span class="p">(</span><span class="n">tfidf1</span><span class="p">,</span> <span class="n">tfidf2</span><span class="p">,</span> <span class="n">length1</span><span class="p">,</span> <span class="n">length2</span><span class="p">):</span>
-<div class="viewcode-block" id="ClusterDistance.get_cosine_similarity"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterDistance.ClusterDistance.get_cosine_similarity">[docs]</a>        <span class="n">vector_products</span> <span class="o">=</span> <span class="mi">0</span>
+<div class="viewcode-block" id="ClusterDistance.get_cosine_similarity"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterDistance.ClusterDistance.get_cosine_similarity">[docs]</a>        <span class="sd">&quot;&quot;&quot;Measure cosine similarity between two strings.</span>
+
+<span class="sd">        Typically, it is similarity between two event log messages in the two vertices in</span>
+<span class="sd">        graph-based event log clustering.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tfidf1  : list</span>
+<span class="sd">            List of tf-idf measure from the first message.</span>
+<span class="sd">        tfidf2  : list</span>
+<span class="sd">            List of tf-idf measure from the second message.</span>
+<span class="sd">        length1 : float</span>
+<span class="sd">            Denominator in cosine similarity from the first message.</span>
+<span class="sd">        length2 : float</span>
+<span class="sd">            Denominator in cosine similarity from the second message.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cosine_similarity   : float</span>
+<span class="sd">            Cosine similarity between two strings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vector_products</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">ti1</span> <span class="ow">in</span> <span class="n">tfidf1</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">ti2</span> <span class="ow">in</span> <span class="n">tfidf2</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">ti1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">ti2</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
@@ -62,44 +80,19 @@
         <span class="k">except</span> <span class="ne">ZeroDivisionError</span><span class="p">:</span>
             <span class="n">cosine_similarity</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">cosine_similarity</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">cosine_similarity</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">cosine_similarity</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cosine_similarity</span>
 </pre></div></div></div>
 
-          </div>
-        </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
-      </ul>
-    </div>
+
     <div class="footer" role="contentinfo">
         &copy; Copyright 2016, Hudan Studiawan.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.

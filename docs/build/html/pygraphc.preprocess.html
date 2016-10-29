@@ -8,7 +8,7 @@
     
     <title>pygraphc.preprocess package &mdash; pygraphc 0.0.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -30,32 +30,24 @@
     <link rel="prev" title="pygraphc.misc package" href="pygraphc.misc.html" /> 
   </head>
   <body role="document">
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="pygraphc.pygephi.html" title="pygraphc.pygephi package"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="pygraphc.misc.html" title="pygraphc.misc package"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
-          <li class="nav-item nav-item-1"><a href="modules.html" >pygraphc</a> &raquo;</li>
-          <li class="nav-item nav-item-2"><a href="pygraphc.html" accesskey="U">pygraphc package</a> &raquo;</li> 
-      </ul>
-    </div>  
+      <div class="header" role="banner"><h1 class="heading"><a href="index.html">
+          <span>pygraphc 0.0.1 documentation</span></a></h1>
+        <h2 class="heading"><span>pygraphc.preprocess package</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="pygraphc.misc.html">pygraphc.misc package</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="pygraphc.pygephi.html">pygraphc.pygephi package</a>&#160;&#160;»
+        </p>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+      </div>
+      <div class="content">
+        
+        
   <div class="section" id="pygraphc-preprocess-package">
 <h1>pygraphc.preprocess package<a class="headerlink" href="#pygraphc-preprocess-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="submodules">
@@ -66,10 +58,25 @@
 <dl class="class">
 <dt id="pygraphc.preprocess.CreateGraph.CreateGraph">
 <em class="property">class </em><code class="descname">CreateGraph</code><span class="sig-paren">(</span><em>events_unique</em>, <em>cosine_threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/CreateGraph.html#CreateGraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.CreateGraph.CreateGraph" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A class for generating graph from preprocessed logs.</p>
+<dl class="method">
+<dt id="pygraphc.preprocess.CreateGraph.CreateGraph._CreateGraph__create_edges">
+<code class="descname">_CreateGraph__create_edges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygraphc.preprocess.CreateGraph.CreateGraph._CreateGraph__create_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create all edges in the graph based on cosine similarity measure.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.preprocess.CreateGraph.CreateGraph._CreateGraph__create_nodes">
+<code class="descname">_CreateGraph__create_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygraphc.preprocess.CreateGraph.CreateGraph._CreateGraph__create_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create nodes in the graph from unique events.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pygraphc.preprocess.CreateGraph.CreateGraph.do_create">
 <code class="descname">do_create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/CreateGraph.html#CreateGraph.do_create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.CreateGraph.CreateGraph.do_create" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Main method to be executed to create a graph.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pygraphc.preprocess.CreateGraph.CreateGraph.get_edges_dict">
@@ -89,7 +96,19 @@
 <dl class="method">
 <dt id="pygraphc.preprocess.CreateGraph.CreateGraph.get_nodes_id">
 <code class="descname">get_nodes_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/CreateGraph.html#CreateGraph.get_nodes_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.CreateGraph.CreateGraph.get_nodes_id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Get node identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>nodes</strong> &#8211;
+List of node identifier in incremental integer.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[int]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -98,11 +117,64 @@
 <span id="pygraphc-preprocess-preprocesslog-module"></span><h2>pygraphc.preprocess.PreprocessLog module<a class="headerlink" href="#module-pygraphc.preprocess.PreprocessLog" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog">
-<em class="property">class </em><code class="descname">PreprocessLog</code><span class="sig-paren">(</span><em>logfile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<em class="property">class </em><code class="descname">PreprocessLog</code><span class="sig-paren">(</span><em>logfile=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A class to preprocess event log before generating the graph model.</p>
+<dl class="method">
+<dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog._PreprocessLog__get_wordindocs">
+<code class="descname">_PreprocessLog__get_wordindocs</code><span class="sig-paren">(</span><em>word</em>, <em>docs</em><span class="sig-paren">)</span><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog._PreprocessLog__get_wordindocs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find word occurence in all logs. Logs is stated as documents (in the context of information retrieval).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>word</strong> (<em>str</em>) &#8211; A word in a single event log line.</li>
+<li><strong>docs</strong> (<em>list[str]</em>) &#8211; All logs in a file.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>count</strong> &#8211;
+Word occurence in all logs.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog._PreprocessLog__read_log">
+<code class="descname">_PreprocessLog__read_log</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog._PreprocessLog__read_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a log file.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.do_preprocess">
 <code class="descname">do_preprocess</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog.do_preprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog.do_preprocess" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Main method to execute preprocess log.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.get_doclength">
+<code class="descname">get_doclength</code><span class="sig-paren">(</span><em>tfidf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog.get_doclength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_doclength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate doc&#8217;s length for cosine similarity</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tfidf</strong> (<em>list[tuple]</em>) &#8211; List of tf-idf value of each word in tuple.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>length</strong> &#8211;
+Document&#8217;s length.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.get_eventslist">
@@ -115,14 +187,37 @@
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.get_loglength">
-<code class="descname">get_loglength</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog.get_loglength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_loglength" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.get_logs">
 <code class="descname">get_logs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog.get_logs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_logs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.get_tfidf">
+<code class="descname">get_tfidf</code><span class="sig-paren">(</span><em>doc</em>, <em>total_docs</em>, <em>docs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog.get_tfidf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_tfidf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate tf-idf (term frequency-inverse document frequency).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>doc</strong> (<em>str</em>) &#8211; A single event log line.</li>
+<li><strong>total_docs</strong> (<em>float</em>) &#8211; Total number of logs or total line numbers.</li>
+<li><strong>docs</strong> (<em>list[str]</em>) &#8211; All logs in a file.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>doc</strong> (<em>str</em>) &#8211;
+Preprocessed event logs.</li>
+<li><strong>tfidf</strong> (<em>list[tuple]</em>) &#8211;
+List of tuple where a tuple consists of two elements: 1) word and 2) its tf-idf value.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -133,72 +228,19 @@
 </div>
 
 
-          </div>
-        </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">pygraphc.preprocess package</a><ul>
-<li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#module-pygraphc.preprocess.CreateGraph">pygraphc.preprocess.CreateGraph module</a></li>
-<li><a class="reference internal" href="#module-pygraphc.preprocess.PreprocessLog">pygraphc.preprocess.PreprocessLog module</a></li>
-<li><a class="reference internal" href="#module-pygraphc.preprocess">Module contents</a></li>
-</ul>
-</li>
-</ul>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="pygraphc.misc.html">pygraphc.misc package</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="pygraphc.pygephi.html">pygraphc.pygephi package</a>&#160;&#160;»
+        </p>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="pygraphc.misc.html"
-                        title="previous chapter">pygraphc.misc package</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="pygraphc.pygephi.html"
-                        title="next chapter">pygraphc.pygephi package</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/pygraphc.preprocess.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="pygraphc.pygephi.html" title="pygraphc.pygephi package"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="pygraphc.misc.html" title="pygraphc.misc package"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
-          <li class="nav-item nav-item-1"><a href="modules.html" >pygraphc</a> &raquo;</li>
-          <li class="nav-item nav-item-2"><a href="pygraphc.html" >pygraphc package</a> &raquo;</li> 
-      </ul>
-    </div>
+
     <div class="footer" role="contentinfo">
         &copy; Copyright 2016, Hudan Studiawan.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.

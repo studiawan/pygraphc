@@ -8,7 +8,7 @@
     
     <title>pygraphc.clustering.ConnectedComponents &mdash; pygraphc 0.0.1 documentation</title>
     
-    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -28,103 +28,74 @@
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body role="document">
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
-      </ul>
-    </div>  
+      <div class="header" role="banner"><h1 class="heading"><a href="../../../index.html">
+          <span>pygraphc 0.0.1 documentation</span></a></h1>
+        <h2 class="heading"><span>pygraphc.clustering.ConnectedComponents</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+      </div>
+      <div class="content">
+        
+        
   <h1>Source code for pygraphc.clustering.ConnectedComponents</h1><div class="highlight"><pre>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">ClusterUtility</span> <span class="kn">import</span> <span class="n">ClusterUtility</span>
 
 
 <div class="viewcode-block" id="ConnectedComponents"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ConnectedComponents.ConnectedComponents">[docs]</a><span class="k">class</span> <span class="nc">ConnectedComponents</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;This is a class for connected component detection method to cluster event logs [1]_.</span>
+    <span class="sd">&quot;&quot;&quot;This is a class for connected component detection method to cluster event logs [Studiawan2016a]_.</span>
 
-<span class="sd">    .. [1] H. Studiawan, B. A. Pratomo, and R. Anggoro, Connected component detection for authentication log</span>
-<span class="sd">       clustering, in Proceedings of the International Seminar on Science and Technology, 2016, pp. 495-496.</span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [Studiawan2016a] H. Studiawan, B. A. Pratomo, and R. Anggoro, Connected component detection for authentication log</span>
+<span class="sd">                        clustering, The 2nd International Seminar on Science and Technology, 2016, pp. 495-496.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;This is a constructor for ConnectedComponent class</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This is a constructor for ConnectedComponent class.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        g : graph</span>
-<span class="sd">            a graph to be clustered</span>
+<span class="sd">        graph : graph</span>
+<span class="sd">            A graph to be clustered.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">g</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
 
 <div class="viewcode-block" id="ConnectedComponents.get_clusters"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ConnectedComponents.ConnectedComponents.get_clusters">[docs]</a>    <span class="k">def</span> <span class="nf">get_clusters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;This method find any connected component in a graph.</span>
 
 <span class="sd">        A component represents a cluster and each component will be given a cluster identifier.</span>
+<span class="sd">        This method heavily rely on the cosine similarity threshold to build an edge in a graph.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        clusters : list[list]</span>
-<span class="sd">            List of cluster list, where each list contains index (line number) of event log.</span>
+<span class="sd">        clusters : dict[list]</span>
+<span class="sd">            Dictionary of cluster list, where each list contains index (line number) of event log.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">clusters</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">components</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">):</span>
-            <span class="n">clusters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">components</span><span class="p">)</span>
-
+        <span class="n">clusters</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">cluster_id</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_id</span>
+        <span class="k">for</span> <span class="n">components</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">):</span>
+            <span class="n">clusters</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
             <span class="n">cluster_id</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">ClusterUtility</span><span class="o">.</span><span class="n">set_cluster_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">clusters</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">clusters</span></div></div>
 </pre></div>
 
-          </div>
-        </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
-      </ul>
-    </div>
+
     <div class="footer" role="contentinfo">
         &copy; Copyright 2016, Hudan Studiawan.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.

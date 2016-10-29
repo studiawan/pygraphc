@@ -4,6 +4,14 @@ pygraphc.clustering package
 Submodules
 ----------
 
+pygraphc.clustering.ClusterAbstraction module
+---------------------------------------------
+
+.. automodule:: pygraphc.clustering.ClusterAbstraction
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pygraphc.clustering.ClusterDistance module
 ------------------------------------------
 
@@ -36,10 +44,26 @@ pygraphc.clustering.ConnectedComponents module
     :undoc-members:
     :show-inheritance:
 
+pygraphc.clustering.GraphEntropy module
+---------------------------------------
+
+.. automodule:: pygraphc.clustering.GraphEntropy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pygraphc.clustering.KCliquePercolation module
 ---------------------------------------------
 
 .. automodule:: pygraphc.clustering.KCliquePercolation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pygraphc.clustering.MajorClust module
+-------------------------------------
+
+.. automodule:: pygraphc.clustering.MajorClust
     :members:
     :undoc-members:
     :show-inheritance:

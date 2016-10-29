@@ -6,6 +6,7 @@ Subpackages
 
 .. toctree::
 
+    pygraphc.anomaly
     pygraphc.clustering
     pygraphc.misc
     pygraphc.preprocess

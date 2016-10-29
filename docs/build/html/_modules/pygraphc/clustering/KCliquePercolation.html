@@ -8,7 +8,7 @@
     
     <title>pygraphc.clustering.KCliquePercolation &mdash; pygraphc 0.0.1 documentation</title>
     
-    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -28,25 +28,20 @@
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body role="document">
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
-      </ul>
-    </div>  
+      <div class="header" role="banner"><h1 class="heading"><a href="../../../index.html">
+          <span>pygraphc 0.0.1 documentation</span></a></h1>
+        <h2 class="heading"><span>pygraphc.clustering.KCliquePercolation</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+      </div>
+      <div class="content">
+        
+        
   <h1>Source code for pygraphc.clustering.KCliquePercolation</h1><div class="highlight"><pre>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
@@ -55,16 +50,19 @@
 
 
 <div class="viewcode-block" id="KCliquePercolation"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation">[docs]</a><span class="k">class</span> <span class="nc">KCliquePercolation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This is a class for graph clustering based on k-clique percolation.</span>
+    <span class="sd">&quot;&quot;&quot;This is a class for graph clustering based on k-clique percolation [Farkas2007]_.</span>
 
 <span class="sd">    The procedure will find k-clique. If there is any percolation between k-cliques, it will be set as a cluster.</span>
-<span class="sd">    The unnecessary edges will be removed. The use of this method for event log clustering was presented in [1]_.</span>
+<span class="sd">    The unnecessary edges will be removed. The use of this method for event log clustering</span>
+<span class="sd">    was presented in [Studiawan2016b]_.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] H. Studiawan, B. A. Pratomo, and R. Anggoro, Clustering of SSH brute-force attack logs using</span>
-<span class="sd">           k-clique percolation, in Proceedings of the 10th International Conference on Information Communication</span>
-<span class="sd">           Technology and Systems, 2016.</span>
+<span class="sd">    .. [Farkas2007]     I. J. Farkas, D. Abel, G. Palla, and T. Vicsek, Weighted network modules,</span>
+<span class="sd">                        New Journal of Physics, 9(6), p. 180, 2007.</span>
+<span class="sd">    .. [Studiawan2016b] H. Studiawan, B. A. Pratomo, and R. Anggoro, Clustering of SSH brute-force attack logs using</span>
+<span class="sd">                        k-clique percolation, in Proceedings of the 10th International Conference on Information</span>
+<span class="sd">                        Communication Technology and Systems, pp. 33-36, 2016.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">edges_weight</span><span class="p">,</span> <span class="n">nodes_id</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;This is a constructor for class KCliquePercolation.</span>
@@ -88,7 +86,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">percolated_nodes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">removed_edges</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="KCliquePercolation.get_percolation_nodes"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.KCliquePercolation.KCliquePercolation.get_percolation_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_percolation_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get percolation nodes after finished clustering.</span>
@@ -115,8 +113,8 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        clique_percolation  : list[frozenset]</span>
-<span class="sd">            List of nodes in each cluster in frozenset.</span>
+<span class="sd">        clique_percolation  : dict[frozenset]</span>
+<span class="sd">            Dictionary of nodes in each cluster in frozenset.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span>
 </div>
@@ -125,7 +123,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        clusters    : list[list]</span>
+<span class="sd">        clusters    : dict[list]</span>
 <span class="sd">            List of list containing nodes identifier for each cluster.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">print</span> <span class="s">&#39;get_kclique_percolation ...&#39;</span>
@@ -170,7 +168,7 @@
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        Based on the algorithm published by Zhang et al. (2005) [1]_</span>
+<span class="sd">        Based on the algorithm published by Zhang et al. (2005) [Zhang2005]_</span>
 <span class="sd">        and adapted to output all cliques discovered.</span>
 <span class="sd">        This algorithm is not applicable on directed graphs.</span>
 <span class="sd">        This algorithm ignores self-loops and parallel edges as</span>
@@ -180,20 +178,20 @@
 <span class="sd">        since it only keeps candidate sublists in memory and</span>
 <span class="sd">        continuously removes exhausted sublists.</span>
 
-<span class="sd">        The original source code is taken from NetworkX development branch [2]_.</span>
+<span class="sd">        The original source code is taken from NetworkX development branch [Schult2016]_.</span>
 
 <span class="sd">        References</span>
 <span class="sd">        ----------</span>
-<span class="sd">        .. [1] Yun Zhang, Abu-Khzam, F.N., Baldwin, N.E., Chesler, E.J.,</span>
-<span class="sd">               Langston, M.A., Samatova, N.F.,</span>
-<span class="sd">               Genome-Scale Computational Approaches to Memory-Intensive</span>
-<span class="sd">               Applications in Systems Biology.</span>
-<span class="sd">               Supercomputing, 2005. Proceedings of the ACM/IEEE SC 2005</span>
-<span class="sd">               Conference, pp. 12, 12-18 Nov. 2005.</span>
-<span class="sd">               doi: 10.1109/SC.2005.29.</span>
-<span class="sd">               http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;arnumber=1559964&amp;isnumber=33129</span>
-<span class="sd">        .. [2] Dan Schult, Source code for networkx.algorithms.clique.</span>
-<span class="sd">               https://networkx.github.io/documentation/development/_modules/networkx/algorithms/clique.html</span>
+<span class="sd">        .. [Zhang2005]  Yun Zhang, Abu-Khzam, F.N., Baldwin, N.E., Chesler, E.J.,</span>
+<span class="sd">                        Langston, M.A., Samatova, N.F.,</span>
+<span class="sd">                        Genome-Scale Computational Approaches to Memory-Intensive</span>
+<span class="sd">                        Applications in Systems Biology.</span>
+<span class="sd">                        Supercomputing, 2005. Proceedings of the ACM/IEEE SC 2005</span>
+<span class="sd">                        Conference, pp. 12, 12-18 Nov. 2005.</span>
+<span class="sd">                        doi: 10.1109/SC.2005.29.</span>
+<span class="sd">                        http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;arnumber=1559964&amp;isnumber=33129</span>
+<span class="sd">        .. [Schult2016] Dan Schult, Source code for networkx.algorithms.clique.</span>
+<span class="sd">                        https://networkx.github.io/documentation/development/_modules/networkx/algorithms/clique.html</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">print</span> <span class="s">&#39;enumerate_all_cliques ...&#39;</span>
@@ -240,9 +238,10 @@
                 <span class="n">percolation_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">clique1</span><span class="p">,</span> <span class="n">clique2</span><span class="p">)</span>
 
         <span class="c"># Get all connected component in percolation graph</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cluster_id</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">percolation_graph</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">component</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">component</span><span class="p">)</span>
+            <span class="n">cluster_id</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="c"># set cluster id</span>
         <span class="n">ClusterUtility</span><span class="o">.</span><span class="n">set_cluster_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">clique_percolation</span><span class="p">)</span>
@@ -270,12 +269,14 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        clusters    : list[list]</span>
-<span class="sd">            List of list containing nodes identifier for each cluster.</span>
+<span class="sd">        clusters    : dict[list]</span>
+<span class="sd">            Dictionary of list containing nodes identifier for each cluster.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">clusters</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">):</span>
-            <span class="n">clusters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">cluster_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">components</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">):</span>
+            <span class="n">clusters</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+            <span class="n">cluster_id</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="c"># refine cluster id</span>
         <span class="n">ClusterUtility</span><span class="o">.</span><span class="n">set_cluster_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">clusters</span><span class="p">)</span>
@@ -323,41 +324,15 @@
         <span class="k">return</span> <span class="n">weighted_kcliques</span></div></div>
 </pre></div>
 
-          </div>
-        </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">pygraphc 0.0.1 documentation</a> &raquo;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
-      </ul>
-    </div>
+
     <div class="footer" role="contentinfo">
         &copy; Copyright 2016, Hudan Studiawan.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.

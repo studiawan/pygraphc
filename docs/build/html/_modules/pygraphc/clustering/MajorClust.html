@@ -1,0 +1,331 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pygraphc.clustering.MajorClust &mdash; pygraphc 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pygraphc 0.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="../../../index.html">
+          <span>pygraphc 0.0.1 documentation</span></a></h1>
+        <h2 class="heading"><span>pygraphc.clustering.MajorClust</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for pygraphc.clustering.MajorClust</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span> <span class="nn">pygraphc.clustering.ClusterAbstraction</span> <span class="kn">import</span> <span class="n">ClusterAbstraction</span>
+<span class="kn">from</span> <span class="nn">pygraphc.preprocess.PreprocessLog</span> <span class="kn">import</span> <span class="n">PreprocessLog</span>
+<span class="kn">from</span> <span class="nn">pygraphc.preprocess.CreateGraph</span> <span class="kn">import</span> <span class="n">CreateGraph</span>
+
+
+<div class="viewcode-block" id="MajorClust"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.MajorClust">[docs]</a><span class="k">class</span> <span class="nc">MajorClust</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The implementation of MajorClust graph clustering algorithm [Stein1999]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [Stein1999] B. Stein and O. Niggemann, On the nature of structure and its identification,</span>
+<span class="sd">                   Proceedings of the 25th International Workshop on Graph-Theoretic Concepts in Computer Science,</span>
+<span class="sd">                   pp. 122-134, 1999.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The constructor of class MajorClust.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        graph   : graph</span>
+<span class="sd">            A graph to be clustered.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clusters</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="MajorClust.get_majorclust"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.MajorClust.get_majorclust">[docs]</a>    <span class="k">def</span> <span class="nf">get_majorclust</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The main method to run MajorClust algorithm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        graph   : graph</span>
+<span class="sd">            A graph to be clustered.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        clusters = dict[list]</span>
+<span class="sd">            Dictionary of list containing node identifier for each cluster.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># run majorclust algorithm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_majorclust</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_cluster</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">clusters</span>
+</div>
+<div class="viewcode-block" id="MajorClust._majorclust"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.MajorClust._majorclust">[docs]</a>    <span class="k">def</span> <span class="nf">_majorclust</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The main procedure of MajorClust which is visiting every node to be evaluated for its neighbor cluster.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        graph   : graph</span>
+<span class="sd">            A graph to be clustered. It can be original graph or the refined one.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reclusters</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">terminate</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">terminate</span><span class="p">:</span>
+            <span class="n">terminate</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="n">initial_cluster</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span>
+                <span class="n">current_cluster</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_re_majorclust</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+                <span class="n">recluster</span> <span class="o">=</span> <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">initial_cluster</span><span class="p">,</span> <span class="n">current_cluster</span><span class="p">)</span>
+
+                <span class="c"># if has not checked, recluster again</span>
+                <span class="k">if</span> <span class="n">initial_cluster</span> <span class="o">!=</span> <span class="n">current_cluster</span> <span class="ow">and</span> <span class="n">recluster</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reclusters</span><span class="p">:</span>
+                    <span class="n">reclusters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">recluster</span><span class="p">)</span>
+                    <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_cluster</span>
+                    <span class="n">terminate</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="MajorClust._re_majorclust"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.MajorClust._re_majorclust">[docs]</a>    <span class="k">def</span> <span class="nf">_re_majorclust</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluating the neighbor nodes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node    : node</span>
+<span class="sd">            A node in a processed graph.</span>
+<span class="sd">        graph   : graph</span>
+<span class="sd">            A graph to be clustered. It can be original graph or the refined one.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># reclustering</span>
+        <span class="n">visited_neighbor</span><span class="p">,</span> <span class="n">visited_neigbor_num</span><span class="p">,</span> <span class="n">neighbor_weights</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+
+        <span class="c"># observe neighboring edges and nodes</span>
+        <span class="k">for</span> <span class="n">current_node</span><span class="p">,</span> <span class="n">neighbor_node</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">([</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">data</span><span class="o">=</span><span class="s">&#39;weight&#39;</span><span class="p">):</span>
+            <span class="n">neighbor_weights</span><span class="p">[</span><span class="n">neighbor_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight</span>
+            <span class="n">visited_neighbor</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">neighbor_node</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]]</span> <span class="o">=</span> \
+                <span class="n">visited_neighbor</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">neighbor_node</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">weight</span><span class="p">[</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
+
+        <span class="c"># get the weight</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">visited_neighbor</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">visited_neigbor_num</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="c"># attach a node to the cluster of majority of neighbor nodes</span>
+        <span class="n">current_cluster</span> <span class="o">=</span> <span class="n">visited_neigbor_num</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">visited_neigbor_num</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span> \
+            <span class="k">if</span> <span class="n">visited_neigbor_num</span> <span class="k">else</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">current_cluster</span>
+</div>
+<div class="viewcode-block" id="MajorClust._get_cluster"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.MajorClust._get_cluster">[docs]</a>    <span class="k">def</span> <span class="nf">_get_cluster</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get cluster in the form of dictionary of node identifier list. The cluster id is in incremental integer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">unique_cluster</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_unique_cluster</span><span class="p">()</span>
+        <span class="n">cluster_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">uc</span> <span class="ow">in</span> <span class="n">unique_cluster</span><span class="p">:</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s">&#39;True&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">uc</span><span class="p">:</span>
+                    <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clusters</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodes</span>
+            <span class="n">cluster_id</span> <span class="o">+=</span> <span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="MajorClust._get_unique_cluster"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.MajorClust._get_unique_cluster">[docs]</a>    <span class="k">def</span> <span class="nf">_get_unique_cluster</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get unique cluster identifier.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        unique_cluster  : set</span>
+<span class="sd">            A set containing unique cluster identifier.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cluster</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s">&#39;cluster&#39;</span><span class="p">)]</span>
+        <span class="n">unique_cluster</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">unique_cluster</span>
+
+</div></div>
+<div class="viewcode-block" id="ImprovedMajorClust"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.ImprovedMajorClust">[docs]</a><span class="k">class</span> <span class="nc">ImprovedMajorClust</span><span class="p">(</span><span class="n">MajorClust</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class that improves MajorClust.</span>
+
+<span class="sd">       It improves the method _re_majorclust to have re-evaluation. This procedure then add refine cluster step</span>
+<span class="sd">       as the re-majorclust provides overvitting clusters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The constructor of class ImprovedMajorClust.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        graph   : graph</span>
+<span class="sd">            A graph to be clustered.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ImprovedMajorClust</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rgraph</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="ImprovedMajorClust.get_improved_majorclust"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.ImprovedMajorClust.get_improved_majorclust">[docs]</a>    <span class="k">def</span> <span class="nf">get_improved_majorclust</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The main method to run improved MajorClust algorithm. The procedure gets the refined nodes and</span>
+<span class="sd">        call ImprovedMajorClust once again.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        clusters    : dict[list]</span>
+<span class="sd">            Dictionary of list containing node identifier for each cluster.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># run majorclust</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ImprovedMajorClust</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_majorclust</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+
+        <span class="c"># create new graph for refined_nodes and create edges</span>
+        <span class="n">refined_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refine_cluster</span><span class="p">()</span>
+        <span class="n">refined_graph</span> <span class="o">=</span> <span class="n">CreateGraph</span><span class="p">(</span><span class="n">refined_nodes</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">refined_graph</span><span class="o">.</span><span class="n">do_create</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rgraph</span> <span class="o">=</span> <span class="n">refined_graph</span><span class="o">.</span><span class="n">get_graph</span><span class="p">()</span>
+
+        <span class="c"># run improved majorclust with refined graph</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ImprovedMajorClust</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_majorclust</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rgraph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backto_prerefine</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clusters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ImprovedMajorClust</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_get_cluster</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">clusters</span>
+</div>
+<div class="viewcode-block" id="ImprovedMajorClust._re_majorclust"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.ImprovedMajorClust._re_majorclust">[docs]</a>    <span class="k">def</span> <span class="nf">_re_majorclust</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Re-evaluation of a node after clustered by standard MajorClust.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node    : node</span>
+<span class="sd">            An evaluated node.</span>
+<span class="sd">        graph   : graph</span>
+<span class="sd">            A graph to be clustered. It can be original graph or the refined one.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># reclustering</span>
+        <span class="n">visited_neighbor</span><span class="p">,</span> <span class="n">visited_neigbor_num</span><span class="p">,</span> <span class="n">neighbor_weights</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+
+        <span class="c"># observe neighboring edges and nodes</span>
+        <span class="k">for</span> <span class="n">current_node</span><span class="p">,</span> <span class="n">neighbor_node</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">([</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">data</span><span class="o">=</span><span class="s">&#39;weight&#39;</span><span class="p">):</span>
+            <span class="n">neighbor_weights</span><span class="p">[</span><span class="n">neighbor_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight</span>
+            <span class="n">visited_neighbor</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">neighbor_node</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]]</span> <span class="o">=</span> \
+                <span class="n">visited_neighbor</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">neighbor_node</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">weight</span><span class="p">[</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
+
+        <span class="c"># get the weight</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">visited_neighbor</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">visited_neigbor_num</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="c"># attach a node to the cluster of majority of neighbor nodes</span>
+        <span class="n">current_cluster</span> <span class="o">=</span> <span class="n">visited_neigbor_num</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">visited_neigbor_num</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span> \
+            <span class="k">if</span> <span class="n">visited_neigbor_num</span> <span class="k">else</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span>
+
+        <span class="c"># set event, cluster id, and its frequency for every cluster</span>
+        <span class="c"># a cluster is now represented as a node</span>
+        <span class="k">if</span> <span class="n">visited_neigbor_num</span><span class="p">:</span>
+            <span class="n">heaviest_neighbor_node</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">neighbor_weights</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">heaviest_neighbor_cluster</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">heaviest_neighbor_node</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">current_cluster</span> <span class="o">!=</span> <span class="n">heaviest_neighbor_cluster</span><span class="p">:</span>
+                <span class="n">current_cluster</span> <span class="o">=</span> <span class="n">heaviest_neighbor_cluster</span>
+
+        <span class="k">return</span> <span class="n">current_cluster</span>
+</div>
+<div class="viewcode-block" id="ImprovedMajorClust._refine_cluster"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.ImprovedMajorClust._refine_cluster">[docs]</a>    <span class="k">def</span> <span class="nf">_refine_cluster</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Refine cluster by representing a previously generated cluster as a vertex.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        refined_nodes   : list[list]</span>
+<span class="sd">            List of list containing node identifier and its properties.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># set event, cluster id, and its frequency for every cluster</span>
+        <span class="c"># a cluster is now represented as a node</span>
+        <span class="n">unique_cluster</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ImprovedMajorClust</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_get_unique_cluster</span><span class="p">()</span>
+        <span class="n">refined_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">all_events</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">uc</span> <span class="ow">in</span> <span class="n">unique_cluster</span><span class="p">:</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">member</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">total_frequency</span><span class="p">,</span> <span class="n">total_nodes</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+            <span class="n">timestamps</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">uc</span><span class="p">:</span>
+                    <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;event&#39;</span><span class="p">])</span>    <span class="c"># to be tested: not &#39;event&#39; but &#39;preprocessed_event&#39;</span>
+                    <span class="n">total_frequency</span> <span class="o">+=</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;frequency&#39;</span><span class="p">]</span>
+                    <span class="n">total_nodes</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">timestamps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;start&#39;</span><span class="p">])</span>
+                    <span class="n">timestamps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;end&#39;</span><span class="p">])</span>
+                    <span class="n">member</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="c"># get start and end time for a specific cluster</span>
+            <span class="n">sorted_timestamps</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">timestamps</span><span class="p">)</span>
+
+            <span class="c"># get multiple longest common substring for refined cluster label</span>
+            <span class="n">event_lcs</span> <span class="o">=</span> <span class="n">ClusterAbstraction</span><span class="o">.</span><span class="n">lcs</span><span class="p">(</span><span class="n">events</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">events</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">refined_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">uc</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;event&#39;</span><span class="p">:</span> <span class="n">event_lcs</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="s">&#39;tf-idf&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;length&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;cluster&#39;</span><span class="p">:</span> <span class="n">uc</span><span class="p">,</span>
+                                       <span class="s">&#39;frequency&#39;</span><span class="p">:</span> <span class="n">total_frequency</span><span class="p">,</span> <span class="s">&#39;total_nodes&#39;</span><span class="p">:</span> <span class="n">total_nodes</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+                                       <span class="s">&#39;start&#39;</span><span class="p">:</span> <span class="n">sorted_timestamps</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;end&#39;</span><span class="p">:</span> <span class="n">sorted_timestamps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s">&#39;member&#39;</span><span class="p">:</span> <span class="n">member</span><span class="p">}])</span>
+            <span class="n">all_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event_lcs</span><span class="p">)</span>
+
+        <span class="c"># set tf-idf and document length for refined_nodes</span>
+        <span class="n">preprocess</span> <span class="o">=</span> <span class="n">PreprocessLog</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">uc</span> <span class="ow">in</span> <span class="n">unique_cluster</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">refined_nodes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">uc</span><span class="p">:</span>
+                    <span class="n">preprocessed_events</span><span class="p">,</span> <span class="n">tfidf</span> <span class="o">=</span> \
+                        <span class="n">preprocess</span><span class="o">.</span><span class="n">get_tfidf</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;event&#39;</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_events</span><span class="p">)),</span> <span class="n">all_events</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">tfidf</span><span class="p">:</span>
+                        <span class="c"># print node[1][&#39;event&#39;]</span>
+                        <span class="k">pass</span>
+                    <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;tf-idf&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tfidf</span>
+                    <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;length&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">get_doclength</span><span class="p">(</span><span class="n">tfidf</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">refined_nodes</span>
+</div>
+<div class="viewcode-block" id="ImprovedMajorClust._backto_prerefine"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.ImprovedMajorClust._backto_prerefine">[docs]</a>    <span class="k">def</span> <span class="nf">_backto_prerefine</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This procedure will convert the result of clustering from refined graph to original graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cluster</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rgraph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s">&#39;cluster&#39;</span><span class="p">)]</span>
+        <span class="n">unique_cluster</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">uc</span> <span class="ow">in</span> <span class="n">unique_cluster</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rgraph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">uc</span><span class="p">:</span>
+                    <span class="n">members</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;member&#39;</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">member</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uc</span></div></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hudan Studiawan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

@@ -41,8 +41,8 @@ def main():
         Homogeneity, completeness and V-measure.
     """
     groundtruth_path = '/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1/161.166.232.17/'
-    groundtruth_file = groundtruth_path + 'auth.log.anon.labeled'
-    analyzed_file = groundtruth_path + 'auth.log.anon'
+    groundtruth_file = groundtruth_path + 'dec-7.log.labeled'
+    analyzed_file = groundtruth_path + 'dec-7.log'
     graph_method = ['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
                     'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust']
     nongraph_method = ['iplom', 'lke']
@@ -54,7 +54,7 @@ def main():
                       action='store',
                       dest='method',
                       choices=methods,
-                      default='majorclust',
+                      default='maxclique_percolation_weighted',
                       help='Graph clustering method to run.')
     parser.add_option('-l', '--logfile',
                       action='store',
@@ -69,7 +69,7 @@ def main():
     parser.add_option('-g', '--geometric',
                       action='store',
                       dest='g',
-                      default=0.2,
+                      default=0.1,
                       help='Threshold of geometric mean.')
     parser.add_option('-c', '--cosine',
                       action='store',
@@ -81,6 +81,21 @@ def main():
                       dest='s',
                       default=False,
                       help='Streaming the processed graph to Gephi.')
+    parser.add_option('-d', '--ground-truth-dir',
+                      action='store',
+                      dest='d',
+                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1/161.166.232.17/',
+                      help='A path for ground truth directory.')
+    parser.add_option('-t', '--ground-truth-file',
+                      action='store',
+                      dest='t',
+                      default='dec-7.log.labeled',
+                      help='A ground truth for analyzed log file.')
+    parser.add_option('-f', '--analyzed-file',
+                      action='store',
+                      dest='f',
+                      default='dec-7.log',
+                      help='A log file to be analyzed.')
 
     # get options
     (options, args) = parser.parse_args()
@@ -151,14 +166,12 @@ def main():
         elif options.method == 'majorclust':
             # please note that this method is not suitable for a dense graph.
             mc = MajorClust(graph)
-            clusters = mc.get_majorclust()
-            print clusters
+            clusters = mc.get_majorclust(graph)
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
         elif options.method == 'improved_majorclust':
             imc = ImprovedMajorClust(graph)
             clusters = imc.get_improved_majorclust()
-            print clusters
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
 
