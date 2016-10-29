@@ -82,7 +82,7 @@ class ClusterUtility(object):
 
     @staticmethod
     def set_cluster_label_id(graph, clusters, original_logs, analysis_dir):
-        """Get all logs per cluster, get most dominant cluster label, and write clustering result to file.
+        """Get all logs per cluster, get most dominant cluster label, and write clustering result to file [Manning2008]_.
 
         Parameters
         ----------
@@ -97,9 +97,9 @@ class ClusterUtility(object):
 
         References
         ----------
-        .. [1] Christopher D. Manning, Prabhakar Raghavan & Hinrich Schutze, Evaluation of clustering,
-               in Introduction to Information Retrieval, 2008, Cambridge University Press.
-               http://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-clustering-1.html
+        .. [Manning2008] Christopher D. Manning, Prabhakar Raghavan & Hinrich Schutze, Evaluation of clustering,
+                         in Introduction to Information Retrieval, 2008, Cambridge University Press.
+                         http://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-clustering-1.html
         """
         new_cluster_member_label = {}   # store individiual cluster id for each cluster member
         dominant_cluster_labels = {}    # store dominant cluster label from all clusters
