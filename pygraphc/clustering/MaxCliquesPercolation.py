@@ -8,15 +8,13 @@ class MaxCliquesPercolation(KCliquePercolation):
     """This class find maximal cliques and their percolation in a graph.
 
     The procedure will find any intersection (percolation) between any maximal cliques found.
-    The cluster is defined as percolated maximal cliques.
+    The cluster is defined as percolated maximal cliques [Reid2012]_.
 
     References
     ----------
-    .. [1] Guimei Liu, Limsoon Wong, and Hon Nian Chua. Complex discovery from weighted PPI networks.
-           Bioinformatics, 25(15):1891-1897, 2009.
-    .. [2] Fergal Reid, Aaron McDaid, and Neil Hurley. Percolation computation in complex networks.
-           In Proceedings of the 2012 IEEE/ACM International Conference on Advances in Social Networks
-           Analysis and Mining, pp. 274-281, 2012.
+    .. [Reid2012] Fergal Reid, Aaron McDaid, and Neil Hurley. Percolation computation in complex networks.
+                  In Proceedings of the 2012 IEEE/ACM International Conference on Advances in Social Networks
+                  Analysis and Mining, pp. 274-281, 2012.
     """
     def __init__(self, graph, edges_weight, nodes_id, k):
         """This is the constructor of class MaxCliquesPercolation
@@ -81,18 +79,18 @@ class MaxCliquesPercolation(KCliquePercolation):
 
 
 class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
-    """This is a class for maximal clique percolation with edge weight [1]_.
+    """This is a class for maximal clique percolation with edge weight [Liu2009]_.
 
     Edge weight is evaluated using intensity threshold or the geometric mean
-    for all edge weights in a maximal clique [2]_. We then remove the overlapping nodes
-    where a node only follow the weighter neighboring cluster [2]_.
+    for all edge weights in a maximal clique [Studiawan2016c]_. We then remove the overlapping nodes
+    where a node only follow the weighter neighboring cluster [Studiawan2016c]_.
 
     References
     ----------
-    .. [1] Guimei Liu, Limsoon Wong, and Hon Nian Chua. Complex discovery from
-           weighted PPI networks. Bioinformatics, 25(15):1891-1897, 2009.
-    .. [2] H. Studiawan, C. Payne, F. Sohel, SSH log clustering using weighted
-           maximal clique percolation (to be submitted).
+    .. [Liu2009]        Guimei Liu, Limsoon Wong, and Hon Nian Chua. Complex discovery from
+                        weighted PPI networks. Bioinformatics, 25(15):1891-1897, 2009.
+    .. [Studiawan2016c] H. Studiawan, C. Payne, F. Sohel, SSH log clustering using weighted
+                        maximal clique percolation (to be submitted).
     """
     def __init__(self, graph, edges_weight, nodes_id, k, threshold):
         """This is the constructor of class MaxCliquePercolation Weighted.
