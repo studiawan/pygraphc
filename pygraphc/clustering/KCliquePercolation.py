@@ -5,18 +5,19 @@ from ClusterUtility import ClusterUtility
 
 
 class KCliquePercolation(object):
-    """This is a class for graph clustering based on k-clique percolation [1]_.
+    """This is a class for graph clustering based on k-clique percolation [Farkas2007]_.
 
     The procedure will find k-clique. If there is any percolation between k-cliques, it will be set as a cluster.
-    The unnecessary edges will be removed. The use of this method for event log clustering was presented in [2]_.
+    The unnecessary edges will be removed. The use of this method for event log clustering
+    was presented in [Studiawan2016b]_.
 
     References
     ----------
-    .. [1] I. J. Farkas, D. Abel, G. Palla, and T. Vicsek, Weighted network modules,
-           New Journal of Physics, 9(6), p. 180, 2007.
-    .. [2] H. Studiawan, B. A. Pratomo, and R. Anggoro, Clustering of SSH brute-force attack logs using
-           k-clique percolation, in Proceedings of the 10th International Conference on Information Communication
-           Technology and Systems, pp. 33-36, 2016.
+    .. [Farkas2007]     I. J. Farkas, D. Abel, G. Palla, and T. Vicsek, Weighted network modules,
+                        New Journal of Physics, 9(6), p. 180, 2007.
+    .. [Studiawan2016b] H. Studiawan, B. A. Pratomo, and R. Anggoro, Clustering of SSH brute-force attack logs using
+                        k-clique percolation, in Proceedings of the 10th International Conference on Information
+                        Communication Technology and Systems, pp. 33-36, 2016.
     """
     def __init__(self, graph, edges_weight, nodes_id, k):
         """This is a constructor for class KCliquePercolation.
@@ -122,7 +123,7 @@ class KCliquePercolation(object):
 
         Notes
         -----
-        Based on the algorithm published by Zhang et al. (2005) [1]_
+        Based on the algorithm published by Zhang et al. (2005) [Zhang2005]_
         and adapted to output all cliques discovered.
         This algorithm is not applicable on directed graphs.
         This algorithm ignores self-loops and parallel edges as
@@ -132,20 +133,20 @@ class KCliquePercolation(object):
         since it only keeps candidate sublists in memory and
         continuously removes exhausted sublists.
 
-        The original source code is taken from NetworkX development branch [2]_.
+        The original source code is taken from NetworkX development branch [Schult2016]_.
 
         References
         ----------
-        .. [1] Yun Zhang, Abu-Khzam, F.N., Baldwin, N.E., Chesler, E.J.,
-               Langston, M.A., Samatova, N.F.,
-               Genome-Scale Computational Approaches to Memory-Intensive
-               Applications in Systems Biology.
-               Supercomputing, 2005. Proceedings of the ACM/IEEE SC 2005
-               Conference, pp. 12, 12-18 Nov. 2005.
-               doi: 10.1109/SC.2005.29.
-               http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=1559964&isnumber=33129
-        .. [2] Dan Schult, Source code for networkx.algorithms.clique.
-               https://networkx.github.io/documentation/development/_modules/networkx/algorithms/clique.html
+        .. [Zhang2005]  Yun Zhang, Abu-Khzam, F.N., Baldwin, N.E., Chesler, E.J.,
+                        Langston, M.A., Samatova, N.F.,
+                        Genome-Scale Computational Approaches to Memory-Intensive
+                        Applications in Systems Biology.
+                        Supercomputing, 2005. Proceedings of the ACM/IEEE SC 2005
+                        Conference, pp. 12, 12-18 Nov. 2005.
+                        doi: 10.1109/SC.2005.29.
+                        http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=1559964&isnumber=33129
+        .. [Schult2016] Dan Schult, Source code for networkx.algorithms.clique.
+                        https://networkx.github.io/documentation/development/_modules/networkx/algorithms/clique.html
         """
 
         print 'enumerate_all_cliques ...'
