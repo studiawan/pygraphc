@@ -5,13 +5,13 @@ from pygraphc.preprocess.CreateGraph import CreateGraph
 
 
 class MajorClust(object):
-    """The implementation of MajorClust graph clustering algorithm [1]_.
+    """The implementation of MajorClust graph clustering algorithm [Stein1999]_.
 
     References
     ----------
-    .. [1] B. Stein and O. Niggemann, On the nature of structure and its identification,
-           Proceedings of the 25th International Workshop on Graph-Theoretic Concepts in Computer Science,
-           pp. 122-134, 1999.
+    .. [Stein1999] B. Stein and O. Niggemann, On the nature of structure and its identification,
+                   Proceedings of the 25th International Workshop on Graph-Theoretic Concepts in Computer Science,
+                   pp. 122-134, 1999.
     """
     def __init__(self, graph):
         """The constructor of class MajorClust.
