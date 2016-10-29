@@ -3,12 +3,12 @@ from ClusterUtility import ClusterUtility
 
 
 class ConnectedComponents:
-    """This is a class for connected component detection method to cluster event logs [1]_.
+    """This is a class for connected component detection method to cluster event logs [Studiawan2016a]_.
 
     References
     ----------
-    .. [1] H. Studiawan, B. A. Pratomo, and R. Anggoro, Connected component detection for authentication log
-           clustering, The 2nd International Seminar on Science and Technology, 2016, pp. 495-496.
+    .. [Studiawan2016a] H. Studiawan, B. A. Pratomo, and R. Anggoro, Connected component detection for authentication log
+                        clustering, The 2nd International Seminar on Science and Technology, 2016, pp. 495-496.
     """
     def __init__(self, graph):
         """This is a constructor for ConnectedComponent class.
