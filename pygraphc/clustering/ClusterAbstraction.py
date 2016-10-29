@@ -1,10 +1,10 @@
 
 class ClusterAbstraction(object):
-    """Get cluster abstraction based on longest common substring.
+    """Get cluster abstraction based on longest common substring [jtjacques2010]_.
 
     References
     ----------
-    .. [1] jtjacques, Longest common substring from more than two strings - Python.
+    .. [jtjacques2010] jtjacques, Longest common substring from more than two strings - Python.
            http://stackoverflow.com/questions/2892931/longest-common-substring-from-more-than-two-strings-python.
     """
     @staticmethod
