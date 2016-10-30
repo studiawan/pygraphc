@@ -35,7 +35,7 @@ class ClusterEvaluation(object):
 
     @staticmethod
     def get_adjusted_rand_score(standard_file, prediction_file):
-        """Get adjusted rand index.
+        """Get adjusted rand index [Hubert1985]_.
 
         Parameters
         ----------
@@ -43,10 +43,16 @@ class ClusterEvaluation(object):
             The ground truth or standard filename.
         prediction_file : str
             The analyzed or predicted filename.
+
         Returns
         -------
         adjusted_rand_index : float
             Adjusted rand index.
+
+        References
+        ----------
+        .. [Hubert1985] Lawrence Hubert and Phipps Arabie. Comparing partitions.
+                        Journal of Classification, 2(1):193-218, 1985.
         """
         standard_labels = ClusterEvaluation.get_evaluated(standard_file)
         prediction_labels = ClusterEvaluation.get_evaluated(prediction_file)
@@ -56,7 +62,7 @@ class ClusterEvaluation(object):
 
     @staticmethod
     def get_adjusted_mutual_info_score(standard_file, prediction_file):
-        """Get adjusted mutual information (AMI).
+        """Get adjusted mutual information (AMI) [Vinh2009]_.
 
         Parameters
         ----------
@@ -69,6 +75,13 @@ class ClusterEvaluation(object):
         -------
         adjusted_mutual_info    : float
             Adjusted mutual information score.
+
+        References
+        ----------
+        .. [Vinh2009] Vinh, Nguyen Xuan, Julien Epps, and James Bailey. "Information theoretic measures for
+                      clusterings comparison: is a correction for chance necessary?."
+                      In Proceedings of the 26th Annual International Conference on Machine Learning,
+                      pp. 1073-1080, 2009.
         """
         standard_labels = ClusterEvaluation.get_evaluated(standard_file)
         prediction_labels = ClusterEvaluation.get_evaluated(prediction_file)
@@ -78,7 +91,7 @@ class ClusterEvaluation(object):
 
     @staticmethod
     def get_normalized_mutual_info_score(standard_file, prediction_file):
-        """Get normalized mutual information (NMI).
+        """Get normalized mutual information (NMI) [Strehl2002]_.
 
         Parameters
         ----------
@@ -91,6 +104,12 @@ class ClusterEvaluation(object):
         -------
         normalized_mutual_info  : float
             Normalized mutual information score.
+
+        References
+        ----------
+        .. [Strehl2002] Alexander Strehl and Joydeep Ghosh. Cluster ensembles A knowledge reuse framework
+                        for combining multiple partitions. Journal of Machine Learning Research,
+                        3(Dec):583-617, 2002.
         """
         standard_labels = ClusterEvaluation.get_evaluated(standard_file)
         prediction_labels = ClusterEvaluation.get_evaluated(prediction_file)
@@ -100,7 +119,7 @@ class ClusterEvaluation(object):
 
     @staticmethod
     def get_homogeneity_completeness_vmeasure(standard_file, prediction_file):
-        """Get homogeneity, completeness, and V-measure score.
+        """Get homogeneity, completeness, and V-measure score [Rosenberg2007]_.
 
         Parameters
         ----------
@@ -113,6 +132,13 @@ class ClusterEvaluation(object):
         -------
         homogeneity_completeness_vmeasure   : tuple
             Homogeneity, completeness, and V-measure score
+
+        References
+        ----------
+        .. [Rosenberg2007] Andrew Rosenberg and Julia Hirschberg. V-Measure: A conditional entropy-based
+                           external cluster evaluation measure. In Proceedings of the 2007 Joint Conference on
+                           Empirical Methods in Natural Language Processing and Computational
+                           Natural Language Learning, volume 7, pages 410-420, 2007.
         """
         standard_labels = ClusterEvaluation.get_evaluated(standard_file)
         prediction_labels = ClusterEvaluation.get_evaluated(prediction_file)
@@ -150,7 +176,9 @@ class ClusterEvaluation(object):
         Parameters
         ----------
         standard_file   : str
+            The ground truth or standard filename.
         prediction_file : str
+            The analyzed or predicted filename.
 
         Returns
         -------
@@ -170,7 +198,9 @@ class ClusterEvaluation(object):
         Parameters
         ----------
         standard_file   : str
+            The ground truth or standard filename.
         prediction_file : str
+            The analyzed or predicted filename.
 
         Returns
         -------
