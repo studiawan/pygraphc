@@ -5,6 +5,7 @@ from pygraphc.clustering.ConnectedComponents import ConnectedComponents
 from pygraphc.clustering.KCliquePercolation import KCliquePercolation, KCliquePercolationWeighted
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolation, MaxCliquesPercolationWeighted
 from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
+from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.visualization.GraphStreaming import GraphStreaming
 from time import time  # , sleep
 from pygraphc.clustering.ClusterUtility import ClusterUtility
@@ -40,11 +41,9 @@ def main():
     homogeneity_completeness_vmeasure   : float
         Homogeneity, completeness and V-measure.
     """
-    groundtruth_path = '/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1/161.166.232.17/'
-    groundtruth_file = groundtruth_path + 'dec-7.log.labeled'
-    analyzed_file = groundtruth_path + 'dec-7.log'
     graph_method = ['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
-                    'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust']
+                    'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust',
+                    'graph_entropy']
     nongraph_method = ['iplom', 'lke']
     methods = graph_method + nongraph_method
 
@@ -54,13 +53,8 @@ def main():
                       action='store',
                       dest='method',
                       choices=methods,
-                      default='maxclique_percolation_weighted',
+                      default='graph_entropy',
                       help='Graph clustering method to run.')
-    parser.add_option('-l', '--logfile',
-                      action='store',
-                      dest='logfile',
-                      default=analyzed_file,
-                      help='Log file to analyze.')
     parser.add_option('-k', '--kpercolation',
                       action='store',
                       dest='k',
@@ -99,12 +93,15 @@ def main():
 
     # get options
     (options, args) = parser.parse_args()
-    logfile = options.logfile
     k = options.k
     geometric_mean_threshold = options.g
 
+    groundtruth_path = options.d
+    groundtruth_file = groundtruth_path + options.t
+    analyzed_file = groundtruth_path + options.f
+
     # preprocess log file
-    p = PreprocessLog(logfile)
+    p = PreprocessLog(analyzed_file)
     p.do_preprocess()
     events_unique = p.get_eventsunique()
     logs = p.get_logs()
@@ -123,7 +120,6 @@ def main():
         edges = g.get_edges_dict()
         edges_weight = g.get_edges_weight()
         nodes_id = g.get_nodes_id()
-        # maxcliques = None
 
         # prediction result file
         if options.method in ['maxclique_percolation', 'maxclique_percolation_weighted', 'kclique_percolation',
@@ -132,7 +128,7 @@ def main():
                               '-c=' + str(options.c) + '.log'
         elif options.method in ['connected_components']:
             prediction_file = './results-c=' + str(options.c) + '.log'
-        elif options.method in ['majorclust', 'improved_majorclust']:
+        elif options.method in ['majorclust', 'improved_majorclust', 'graph_entropy']:
             prediction_file = './results.log'
 
         # run the selected method
@@ -160,7 +156,6 @@ def main():
         elif options.method == 'maxclique_percolation_weighted':
             mcpw = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id, k, geometric_mean_threshold)
             clusters = mcpw.get_maxcliques_percolation_weighted()
-            # maxcliques = mcpw.get_maxcliques()
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
         elif options.method == 'majorclust':
@@ -172,6 +167,11 @@ def main():
         elif options.method == 'improved_majorclust':
             imc = ImprovedMajorClust(graph)
             clusters = imc.get_improved_majorclust()
+            if options.s:
+                graph_streaming(graph, edges, removed_edges)
+        elif options.method == 'graph_entropy':
+            ge = GraphEntropy(graph)
+            clusters = ge.get_graph_entropy()
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
 
@@ -199,8 +199,6 @@ def main():
 def graph_streaming(graph, edges, removed_edges):
     stream = GraphStreaming(graph, edges, 0)
     stream.gephi_streaming()
-    # sleep(120)
-    # stream.change_color(maxcliques)
     if removed_edges:
         # print 'sleeping for 120 seconds ...'
         # sleep(120)
