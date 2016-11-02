@@ -1,13 +1,15 @@
 from math import log
+from ClusterUtility import ClusterUtility
 
 
 class GraphEntropy(object):
     def __init__(self, graph):
         self.graph = graph
-        self.clusters = []
 
     def get_graph_entropy(self):
         nodes = set(self.graph.nodes())
+        clusters = {}
+        cluster_id = 0
 
         while nodes:
             seed_node = nodes.pop()
@@ -46,9 +48,15 @@ class GraphEntropy(object):
             nodes -= cluster_candidate
 
             if len(cluster_candidate) > 0:
-                print '-'.join(str(c) for c in cluster_candidate)
+                clusters[cluster_id] = list(cluster_candidate)
+                cluster_id += 1
+                # print '-'.join(str(c) for c in cluster_candidate)
+
+        ClusterUtility.set_cluster_id(self.graph, clusters)
+        return clusters
 
     def _get_entropies(self, cluster_candidate, neighbors):
+        # get entropy from cluster candidate or all nodes in a graph.
         entropies = {}
         for node in neighbors:
             entropies[node] = self._get_node_entropy(cluster_candidate, node)
@@ -73,5 +81,4 @@ class GraphEntropy(object):
         entropy = 0 if inner_probability <= 0.0 or inner_probability >= 1.0 else \
             -inner_probability * log(inner_probability, 2) - (1 - inner_probability) * log(1 - inner_probability, 2)
 
-        # print 'entropy', node, entropy
         return entropy
