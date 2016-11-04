@@ -1,16 +1,17 @@
 from optparse import OptionParser
-from pygraphc.preprocess.PreprocessLog import PreprocessLog
-from pygraphc.preprocess.CreateGraph import CreateGraph
-from pygraphc.clustering.ConnectedComponents import ConnectedComponents
-from pygraphc.clustering.KCliquePercolation import KCliquePercolation, KCliquePercolationWeighted
-from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolation, MaxCliquesPercolationWeighted
-from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
-from pygraphc.clustering.GraphEntropy import GraphEntropy
-from pygraphc.visualization.GraphStreaming import GraphStreaming
 from time import time  # , sleep
-from pygraphc.clustering.ClusterUtility import ClusterUtility
-from pygraphc.clustering.ClusterEvaluation import ClusterEvaluation
+
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
+from pygraphc.clustering.ClusterUtility import ClusterUtility
+from pygraphc.clustering.ConnectedComponents import ConnectedComponents
+from pygraphc.clustering.GraphEntropy import GraphEntropy
+from pygraphc.clustering.KCliquePercolation import KCliquePercolation, KCliquePercolationWeighted
+from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
+from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolation, MaxCliquesPercolationWeighted
+from pygraphc.evaluation.ClusterEvaluation import ClusterEvaluation
+from pygraphc.preprocess.CreateGraph import CreateGraph
+from pygraphc.preprocess.PreprocessLog import PreprocessLog
+from pygraphc.visualization.GraphStreaming import GraphStreaming
 
 
 def main():

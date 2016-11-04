@@ -1,7 +1,8 @@
 from operator import itemgetter
-from pygraphc.clustering.ClusterAbstraction import ClusterAbstraction
-from pygraphc.preprocess.PreprocessLog import PreprocessLog
+
+from pygraphc.abstraction.ClusterAbstraction import ClusterAbstraction
 from pygraphc.preprocess.CreateGraph import CreateGraph
+from pygraphc.preprocess.PreprocessLog import PreprocessLog
 
 
 class MajorClust(object):

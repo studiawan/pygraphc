@@ -1,6 +1,7 @@
-from pygraphc.clustering.ClusterUtility import ClusterUtility
-from pygraphc.clustering.ClusterAbstraction import ClusterAbstraction
 import csv
+
+from pygraphc.abstraction.ClusterAbstraction import ClusterAbstraction
+from pygraphc.clustering.ClusterUtility import ClusterUtility
 
 
 class AnomalyScore(object):
