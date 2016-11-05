@@ -44,9 +44,9 @@
         
   <h1>Source code for pygraphc.clustering.MajorClust</h1><div class="highlight"><pre>
 <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
-<span class="kn">from</span> <span class="nn">pygraphc.clustering.ClusterAbstraction</span> <span class="kn">import</span> <span class="n">ClusterAbstraction</span>
-<span class="kn">from</span> <span class="nn">pygraphc.preprocess.PreprocessLog</span> <span class="kn">import</span> <span class="n">PreprocessLog</span>
+<span class="kn">from</span> <span class="nn">pygraphc.abstraction.ClusterAbstraction</span> <span class="kn">import</span> <span class="n">ClusterAbstraction</span>
 <span class="kn">from</span> <span class="nn">pygraphc.preprocess.CreateGraph</span> <span class="kn">import</span> <span class="n">CreateGraph</span>
+<span class="kn">from</span> <span class="nn">pygraphc.preprocess.PreprocessLog</span> <span class="kn">import</span> <span class="n">PreprocessLog</span>
 
 
 <div class="viewcode-block" id="MajorClust"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.MajorClust.MajorClust">[docs]</a><span class="k">class</span> <span class="nc">MajorClust</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -201,7 +201,7 @@
         <span class="n">refined_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refine_cluster</span><span class="p">()</span>
         <span class="n">refined_graph</span> <span class="o">=</span> <span class="n">CreateGraph</span><span class="p">(</span><span class="n">refined_nodes</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">refined_graph</span><span class="o">.</span><span class="n">do_create</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rgraph</span> <span class="o">=</span> <span class="n">refined_graph</span><span class="o">.</span><span class="n">get_graph</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rgraph</span> <span class="o">=</span> <span class="n">refined_graph</span><span class="o">.</span><span class="n">g</span>
 
         <span class="c"># run improved majorclust with refined graph</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ImprovedMajorClust</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_majorclust</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rgraph</span><span class="p">)</span>

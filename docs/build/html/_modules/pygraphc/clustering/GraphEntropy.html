@@ -44,13 +44,126 @@
         
   <h1>Source code for pygraphc.clustering.GraphEntropy</h1><div class="highlight"><pre>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">ClusterUtility</span> <span class="kn">import</span> <span class="n">ClusterUtility</span>
 
 
 <div class="viewcode-block" id="GraphEntropy"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.GraphEntropy.GraphEntropy">[docs]</a><span class="k">class</span> <span class="nc">GraphEntropy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class for graph clustering using entropy-based method [Kenley2011]_. The review of</span>
+<span class="sd">       some graph clustering method for PPI networks, including this entropy-based, was presented in [Price2013]_.</span>
+<span class="sd">       This code is NetworkX version of the original code by True Price [Price2016]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [Kenley2011] Edward Casey Kenley and Young-Rae Cho, Detecting protein complexes and functional modules</span>
+<span class="sd">                    from protein interaction networks: A graph entropy approach,</span>
+<span class="sd">                    Proteomics 2011, 11, pp. 3835-3844.</span>
+<span class="sd">    .. [Price2013]  True Price, Francisco I Pena III, Young-Rae Cho, Survey: Enhancing Protein Complex Prediction in</span>
+<span class="sd">                    PPI Networks with GO Similarity Weighting, Interdisciplinary Sciences: Computational Life Sciences,</span>
+<span class="sd">                    5(3), pp. 196-210, 2013.</span>
+<span class="sd">    .. [Price2016]  True Price, Graph clustering in Python, https://github.com/trueprice/python-graph-clustering.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The constructor for class GraphEntropy.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        graph   : graph</span>
+<span class="sd">            A graph to be clustered.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
 
-<div class="viewcode-block" id="GraphEntropy.get_node_entropy"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.GraphEntropy.GraphEntropy.get_node_entropy">[docs]</a>    <span class="k">def</span> <span class="nf">get_node_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_candidate</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphEntropy.get_graph_entropy"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.GraphEntropy.GraphEntropy.get_graph_entropy">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The main method to execute clustering based on graph entropy.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        clusters    : dict[list]</span>
+<span class="sd">            Dictionary of list containing nodes for each cluster.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">cluster_id</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">while</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">seed_node</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">cluster_candidate</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">seed_node</span><span class="p">))</span>
+            <span class="n">cluster_candidate</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">seed_node</span><span class="p">)</span>
+            <span class="n">entropies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_entropies</span><span class="p">(</span><span class="n">cluster_candidate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+
+            <span class="c"># removing neighbors to minimize entropy</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">cluster_candidate</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node</span> <span class="o">==</span> <span class="n">seed_node</span><span class="p">:</span>   <span class="c"># don&#39;t remove the seed node</span>
+                    <span class="k">continue</span>
+
+                <span class="n">new_cluster</span> <span class="o">=</span> <span class="n">cluster_candidate</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">new_cluster</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="n">new_entropies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_entropies</span><span class="p">(</span><span class="n">new_cluster</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">new_entropies</span><span class="o">.</span><span class="n">itervalues</span><span class="p">())</span> <span class="o">&lt;</span> <span class="nb">sum</span><span class="p">(</span><span class="n">entropies</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node</span><span class="p">)):</span>
+                    <span class="n">cluster_candidate</span> <span class="o">=</span> <span class="n">new_cluster</span>
+                    <span class="n">entropies</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">new_entropies</span><span class="p">)</span>
+
+            <span class="c"># boundary candidates, a intersection with b</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">|</span> <span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cluster_candidate</span><span class="p">))</span> <span class="o">-</span> \
+                <span class="n">cluster_candidate</span>
+
+            <span class="k">while</span> <span class="n">c</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">new_cluster</span> <span class="o">=</span> <span class="n">cluster_candidate</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">new_cluster</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="n">new_entropies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_entropies</span><span class="p">(</span><span class="n">new_cluster</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">new_entropies</span><span class="o">.</span><span class="n">itervalues</span><span class="p">())</span> <span class="o">&lt;</span> <span class="nb">sum</span><span class="p">(</span><span class="n">entropies</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node</span><span class="p">)):</span>
+                    <span class="n">cluster_candidate</span> <span class="o">=</span> <span class="n">new_cluster</span>
+                    <span class="n">entropies</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">new_entropies</span><span class="p">)</span>
+                    <span class="n">c</span> <span class="o">&amp;=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node</span><span class="p">))</span> <span class="o">-</span> <span class="n">cluster_candidate</span>
+
+            <span class="n">nodes</span> <span class="o">-=</span> <span class="n">cluster_candidate</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_candidate</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">clusters</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cluster_candidate</span><span class="p">)</span>
+                <span class="n">cluster_id</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c"># print &#39;-&#39;.join(str(c) for c in cluster_candidate)</span>
+
+        <span class="n">ClusterUtility</span><span class="o">.</span><span class="n">set_cluster_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">clusters</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">clusters</span>
+</div>
+<div class="viewcode-block" id="GraphEntropy._get_entropies"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.GraphEntropy.GraphEntropy._get_entropies">[docs]</a>    <span class="k">def</span> <span class="nf">_get_entropies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_candidate</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get entropy from cluster candidate or all nodes in a graph.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cluster_candidate   : iterable</span>
+<span class="sd">            The entity to be analyzed for its entropy. It can be cluster candidate or a graph.</span>
+<span class="sd">        neighbors           : list</span>
+<span class="sd">            The neigbors of processed node.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        entropies   : dict</span>
+<span class="sd">            Dictionary of entropies. Key: node identifier and value: entropy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">entropies</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span>
+            <span class="n">entropies</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_entropy</span><span class="p">(</span><span class="n">cluster_candidate</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">entropies</span>
+</div>
+<div class="viewcode-block" id="GraphEntropy._get_node_entropy"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.GraphEntropy.GraphEntropy._get_node_entropy">[docs]</a>    <span class="k">def</span> <span class="nf">_get_node_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_candidate</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get node&#39;s entropy.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cluster_candidate   : set</span>
+<span class="sd">            The entity to be analyzed for its entropy. It can be cluster candidate or a graph.</span>
+<span class="sd">        node                : int</span>
+<span class="sd">            The analyzed node to be calculated for its entropy.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        entropy : float</span>
+<span class="sd">            Entropy for a particular node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c"># get node degree with weight</span>
         <span class="n">degree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s">&#39;weight&#39;</span><span class="p">)[</span><span class="n">node</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">degree</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -61,62 +174,14 @@
         <span class="n">neighbors_weight_sum</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">neighbors_weight</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">cluster_candidate</span><span class="p">:</span>
-                <span class="n">neighbors_weight_sum</span> <span class="o">+=</span> <span class="n">weight</span><span class="p">[</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
+                <span class="n">neighbors_weight_sum</span> <span class="o">+=</span> <span class="n">weight</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
         <span class="n">inner_probability</span> <span class="o">=</span> <span class="n">neighbors_weight_sum</span> <span class="o">/</span> <span class="n">degree</span>
 
         <span class="c"># get entropy</span>
         <span class="n">entropy</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">inner_probability</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">inner_probability</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="k">else</span> \
             <span class="o">-</span><span class="n">inner_probability</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">inner_probability</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">inner_probability</span><span class="p">)</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">inner_probability</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">entropy</span>
-</div>
-<div class="viewcode-block" id="GraphEntropy.get_entropies"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.GraphEntropy.GraphEntropy.get_entropies">[docs]</a>    <span class="k">def</span> <span class="nf">get_entropies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_candidate</span><span class="p">):</span>
-        <span class="n">entropies</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
-            <span class="n">entropies</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_node_entropy</span><span class="p">(</span><span class="n">cluster_candidate</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">entropies</span>
-</div>
-<div class="viewcode-block" id="GraphEntropy.get_graph_entropy"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.GraphEntropy.GraphEntropy.get_graph_entropy">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span>
-        <span class="c"># clusters = []</span>
-        <span class="n">cluster_candidate</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">entropies</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
-            <span class="n">initial_node</span> <span class="o">=</span> <span class="n">node</span>
-            <span class="n">cluster_candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">initial_node</span><span class="p">)</span>
-            <span class="n">cluster_candidate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">initial_node</span><span class="p">)</span>
-            <span class="n">entropies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_entropies</span><span class="p">(</span><span class="n">cluster_candidate</span><span class="p">)</span>
-
-            <span class="c"># removing neighbors to minimize entropy</span>
-            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cluster_candidate</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">node</span><span class="p">:</span>   <span class="c"># don&#39;t remove our seed, obviously</span>
-                    <span class="k">continue</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">new_cluster</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cluster_candidate</span><span class="p">)</span>
-                    <span class="n">new_cluster</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-                    <span class="n">new_entropies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_entropies</span><span class="p">(</span><span class="n">new_cluster</span><span class="p">)</span>
-
-                    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">new_entropies</span><span class="o">.</span><span class="n">itervalues</span><span class="p">())</span> <span class="o">&lt;</span> <span class="nb">sum</span><span class="p">(</span><span class="n">entropies</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cluster_candidate</span><span class="p">):</span>
-                        <span class="n">cluster_candidate</span> <span class="o">=</span> <span class="n">new_cluster</span>
-                        <span class="n">entropies</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">new_entropies</span><span class="p">)</span>
-
-        <span class="c"># boundary candidates</span>
-        <span class="n">c</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">|</span> <span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cluster_candidate</span><span class="p">))</span> <span class="o">-</span> <span class="n">cluster_candidate</span>
-        <span class="k">while</span> <span class="n">c</span><span class="p">:</span>
-            <span class="n">n</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-            <span class="n">new_cluster</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cluster_candidate</span><span class="p">)</span>
-            <span class="n">new_cluster</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-            <span class="n">new_entropies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_entropies</span><span class="p">(</span><span class="n">new_cluster</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">new_entropies</span><span class="o">.</span><span class="n">itervalues</span><span class="p">())</span> <span class="o">&lt;</span> <span class="nb">sum</span><span class="p">(</span><span class="n">entropies</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cluster_candidate</span><span class="p">):</span>
-                <span class="n">cluster_candidate</span> <span class="o">=</span> <span class="n">new_cluster</span>
-                <span class="n">entropies</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">new_entropies</span><span class="p">)</span>
-                <span class="n">c</span> <span class="o">&amp;=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="o">-</span> <span class="n">cluster_candidate</span>
-
-        <span class="n">nodes</span> <span class="o">-=</span> <span class="n">cluster_candidate</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_candidate</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">print</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cluster_candidate</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">entropy</span></div></div>
 </pre></div>
 
       </div>

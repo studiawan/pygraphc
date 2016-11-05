@@ -4,26 +4,10 @@ pygraphc.clustering package
 Submodules
 ----------
 
-pygraphc.clustering.ClusterAbstraction module
----------------------------------------------
-
-.. automodule:: pygraphc.clustering.ClusterAbstraction
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pygraphc.clustering.ClusterDistance module
 ------------------------------------------
 
 .. automodule:: pygraphc.clustering.ClusterDistance
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pygraphc.clustering.ClusterEvaluation module
---------------------------------------------
-
-.. automodule:: pygraphc.clustering.ClusterEvaluation
     :members:
     :undoc-members:
     :show-inheritance:

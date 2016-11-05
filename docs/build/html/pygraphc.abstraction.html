@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pygraphc.abstraction package &mdash; pygraphc 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pygraphc 0.0.1 documentation" href="index.html" />
+    <link rel="up" title="pygraphc package" href="pygraphc.html" />
+    <link rel="next" title="pygraphc.anomaly package" href="pygraphc.anomaly.html" />
+    <link rel="prev" title="pygraphc package" href="pygraphc.html" /> 
+  </head>
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="index.html">
+          <span>pygraphc 0.0.1 documentation</span></a></h1>
+        <h2 class="heading"><span>pygraphc.abstraction package</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="pygraphc.html">pygraphc package</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="pygraphc.anomaly.html">pygraphc.anomaly package</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="pygraphc-abstraction-package">
+<h1>pygraphc.abstraction package<a class="headerlink" href="#pygraphc-abstraction-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pygraphc.abstraction.ClusterAbstraction">
+<span id="pygraphc-abstraction-clusterabstraction-module"></span><h2>pygraphc.abstraction.ClusterAbstraction module<a class="headerlink" href="#module-pygraphc.abstraction.ClusterAbstraction" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pygraphc.abstraction.ClusterAbstraction.ClusterAbstraction">
+<em class="property">class </em><code class="descname">ClusterAbstraction</code><a class="reference internal" href="_modules/pygraphc/abstraction/ClusterAbstraction.html#ClusterAbstraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.abstraction.ClusterAbstraction.ClusterAbstraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Get cluster abstraction based on longest common substring <a class="reference internal" href="#jtjacques2010" id="id1">[jtjacques2010]</a>.</p>
+<div class="admonition-references admonition">
+<p class="first admonition-title">References</p>
+<table class="last docutils citation" frame="void" id="jtjacques2010" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[jtjacques2010]</a></td><td>jtjacques, Longest common substring from more than two strings - Python.
+<a class="reference external" href="http://stackoverflow.com/questions/2892931/longest-common-substring-from-more-than-two-strings-python">http://stackoverflow.com/questions/2892931/longest-common-substring-from-more-than-two-strings-python</a>.</td></tr>
+</tbody>
+</table>
+</div>
+<dl class="staticmethod">
+<dt id="pygraphc.abstraction.ClusterAbstraction.ClusterAbstraction.dp_lcs">
+<em class="property">static </em><code class="descname">dp_lcs</code><span class="sig-paren">(</span><em>graph</em>, <em>clusters</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/abstraction/ClusterAbstraction.html#ClusterAbstraction.dp_lcs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.abstraction.ClusterAbstraction.ClusterAbstraction.dp_lcs" title="Permalink to this definition">¶</a></dt>
+<dd><p>The processed string are preprocessed message from raw event log messages.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>graph</strong> (<em>graph</em>) &#8211; A graph to be processed.</li>
+<li><strong>clusters</strong> (<em>dict[list]</em>) &#8211; Dictionary containing a list of node identifier per cluster.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>abstraction</strong> &#8211;
+Dictionary of abstraction string per cluster.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict[str]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pygraphc.abstraction.ClusterAbstraction.ClusterAbstraction.lcs">
+<em class="property">static </em><code class="descname">lcs</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/abstraction/ClusterAbstraction.html#ClusterAbstraction.lcs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.abstraction.ClusterAbstraction.ClusterAbstraction.lcs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get longest common substring from multiple string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>list[str]</em>) &#8211; List of string to be processed.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>substr</strong> &#8211;
+A single string as longest common substring.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pygraphc.abstraction">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pygraphc.abstraction" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="pygraphc.html">pygraphc package</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="pygraphc.anomaly.html">pygraphc.anomaly package</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hudan Studiawan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

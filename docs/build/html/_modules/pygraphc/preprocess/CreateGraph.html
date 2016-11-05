@@ -56,7 +56,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        events_unique       : list[str]</span>
+<span class="sd">        events_unique       : list[list]</span>
 <span class="sd">            List of unique events from preprocessed logs.</span>
 <span class="sd">        cosine_threshold    : float</span>
 <span class="sd">            Threshold of cosine similarity measure for edge weight.</span>
@@ -67,20 +67,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">edges_weight</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cosine_threshold</span> <span class="o">=</span> <span class="n">cosine_threshold</span>
 
-<div class="viewcode-block" id="CreateGraph.get_edges_dict"><a class="viewcode-back" href="../../../pygraphc.preprocess.html#pygraphc.preprocess.CreateGraph.CreateGraph.get_edges_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_edges_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges_dict</span>
-</div>
-<div class="viewcode-block" id="CreateGraph.get_edges_weight"><a class="viewcode-back" href="../../../pygraphc.preprocess.html#pygraphc.preprocess.CreateGraph.CreateGraph.get_edges_weight">[docs]</a>    <span class="k">def</span> <span class="nf">get_edges_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges_weight</span>
-</div>
 <div class="viewcode-block" id="CreateGraph.do_create"><a class="viewcode-back" href="../../../pygraphc.preprocess.html#pygraphc.preprocess.CreateGraph.CreateGraph.do_create">[docs]</a>    <span class="k">def</span> <span class="nf">do_create</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Main method to be executed to create a graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__create_nodes</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__create_edges</span><span class="p">()</span>
-</div>
-<div class="viewcode-block" id="CreateGraph.get_graph"><a class="viewcode-back" href="../../../pygraphc.preprocess.html#pygraphc.preprocess.CreateGraph.CreateGraph.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span>
 </div>
 <div class="viewcode-block" id="CreateGraph.get_nodes_id"><a class="viewcode-back" href="../../../pygraphc.preprocess.html#pygraphc.preprocess.CreateGraph.CreateGraph.get_nodes_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_nodes_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get node identifier.</span>

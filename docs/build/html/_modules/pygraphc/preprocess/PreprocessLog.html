@@ -91,19 +91,19 @@
 
             <span class="c"># if not exist, add new element</span>
             <span class="k">if</span> <span class="n">preprocessed_event</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">check_events_unique</span><span class="p">:</span>
-            <span class="c"># if event not in check_events_unique:</span>
+                <span class="c"># if event not in check_events_unique:</span>
                 <span class="k">print</span> <span class="n">index</span><span class="p">,</span> <span class="n">event</span>
                 <span class="n">length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_doclength</span><span class="p">(</span><span class="n">tfidf</span><span class="p">)</span>
                 <span class="n">events_unique</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">index</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;event&#39;</span><span class="p">:</span> <span class="n">event</span><span class="p">,</span> <span class="s">&#39;tf-idf&#39;</span><span class="p">:</span> <span class="n">tfidf</span><span class="p">,</span> <span class="s">&#39;length&#39;</span><span class="p">:</span> <span class="n">length</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
                                               <span class="s">&#39;cluster&#39;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span> <span class="s">&#39;frequency&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;member&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">index_log</span><span class="p">],</span>
-                                              <span class="s">&#39;preprocessed_event&#39;</span><span class="p">:</span><span class="n">preprocessed_event</span><span class="p">}])</span>
+                                              <span class="s">&#39;preprocessed_event&#39;</span><span class="p">:</span> <span class="n">preprocessed_event</span><span class="p">}])</span>
                 <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
 
             <span class="c"># if exist, increment the frequency</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">events_unique</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">preprocessed_event</span> <span class="o">==</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;preprocessed_event&#39;</span><span class="p">]:</span>
-                    <span class="c"># if event == e[1][&#39;event&#39;]:</span>
+                        <span class="c"># if event == e[1][&#39;event&#39;]:</span>
                         <span class="n">member</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;member&#39;</span><span class="p">]</span>
                         <span class="n">member</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index_log</span><span class="p">)</span>
                         <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;member&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">member</span>
@@ -125,15 +125,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">events_list</span> <span class="o">=</span> <span class="n">events_list</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">events_unique</span> <span class="o">=</span> <span class="n">events_unique</span>
 </div>
-<div class="viewcode-block" id="PreprocessLog.get_eventslist"><a class="viewcode-back" href="../../../pygraphc.preprocess.html#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_eventslist">[docs]</a>    <span class="k">def</span> <span class="nf">get_eventslist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">events_list</span>
-</div>
-<div class="viewcode-block" id="PreprocessLog.get_eventsunique"><a class="viewcode-back" href="../../../pygraphc.preprocess.html#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_eventsunique">[docs]</a>    <span class="k">def</span> <span class="nf">get_eventsunique</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">events_unique</span>
-</div>
-<div class="viewcode-block" id="PreprocessLog.get_logs"><a class="viewcode-back" href="../../../pygraphc.preprocess.html#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_logs">[docs]</a>    <span class="k">def</span> <span class="nf">get_logs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logs</span>
-</div>
     <span class="k">def</span> <span class="nf">__read_log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Read a log file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -143,7 +134,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">logs</span> <span class="o">=</span> <span class="n">logs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loglength</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__get_wordindocs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">word</span><span class="p">,</span> <span class="n">docs</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__get_wordindocs</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">docs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find word occurence in all logs. Logs is stated as documents (in the context of information retrieval).</span>
 
 <span class="sd">        Parameters</span>
@@ -212,7 +204,8 @@
 
         <span class="k">return</span> <span class="n">doc</span><span class="p">,</span> <span class="n">tfidf</span>
 </div>
-<div class="viewcode-block" id="PreprocessLog.get_doclength"><a class="viewcode-back" href="../../../pygraphc.preprocess.html#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_doclength">[docs]</a>    <span class="k">def</span> <span class="nf">get_doclength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tfidf</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="PreprocessLog.get_doclength"><a class="viewcode-back" href="../../../pygraphc.preprocess.html#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_doclength">[docs]</a>    <span class="k">def</span> <span class="nf">get_doclength</span><span class="p">(</span><span class="n">tfidf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate doc&#39;s length for cosine similarity</span>
 
 <span class="sd">        Parameters</span>

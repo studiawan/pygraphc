@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pygraphc.clustering.ClusterAbstraction &mdash; pygraphc 0.0.1 documentation</title>
+    <title>pygraphc.abstraction.ClusterAbstraction &mdash; pygraphc 0.0.1 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -30,7 +30,7 @@
   <body role="document">
       <div class="header" role="banner"><h1 class="heading"><a href="../../../index.html">
           <span>pygraphc 0.0.1 documentation</span></a></h1>
-        <h2 class="heading"><span>pygraphc.clustering.ClusterAbstraction</span></h2>
+        <h2 class="heading"><span>pygraphc.abstraction.ClusterAbstraction</span></h2>
       </div>
       <div class="topnav" role="navigation" aria-label="top navigation">
       
@@ -42,18 +42,18 @@
       <div class="content">
         
         
-  <h1>Source code for pygraphc.clustering.ClusterAbstraction</h1><div class="highlight"><pre>
+  <h1>Source code for pygraphc.abstraction.ClusterAbstraction</h1><div class="highlight"><pre>
 <span class="k">class</span> <span class="nc">ClusterAbstraction</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<div class="viewcode-block" id="ClusterAbstraction"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterAbstraction.ClusterAbstraction">[docs]</a>    <span class="sd">&quot;&quot;&quot;Get cluster abstraction based on longest common substring [jtjacques2010]_.</span>
+<div class="viewcode-block" id="ClusterAbstraction"><a class="viewcode-back" href="../../../pygraphc.abstraction.html#pygraphc.abstraction.ClusterAbstraction.ClusterAbstraction">[docs]</a>    <span class="sd">&quot;&quot;&quot;Get cluster abstraction based on longest common substring [jtjacques2010]_.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    .. [jtjacques2010] jtjacques, Longest common substring from more than two strings - Python.</span>
-<span class="sd">           http://stackoverflow.com/questions/2892931/longest-common-substring-from-more-than-two-strings-python.</span>
+<span class="sd">       http://stackoverflow.com/questions/2892931/longest-common-substring-from-more-than-two-strings-python.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">dp_lcs</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">clusters</span><span class="p">):</span>
-<div class="viewcode-block" id="ClusterAbstraction.dp_lcs"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterAbstraction.ClusterAbstraction.dp_lcs">[docs]</a>        <span class="sd">&quot;&quot;&quot;The processed string are preprocessed message from raw event log messages.</span>
+<div class="viewcode-block" id="ClusterAbstraction.dp_lcs"><a class="viewcode-back" href="../../../pygraphc.abstraction.html#pygraphc.abstraction.ClusterAbstraction.ClusterAbstraction.dp_lcs">[docs]</a>        <span class="sd">&quot;&quot;&quot;The processed string are preprocessed message from raw event log messages.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -77,7 +77,7 @@
 
     <span class="nd">@staticmethod</span></div>
     <span class="k">def</span> <span class="nf">lcs</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-<div class="viewcode-block" id="ClusterAbstraction.lcs"><a class="viewcode-back" href="../../../pygraphc.clustering.html#pygraphc.clustering.ClusterAbstraction.ClusterAbstraction.lcs">[docs]</a>        <span class="sd">&quot;&quot;&quot;Get longest common substring from multiple string.</span>
+<div class="viewcode-block" id="ClusterAbstraction.lcs"><a class="viewcode-back" href="../../../pygraphc.abstraction.html#pygraphc.abstraction.ClusterAbstraction.ClusterAbstraction.lcs">[docs]</a>        <span class="sd">&quot;&quot;&quot;Get longest common substring from multiple string.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

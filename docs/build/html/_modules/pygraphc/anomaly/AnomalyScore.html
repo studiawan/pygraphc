@@ -43,9 +43,9 @@
         
         
   <h1>Source code for pygraphc.anomaly.AnomalyScore</h1><div class="highlight"><pre>
-<span class="kn">from</span> <span class="nn">pygraphc.clustering.ClusterUtility</span> <span class="kn">import</span> <span class="n">ClusterUtility</span>
-<span class="kn">from</span> <span class="nn">pygraphc.clustering.ClusterAbstraction</span> <span class="kn">import</span> <span class="n">ClusterAbstraction</span>
 <span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">pygraphc.abstraction.ClusterAbstraction</span> <span class="kn">import</span> <span class="n">ClusterAbstraction</span>
+<span class="kn">from</span> <span class="nn">pygraphc.clustering.ClusterUtility</span> <span class="kn">import</span> <span class="n">ClusterUtility</span>
 
 
 <div class="viewcode-block" id="AnomalyScore"><a class="viewcode-back" href="../../../pygraphc.anomaly.html#pygraphc.anomaly.AnomalyScore.AnomalyScore">[docs]</a><span class="k">class</span> <span class="nc">AnomalyScore</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -57,8 +57,11 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        graph       : graph</span>
+<span class="sd">            A graph to be analyzed for its anomaly.</span>
 <span class="sd">        clusters    : dict[list]</span>
+<span class="sd">            Dictionary of list containing node identifier for each clusters.</span>
 <span class="sd">        filename    : str</span>
+<span class="sd">            Filename for anomaly detection result.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">clusters</span> <span class="o">=</span> <span class="n">clusters</span>

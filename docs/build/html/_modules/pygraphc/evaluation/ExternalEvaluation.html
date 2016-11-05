@@ -1,0 +1,392 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pygraphc.evaluation.ExternalEvaluation &mdash; pygraphc 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pygraphc 0.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="../../../index.html">
+          <span>pygraphc 0.0.1 documentation</span></a></h1>
+        <h2 class="heading"><span>pygraphc.evaluation.ExternalEvaluation</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for pygraphc.evaluation.ExternalEvaluation</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">metrics</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+
+
+<div class="viewcode-block" id="ExternalEvaluation"><a class="viewcode-back" href="../../../pygraphc.evaluation.html#pygraphc.evaluation.ExternalEvaluation.ExternalEvaluation">[docs]</a><span class="k">class</span> <span class="nc">ExternalEvaluation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class to evaluate the clustering algorithm.</span>
+
+<span class="sd">    At the moment, we deploy all methods implemented in scikit-learn [Pedregosa2011]_.</span>
+<span class="sd">    The methods are briefly described here [scikit-learn-0.18]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [Pedregosa2011]     Pedregosa et al., Scikit-learn: Machine Learning in Python, JMLR 12, pp. 2825-2830, 2011.</span>
+<span class="sd">    .. [scikit-learn-0.18] scikit-learn, Clustering performance evaluation, scikit-learn 0.18 Documentation.</span>
+<span class="sd">                           http://scikit-learn.org/stable/modules/clustering.html#clustering-performance-evaluation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExternalEvaluation.set_cluster_label_id"><a class="viewcode-back" href="../../../pygraphc.evaluation.html#pygraphc.evaluation.ExternalEvaluation.ExternalEvaluation.set_cluster_label_id">[docs]</a>    <span class="k">def</span> <span class="nf">set_cluster_label_id</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">clusters</span><span class="p">,</span> <span class="n">original_logs</span><span class="p">,</span> <span class="n">analysis_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all logs per cluster, get most dominant cluster label, and write clustering result to file [Manning2008]_.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        graph           : graph</span>
+<span class="sd">            Graph to be analyzed.</span>
+<span class="sd">        clusters        : dict[list]</span>
+<span class="sd">            Dictionary contains sequence of nodes in all clusters.</span>
+<span class="sd">        original_logs   :</span>
+<span class="sd">            List of event logs.</span>
+<span class="sd">        analysis_dir    : str</span>
+<span class="sd">            Path to save the analysis result.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [Manning2008] Christopher D. Manning, Prabhakar Raghavan &amp; Hinrich Schutze, Evaluation of clustering,</span>
+<span class="sd">                         in Introduction to Information Retrieval, 2008, Cambridge University Press.</span>
+<span class="sd">                         http://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-clustering-1.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_cluster_member_label</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c"># store individiual cluster id for each cluster member</span>
+        <span class="n">dominant_cluster_labels</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c"># store dominant cluster label from all clusters</span>
+        <span class="n">cluster_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;accepted password&#39;</span><span class="p">,</span> <span class="s">&#39;accepted publickey&#39;</span><span class="p">,</span> <span class="s">&#39;authentication failure&#39;</span><span class="p">,</span> <span class="s">&#39;check pass&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;connection closed&#39;</span><span class="p">,</span> <span class="s">&#39;connection reset by peer&#39;</span><span class="p">,</span> <span class="s">&#39;did not receive identification string&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;failed password&#39;</span><span class="p">,</span> <span class="s">&#39;ignoring max retries&#39;</span><span class="p">,</span> <span class="s">&#39;invalid user&#39;</span><span class="p">,</span> <span class="s">&#39;pam adding faulty module&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;pam unable to dlopen&#39;</span><span class="p">,</span> <span class="s">&#39;received disconnect&#39;</span><span class="p">,</span> <span class="s">&#39;received signal&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;reverse mapping checking getaddrinfo&#39;</span><span class="p">,</span> <span class="s">&#39;server listening&#39;</span><span class="p">,</span> <span class="s">&#39;session closed&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;session opened&#39;</span><span class="p">,</span> <span class="s">&#39;this does not map back to the address&#39;</span><span class="p">,</span> <span class="s">&#39;unknown option&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;error connect&#39;</span><span class="p">,</span> <span class="s">&#39;open failed&#39;</span><span class="p">,</span> <span class="s">&#39;root login refused&#39;</span><span class="p">,</span> <span class="s">&#39;bad protocol version identification&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;subsystem request&#39;</span><span class="p">,</span> <span class="s">&#39;protocol major versions differ&#39;</span><span class="p">,</span> <span class="s">&#39;failed none&#39;</span><span class="p">,</span> <span class="s">&#39;expired password&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;unable open env file&#39;</span><span class="p">,</span> <span class="s">&#39;dispatch protocol error&#39;</span><span class="p">,</span> <span class="s">&#39;syslogin perform logout&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;corrupted mac&#39;</span><span class="p">,</span> <span class="s">&#39;write ident string&#39;</span><span class="p">]</span>
+        <span class="n">max_cluster_id</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_labels</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">cluster_id</span><span class="p">,</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="n">clusters</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">logs_per_cluster</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">label_counter</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">cl</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="n">cluster_labels</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
+                <span class="c"># get all original_logs per cluster</span>
+                <span class="c"># for graph-based clustering</span>
+                <span class="k">if</span> <span class="n">graph</span><span class="p">:</span>
+                    <span class="n">members</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s">&#39;member&#39;</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+                        <span class="n">logs_per_cluster</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">original_logs</span><span class="p">[</span><span class="n">member</span><span class="p">])</span>
+                <span class="c"># for non graph-based clustering</span>
+                <span class="k">elif</span> <span class="n">graph</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">logs_per_cluster</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">original_logs</span><span class="p">[</span><span class="n">c</span><span class="p">])</span>
+
+                <span class="c"># get dominant label in cluster</span>
+                <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">cluster_labels</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs_per_cluster</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                            <span class="n">label_counter</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c"># get most dominant cluster label</span>
+            <span class="n">dominant_label_counter</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">label_counter</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+            <span class="c"># if cluster label has already used</span>
+            <span class="k">if</span> <span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">dominant_cluster_labels</span><span class="o">.</span><span class="n">values</span><span class="p">()]:</span>
+                <span class="c"># get existing counter</span>
+                <span class="n">existing_counter</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">existing_label</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+                <span class="k">for</span> <span class="n">ec</span> <span class="ow">in</span> <span class="n">dominant_cluster_labels</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">ec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                        <span class="n">existing_counter</span> <span class="o">=</span> <span class="n">ec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="n">existing_label</span> <span class="o">=</span> <span class="n">ec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c"># check for which one is more dominant</span>
+                <span class="k">if</span> <span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">existing_counter</span><span class="p">:</span>
+                    <span class="c"># get existing cluster with lower existing counter</span>
+                    <span class="n">existing_cluster</span> <span class="o">=</span> \
+                        <span class="n">dominant_cluster_labels</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="n">dominant_cluster_labels</span><span class="o">.</span><span class="n">values</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">((</span><span class="n">existing_label</span><span class="p">,</span>
+                                                                                               <span class="n">existing_counter</span><span class="p">))]</span>
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
+                        <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="c"># set old cluster to max_cluster_id + 1</span>
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">existing_cluster</span><span class="p">:</span>
+                        <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_cluster_id</span> <span class="o">+</span> <span class="mi">1</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
+                        <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_cluster_id</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="c"># if cluster label has not used</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dominant_cluster_labels</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">cluster</span><span class="p">)]</span> <span class="o">=</span> <span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
+                    <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">dominant_label_counter</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">analysis_result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">graph</span><span class="p">:</span>
+            <span class="c"># set new cluster label</span>
+            <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">new_label</span> <span class="ow">in</span> <span class="n">new_cluster_member_label</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_label</span>
+
+            <span class="c"># set new cluster id for each cluster member</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="n">members</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;member&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+                    <span class="n">analysis_result</span><span class="p">[</span><span class="n">member</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">elif</span> <span class="n">graph</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
+                    <span class="n">analysis_result</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_cluster_member_label</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+        <span class="c"># get sorted log line id - cluster id results</span>
+        <span class="nb">sorted</span><span class="p">(</span><span class="n">analysis_result</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+        <span class="c"># write clustering result to file (clustering result for all members in a node)</span>
+        <span class="n">fopen</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">analysis_dir</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">rowid</span><span class="p">,</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="n">analysis_result</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">cluster_label</span> <span class="o">=</span> <span class="s">&#39;undefined&#39;</span> <span class="k">if</span> <span class="n">cluster_id</span> <span class="o">&gt;</span> <span class="n">max_cluster_id</span> <span class="k">else</span> <span class="n">cluster_labels</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span>
+            <span class="n">fopen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cluster_id</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;; &#39;</span> <span class="o">+</span> <span class="n">cluster_label</span> <span class="o">+</span> <span class="s">&#39;; &#39;</span> <span class="o">+</span> <span class="n">original_logs</span><span class="p">[</span><span class="n">rowid</span><span class="p">])</span>
+        <span class="n">fopen</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExternalEvaluation.get_evaluated"><a class="viewcode-back" href="../../../pygraphc.evaluation.html#pygraphc.evaluation.ExternalEvaluation.ExternalEvaluation.get_evaluated">[docs]</a>    <span class="k">def</span> <span class="nf">get_evaluated</span><span class="p">(</span><span class="n">evaluated_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get evaluated log file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        evaluated_file  : str</span>
+<span class="sd">            The evaluated log file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        evaluation_labels   : list</span>
+<span class="sd">            Labels for each row in evaluated files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">evaluated_file</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ef</span><span class="p">:</span>
+            <span class="n">evaluations</span> <span class="o">=</span> <span class="n">ef</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+        <span class="n">evaluation_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">evaluation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">evaluation</span> <span class="ow">in</span> <span class="n">evaluations</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">evaluation_labels</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExternalEvaluation.get_adjusted_rand_score"><a class="viewcode-back" href="../../../pygraphc.evaluation.html#pygraphc.evaluation.ExternalEvaluation.ExternalEvaluation.get_adjusted_rand_score">[docs]</a>    <span class="k">def</span> <span class="nf">get_adjusted_rand_score</span><span class="p">(</span><span class="n">standard_file</span><span class="p">,</span> <span class="n">prediction_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get adjusted rand index [Hubert1985]_.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        standard_file   : str</span>
+<span class="sd">            The ground truth or standard filename.</span>
+<span class="sd">        prediction_file : str</span>
+<span class="sd">            The analyzed or predicted filename.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        adjusted_rand_index : float</span>
+<span class="sd">            Adjusted rand index.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [Hubert1985] Lawrence Hubert and Phipps Arabie. Comparing partitions.</span>
+<span class="sd">                        Journal of Classification, 2(1):193-218, 1985.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">standard_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">standard_file</span><span class="p">)</span>
+        <span class="n">prediction_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">prediction_file</span><span class="p">)</span>
+        <span class="n">adjusted_rand_index</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">adjusted_rand_score</span><span class="p">(</span><span class="n">standard_labels</span><span class="p">,</span> <span class="n">prediction_labels</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">adjusted_rand_index</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExternalEvaluation.get_adjusted_mutual_info_score"><a class="viewcode-back" href="../../../pygraphc.evaluation.html#pygraphc.evaluation.ExternalEvaluation.ExternalEvaluation.get_adjusted_mutual_info_score">[docs]</a>    <span class="k">def</span> <span class="nf">get_adjusted_mutual_info_score</span><span class="p">(</span><span class="n">standard_file</span><span class="p">,</span> <span class="n">prediction_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get adjusted mutual information (AMI) [Vinh2009]_.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        standard_file   : str</span>
+<span class="sd">            The ground truth or standard filename.</span>
+<span class="sd">        prediction_file : str</span>
+<span class="sd">            The analyzed or predicted filename.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        adjusted_mutual_info    : float</span>
+<span class="sd">            Adjusted mutual information score.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [Vinh2009] Vinh, Nguyen Xuan, Julien Epps, and James Bailey. &quot;Information theoretic measures for</span>
+<span class="sd">                      clusterings comparison: is a correction for chance necessary?.&quot;</span>
+<span class="sd">                      In Proceedings of the 26th Annual International Conference on Machine Learning,</span>
+<span class="sd">                      pp. 1073-1080, 2009.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">standard_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">standard_file</span><span class="p">)</span>
+        <span class="n">prediction_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">prediction_file</span><span class="p">)</span>
+        <span class="n">adjusted_mutual_info</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">adjusted_mutual_info_score</span><span class="p">(</span><span class="n">standard_labels</span><span class="p">,</span> <span class="n">prediction_labels</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">adjusted_mutual_info</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExternalEvaluation.get_normalized_mutual_info_score"><a class="viewcode-back" href="../../../pygraphc.evaluation.html#pygraphc.evaluation.ExternalEvaluation.ExternalEvaluation.get_normalized_mutual_info_score">[docs]</a>    <span class="k">def</span> <span class="nf">get_normalized_mutual_info_score</span><span class="p">(</span><span class="n">standard_file</span><span class="p">,</span> <span class="n">prediction_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get normalized mutual information (NMI) [Strehl2002]_.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        standard_file   : str</span>
+<span class="sd">            The ground truth or standard filename.</span>
+<span class="sd">        prediction_file : str</span>
+<span class="sd">            The analyzed or predicted filename.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        normalized_mutual_info  : float</span>
+<span class="sd">            Normalized mutual information score.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [Strehl2002] Alexander Strehl and Joydeep Ghosh. Cluster ensembles A knowledge reuse framework</span>
+<span class="sd">                        for combining multiple partitions. Journal of Machine Learning Research,</span>
+<span class="sd">                        3(Dec):583-617, 2002.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">standard_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">standard_file</span><span class="p">)</span>
+        <span class="n">prediction_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">prediction_file</span><span class="p">)</span>
+        <span class="n">normalized_mutual_info</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">normalized_mutual_info_score</span><span class="p">(</span><span class="n">standard_labels</span><span class="p">,</span> <span class="n">prediction_labels</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">normalized_mutual_info</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExternalEvaluation.get_homogeneity_completeness_vmeasure"><a class="viewcode-back" href="../../../pygraphc.evaluation.html#pygraphc.evaluation.ExternalEvaluation.ExternalEvaluation.get_homogeneity_completeness_vmeasure">[docs]</a>    <span class="k">def</span> <span class="nf">get_homogeneity_completeness_vmeasure</span><span class="p">(</span><span class="n">standard_file</span><span class="p">,</span> <span class="n">prediction_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get homogeneity, completeness, and V-measure score [Rosenberg2007]_.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        standard_file   : str</span>
+<span class="sd">            The ground truth or standard filename.</span>
+<span class="sd">        prediction_file : str</span>
+<span class="sd">            The analyzed or predicted filename.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        homogeneity_completeness_vmeasure   : tuple</span>
+<span class="sd">            Homogeneity, completeness, and V-measure score</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [Rosenberg2007] Andrew Rosenberg and Julia Hirschberg. V-Measure: A conditional entropy-based</span>
+<span class="sd">                           external cluster evaluation measure. In Proceedings of the 2007 Joint Conference on</span>
+<span class="sd">                           Empirical Methods in Natural Language Processing and Computational</span>
+<span class="sd">                           Natural Language Learning, volume 7, pages 410-420, 2007.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">standard_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">standard_file</span><span class="p">)</span>
+        <span class="n">prediction_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">prediction_file</span><span class="p">)</span>
+        <span class="n">homogeneity_completeness_vmeasure</span> <span class="o">=</span> \
+            <span class="n">metrics</span><span class="o">.</span><span class="n">homogeneity_completeness_v_measure</span><span class="p">(</span><span class="n">standard_labels</span><span class="p">,</span> <span class="n">prediction_labels</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">homogeneity_completeness_vmeasure</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExternalEvaluation.get_homogeneity"><a class="viewcode-back" href="../../../pygraphc.evaluation.html#pygraphc.evaluation.ExternalEvaluation.ExternalEvaluation.get_homogeneity">[docs]</a>    <span class="k">def</span> <span class="nf">get_homogeneity</span><span class="p">(</span><span class="n">standard_file</span><span class="p">,</span> <span class="n">prediction_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get homogeneity score.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        standard_file   : str</span>
+<span class="sd">            The ground truth or standard filename.</span>
+<span class="sd">        prediction_file : str</span>
+<span class="sd">            The analyzed or predicted filename.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        homogeneity_score   : float</span>
+<span class="sd">            Homogeneity score.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">standard_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">standard_file</span><span class="p">)</span>
+        <span class="n">prediction_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">prediction_file</span><span class="p">)</span>
+        <span class="n">homogeneity_score</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">homogeneity_score</span><span class="p">(</span><span class="n">standard_labels</span><span class="p">,</span> <span class="n">prediction_labels</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">homogeneity_score</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExternalEvaluation.get_completeness"><a class="viewcode-back" href="../../../pygraphc.evaluation.html#pygraphc.evaluation.ExternalEvaluation.ExternalEvaluation.get_completeness">[docs]</a>    <span class="k">def</span> <span class="nf">get_completeness</span><span class="p">(</span><span class="n">standard_file</span><span class="p">,</span> <span class="n">prediction_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get completeness score.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        standard_file   : str</span>
+<span class="sd">            The ground truth or standard filename.</span>
+<span class="sd">        prediction_file : str</span>
+<span class="sd">            The analyzed or predicted filename.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        completeness_score  : float</span>
+<span class="sd">            Completeness score.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">standard_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">standard_file</span><span class="p">)</span>
+        <span class="n">prediction_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">prediction_file</span><span class="p">)</span>
+        <span class="n">completeness_score</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">completeness_score</span><span class="p">(</span><span class="n">standard_labels</span><span class="p">,</span> <span class="n">prediction_labels</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">completeness_score</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExternalEvaluation.get_vmeasure"><a class="viewcode-back" href="../../../pygraphc.evaluation.html#pygraphc.evaluation.ExternalEvaluation.ExternalEvaluation.get_vmeasure">[docs]</a>    <span class="k">def</span> <span class="nf">get_vmeasure</span><span class="p">(</span><span class="n">standard_file</span><span class="p">,</span> <span class="n">prediction_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get V-measure score.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        standard_file   : str</span>
+<span class="sd">            The ground truth or standard filename.</span>
+<span class="sd">        prediction_file : str</span>
+<span class="sd">            The analyzed or predicted filename.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vmeasure_score  : float</span>
+<span class="sd">            V-measure score.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">standard_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">standard_file</span><span class="p">)</span>
+        <span class="n">prediction_labels</span> <span class="o">=</span> <span class="n">ExternalEvaluation</span><span class="o">.</span><span class="n">get_evaluated</span><span class="p">(</span><span class="n">prediction_file</span><span class="p">)</span>
+        <span class="n">vmeasure_score</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">v_measure_score</span><span class="p">(</span><span class="n">standard_labels</span><span class="p">,</span> <span class="n">prediction_labels</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">vmeasure_score</span></div></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hudan Studiawan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

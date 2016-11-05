@@ -27,7 +27,7 @@
     <link rel="top" title="pygraphc 0.0.1 documentation" href="index.html" />
     <link rel="up" title="pygraphc package" href="pygraphc.html" />
     <link rel="next" title="pygraphc.preprocess package" href="pygraphc.preprocess.html" />
-    <link rel="prev" title="pygraphc.clustering package" href="pygraphc.clustering.html" /> 
+    <link rel="prev" title="pygraphc.evaluation package" href="pygraphc.evaluation.html" /> 
   </head>
   <body role="document">
       <div class="header" role="banner"><h1 class="heading"><a href="index.html">
@@ -37,7 +37,7 @@
       <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
-        «&#160;&#160;<a href="pygraphc.clustering.html">pygraphc.clustering package</a>
+        «&#160;&#160;<a href="pygraphc.evaluation.html">pygraphc.evaluation package</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -55,38 +55,41 @@
 </div>
 <div class="section" id="module-pygraphc.misc.IPLoM">
 <span id="pygraphc-misc-iplom-module"></span><h2>pygraphc.misc.IPLoM module<a class="headerlink" href="#module-pygraphc.misc.IPLoM" title="Permalink to this headline">¶</a></h2>
-<p>This is implementation of IPLoM method proposed by Makanju et al. in <a class="footnote-reference" href="#id5" id="id1">[1]</a> and <a class="footnote-reference" href="#id6" id="id2">[2]</a>.</p>
-<p>Original source of IPLoM from He et al. based on the reference <a class="footnote-reference" href="#id7" id="id3">[3]</a> and it is available
-on GitHub <a class="footnote-reference" href="#id8" id="id4">[4]</a>. We modify the original source to comply Python code style and add some methods
-to get cluster.</p>
+<p>This is implementation of IPLoM method proposed by Makanju et al. in <a class="reference internal" href="#adetokunbo2009" id="id1">[Adetokunbo2009]</a> and <a class="reference internal" href="#adetokunbo2012" id="id2">[Adetokunbo2012]</a>.</p>
+<p>Original source of IPLoM from He et al. based on the reference <a class="reference internal" href="#he2016a" id="id3">[He2016a]</a> and it is available
+on GitHub <a class="reference internal" href="#he2016b" id="id4">[He2016b]</a>. We modify the original source to comply Python code style and add some methods
+to get cluster. The methods in this class has not documented and please refer to <a class="reference internal" href="#he2016b" id="id5">[He2016b]</a>
+to get more complete descriptions.</p>
 <div class="admonition-references admonition">
 <p class="first admonition-title">References</p>
-<table class="docutils footnote" frame="void" id="id5" rules="none">
+<table class="docutils citation" frame="void" id="adetokunbo2009" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>M. Adetokunbo, A. N. Zincir-Heywood, and E. E. Milios, Clustering event logs using iterative partitioning,
-Proceedings of the 15th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2009,
-pp. 1255-1264.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[Adetokunbo2009]</a></td><td>M. Adetokunbo, A. N. Zincir-Heywood, and E. E. Milios, Clustering event logs using
+iterative partitioning, Proceedings of the 15th ACM SIGKDD International Conference on
+Knowledge Discovery and Data Mining, 2009, pp. 1255-1264.</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id6" rules="none">
+<table class="docutils citation" frame="void" id="adetokunbo2012" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>M. Adetokunbo, A. N. Zincir-Heywood, and E. E. Milios, A lightweight algorithm for message type extraction
-in system application logs, IEEE Transactions on Knowledge and Data Engineering, 2012, 24(11), pp. 1921-1936.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[Adetokunbo2012]</a></td><td>M. Adetokunbo, A. N. Zincir-Heywood, and E. E. Milios, A lightweight algorithm for
+message type extraction in system application logs, IEEE Transactions on Knowledge
+and Data Engineering, 2012, 24(11), pp. 1921-1936.</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id7" rules="none">
+<table class="docutils citation" frame="void" id="he2016a" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td>P. He, J. Zhu, S. He, J. Li, and R. Lyu, An evaluation study on log parsing and its use in log mining,
-Proceedings of the 46th Annual IEEE/IFIP International Conference on Dependable Systems and Networks.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[He2016a]</a></td><td>P. He, J. Zhu, S. He, J. Li, and R. Lyu, An evaluation study on log parsing and its use
+in log mining, Proceedings of the 46th Annual IEEE/IFIP International Conference on
+Dependable Systems and Networks, 2016.</td></tr>
 </tbody>
 </table>
-<table class="last docutils footnote" frame="void" id="id8" rules="none">
+<table class="last docutils citation" frame="void" id="he2016b" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td>P. He, Logparser: A python package of log parsers with benchmarks for log template extraction.
+<tr><td class="label">[He2016b]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> P. He, Logparser: A python package of log parsers with benchmarks for log template extraction.
 <a class="reference external" href="https://github.com/cuhk-cse/logparser">https://github.com/cuhk-cse/logparser</a>.</td></tr>
 </tbody>
 </table>
@@ -200,6 +203,27 @@ Proceedings of the 46th Annual IEEE/IFIP International Conference on Dependable 
 </div>
 <div class="section" id="module-pygraphc.misc.LKE">
 <span id="pygraphc-misc-lke-module"></span><h2>pygraphc.misc.LKE module<a class="headerlink" href="#module-pygraphc.misc.LKE" title="Permalink to this headline">¶</a></h2>
+<p>This is the implementation of Log Key Extraction (LKE) method <a class="reference internal" href="#fu2009" id="id6">[Fu2009]</a>.</p>
+<p>The original code of LKE is provided by Pinjia He in his GitHub account <a class="reference internal" href="#he2016c" id="id7">[He2016c]</a>.
+The methods in this class has not documented and please refer to <a class="reference internal" href="#he2016c" id="id8">[He2016c]</a>
+to get more complete descriptions.</p>
+<div class="admonition-references admonition">
+<p class="first admonition-title">References</p>
+<table class="docutils citation" frame="void" id="fu2009" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[Fu2009]</a></td><td>Fu, Qiang, Jian-Guang Lou, Yi Wang, and Jiang Li., Execution Anomaly Detection in Distributed Systems
+through Unstructured Log Analysis, International Conference on Data Mining, vol. 9, pp. 149-158. 2009.</td></tr>
+</tbody>
+</table>
+<table class="last docutils citation" frame="void" id="he2016c" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[He2016c]</td><td><em>(<a class="fn-backref" href="#id7">1</a>, <a class="fn-backref" href="#id8">2</a>)</em> P. He, Logparser: A python package of log parsers with benchmarks for log template extraction.
+<a class="reference external" href="https://github.com/cuhk-cse/logparser">https://github.com/cuhk-cse/logparser</a>.</td></tr>
+</tbody>
+</table>
+</div>
 <dl class="class">
 <dt id="pygraphc.misc.LKE.LKE">
 <em class="property">class </em><code class="descname">LKE</code><span class="sig-paren">(</span><em>para</em>, <em>word_ll=[]</em>, <em>word_len=[]</em>, <em>groups=[]</em>, <em>logline_num_per_group=[]</em>, <em>word_len_per_group=[]</em>, <em>word_occu_of_posi_lld=[]</em>, <em>loglines_of_groups=[]</em>, <em>flat_log_line_groups=[]</em>, <em>new_groups=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/misc/LKE.html#LKE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.misc.LKE.LKE" title="Permalink to this definition">¶</a></dt>
@@ -331,7 +355,7 @@ Proceedings of the 46th Annual IEEE/IFIP International Conference on Dependable 
       <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
-        «&#160;&#160;<a href="pygraphc.clustering.html">pygraphc.clustering package</a>
+        «&#160;&#160;<a href="pygraphc.evaluation.html">pygraphc.evaluation package</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;

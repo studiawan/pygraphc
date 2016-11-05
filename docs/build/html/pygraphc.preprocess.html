@@ -79,21 +79,6 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="pygraphc.preprocess.CreateGraph.CreateGraph.get_edges_dict">
-<code class="descname">get_edges_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/CreateGraph.html#CreateGraph.get_edges_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.CreateGraph.CreateGraph.get_edges_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pygraphc.preprocess.CreateGraph.CreateGraph.get_edges_weight">
-<code class="descname">get_edges_weight</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/CreateGraph.html#CreateGraph.get_edges_weight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.CreateGraph.CreateGraph.get_edges_weight" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pygraphc.preprocess.CreateGraph.CreateGraph.get_graph">
-<code class="descname">get_graph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/CreateGraph.html#CreateGraph.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.CreateGraph.CreateGraph.get_graph" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="pygraphc.preprocess.CreateGraph.CreateGraph.get_nodes_id">
 <code class="descname">get_nodes_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/CreateGraph.html#CreateGraph.get_nodes_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.CreateGraph.CreateGraph.get_nodes_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get node identifier.</p>
@@ -121,31 +106,6 @@ List of node identifier in incremental integer.</td>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>A class to preprocess event log before generating the graph model.</p>
 <dl class="method">
-<dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog._PreprocessLog__get_wordindocs">
-<code class="descname">_PreprocessLog__get_wordindocs</code><span class="sig-paren">(</span><em>word</em>, <em>docs</em><span class="sig-paren">)</span><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog._PreprocessLog__get_wordindocs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find word occurence in all logs. Logs is stated as documents (in the context of information retrieval).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>word</strong> (<em>str</em>) &#8211; A word in a single event log line.</li>
-<li><strong>docs</strong> (<em>list[str]</em>) &#8211; All logs in a file.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>count</strong> &#8211;
-Word occurence in all logs.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog._PreprocessLog__read_log">
 <code class="descname">_PreprocessLog__read_log</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog._PreprocessLog__read_log" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read a log file.</p>
@@ -157,9 +117,9 @@ Word occurence in all logs.</p>
 <dd><p>Main method to execute preprocess log.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="staticmethod">
 <dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.get_doclength">
-<code class="descname">get_doclength</code><span class="sig-paren">(</span><em>tfidf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog.get_doclength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_doclength" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">get_doclength</code><span class="sig-paren">(</span><em>tfidf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog.get_doclength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_doclength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate doc&#8217;s length for cosine similarity</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -175,21 +135,6 @@ Document&#8217;s length.</td>
 </tbody>
 </table>
 </dd></dl>
-
-<dl class="method">
-<dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.get_eventslist">
-<code class="descname">get_eventslist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog.get_eventslist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_eventslist" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.get_eventsunique">
-<code class="descname">get_eventsunique</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog.get_eventsunique"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_eventsunique" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.get_logs">
-<code class="descname">get_logs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/preprocess/PreprocessLog.html#PreprocessLog.get_logs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.preprocess.PreprocessLog.PreprocessLog.get_logs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="method">
 <dt id="pygraphc.preprocess.PreprocessLog.PreprocessLog.get_tfidf">

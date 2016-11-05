@@ -56,20 +56,40 @@
 <dt id="pygraphc.visualization.GraphStreaming.GraphStreaming">
 <em class="property">class </em><code class="descname">GraphStreaming</code><span class="sig-paren">(</span><em>graph_clusters</em>, <em>edges</em>, <em>sleep_time=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/visualization/GraphStreaming.html#GraphStreaming"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.visualization.GraphStreaming.GraphStreaming" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A class to stream the graph to Gephi.</p>
 <dl class="method">
 <dt id="pygraphc.visualization.GraphStreaming.GraphStreaming.change_color">
 <code class="descname">change_color</code><span class="sig-paren">(</span><em>colored_object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/visualization/GraphStreaming.html#GraphStreaming.change_color"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.visualization.GraphStreaming.GraphStreaming.change_color" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Change color for a particular object, such as a clique or a cluster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>colored_object</strong> (<em>list</em>) &#8211; List of object to be colored.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="pygraphc.visualization.GraphStreaming.GraphStreaming.gephi_streaming">
 <code class="descname">gephi_streaming</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/visualization/GraphStreaming.html#GraphStreaming.gephi_streaming"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.visualization.GraphStreaming.GraphStreaming.gephi_streaming" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Stream the graph to Gephi.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pygraphc.visualization.GraphStreaming.GraphStreaming.remove_outcluster">
 <code class="descname">remove_outcluster</code><span class="sig-paren">(</span><em>removed_edges</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pygraphc/visualization/GraphStreaming.html#GraphStreaming.remove_outcluster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygraphc.visualization.GraphStreaming.GraphStreaming.remove_outcluster" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Remove edge connecting two nodes in different clusters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>removed_edges</strong> (<em>list[tuple]</em>) &#8211; List of tuple containing two connecting nodes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
