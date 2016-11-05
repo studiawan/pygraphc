@@ -1,3 +1,17 @@
+"""This is the implementation of Log Key Extraction (LKE) method [Fu2009]_.
+
+The original code of LKE is provided by Pinjia He in his GitHub account [He2016c]_.
+The methods in this class has not documented and please refer to [He2016c]_
+to get more complete descriptions.
+
+References
+----------
+.. [Fu2009]  Fu, Qiang, Jian-Guang Lou, Yi Wang, and Jiang Li., Execution Anomaly Detection in Distributed Systems
+             through Unstructured Log Analysis, International Conference on Data Mining, vol. 9, pp. 149-158. 2009.
+.. [He2016c] P. He, Logparser: A python package of log parsers with benchmarks for log template extraction.
+             https://github.com/cuhk-cse/logparser.
+"""
+
 from numpy import *
 import math
 import time
