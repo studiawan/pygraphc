@@ -1,5 +1,4 @@
 from operator import itemgetter
-
 from pygraphc.abstraction.ClusterAbstraction import ClusterAbstraction
 from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
@@ -157,7 +156,7 @@ class ImprovedMajorClust(MajorClust):
         refined_nodes = self._refine_cluster()
         refined_graph = CreateGraph(refined_nodes, 0)
         refined_graph.do_create()
-        self.rgraph = refined_graph.get_graph()
+        self.rgraph = refined_graph.g
 
         # run improved majorclust with refined graph
         super(ImprovedMajorClust, self).get_majorclust(self.rgraph)
