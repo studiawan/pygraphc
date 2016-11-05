@@ -1,20 +1,23 @@
-"""This is implementation of IPLoM method proposed by Makanju et al. in [1]_ and [2]_.
+"""This is implementation of IPLoM method proposed by Makanju et al. in [Adetokunbo2009]_ and [Adetokunbo2012]_.
 
-Original source of IPLoM from He et al. based on the reference [3]_ and it is available
-on GitHub [4]_. We modify the original source to comply Python code style and add some methods
-to get cluster.
+Original source of IPLoM from He et al. based on the reference [He2016a]_ and it is available
+on GitHub [He2016b]_. We modify the original source to comply Python code style and add some methods
+to get cluster. The methods in this class has not documented and please refer to [He2016b]_
+to get more complete descriptions.
 
 References
 ----------
-.. [1] M. Adetokunbo, A. N. Zincir-Heywood, and E. E. Milios, Clustering event logs using iterative partitioning,
-       Proceedings of the 15th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2009,
-       pp. 1255-1264.
-.. [2] M. Adetokunbo, A. N. Zincir-Heywood, and E. E. Milios, A lightweight algorithm for message type extraction
-       in system application logs, IEEE Transactions on Knowledge and Data Engineering, 2012, 24(11), pp. 1921-1936.
-.. [3] P. He, J. Zhu, S. He, J. Li, and R. Lyu, An evaluation study on log parsing and its use in log mining,
-       Proceedings of the 46th Annual IEEE/IFIP International Conference on Dependable Systems and Networks.
-.. [4] P. He, Logparser: A python package of log parsers with benchmarks for log template extraction.
-       https://github.com/cuhk-cse/logparser.
+.. [Adetokunbo2009] M. Adetokunbo, A. N. Zincir-Heywood, and E. E. Milios, Clustering event logs using
+                    iterative partitioning, Proceedings of the 15th ACM SIGKDD International Conference on
+                    Knowledge Discovery and Data Mining, 2009, pp. 1255-1264.
+.. [Adetokunbo2012] M. Adetokunbo, A. N. Zincir-Heywood, and E. E. Milios, A lightweight algorithm for
+                    message type extraction in system application logs, IEEE Transactions on Knowledge
+                    and Data Engineering, 2012, 24(11), pp. 1921-1936.
+.. [He2016a]        P. He, J. Zhu, S. He, J. Li, and R. Lyu, An evaluation study on log parsing and its use
+                    in log mining, Proceedings of the 46th Annual IEEE/IFIP International Conference on
+                    Dependable Systems and Networks, 2016.
+.. [He2016b]        P. He, Logparser: A python package of log parsers with benchmarks for log template extraction.
+                    https://github.com/cuhk-cse/logparser.
 """
 
 import copy
