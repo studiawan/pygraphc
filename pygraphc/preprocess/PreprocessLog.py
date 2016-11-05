@@ -46,19 +46,19 @@ class PreprocessLog(object):
 
             # if not exist, add new element
             if preprocessed_event not in check_events_unique:
-            # if event not in check_events_unique:
+                # if event not in check_events_unique:
                 print index, event
                 length = self.get_doclength(tfidf)
                 events_unique.append([index, {'event': event, 'tf-idf': tfidf, 'length': length, 'status': '',
                                               'cluster': index, 'frequency': 1, 'member': [index_log],
-                                              'preprocessed_event':preprocessed_event}])
+                                              'preprocessed_event': preprocessed_event}])
                 index += 1
 
             # if exist, increment the frequency
             else:
                 for e in events_unique:
                     if preprocessed_event == e[1]['preprocessed_event']:
-                    # if event == e[1]['event']:
+                        # if event == e[1]['event']:
                         member = e[1]['member']
                         member.append(index_log)
                         e[1]['member'] = member
@@ -80,15 +80,6 @@ class PreprocessLog(object):
         self.events_list = events_list
         self.events_unique = events_unique
 
-    def get_eventslist(self):
-        return self.events_list
-
-    def get_eventsunique(self):
-        return self.events_unique
-
-    def get_logs(self):
-        return self.logs
-
     def __read_log(self):
         """Read a log file.
         """
@@ -98,7 +89,8 @@ class PreprocessLog(object):
         self.logs = logs
         self.loglength = len(logs)
 
-    def __get_wordindocs(self, word, docs):
+    @staticmethod
+    def __get_wordindocs(word, docs):
         """Find word occurence in all logs. Logs is stated as documents (in the context of information retrieval).
 
         Parameters
@@ -167,7 +159,8 @@ class PreprocessLog(object):
 
         return doc, tfidf
 
-    def get_doclength(self, tfidf):
+    @staticmethod
+    def get_doclength(tfidf):
         """Calculate doc's length for cosine similarity
 
         Parameters
