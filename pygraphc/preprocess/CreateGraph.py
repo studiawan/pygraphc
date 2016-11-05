@@ -11,7 +11,7 @@ class CreateGraph(object):
 
         Parameters
         ----------
-        events_unique       : list[str]
+        events_unique       : list[list]
             List of unique events from preprocessed logs.
         cosine_threshold    : float
             Threshold of cosine similarity measure for edge weight.
@@ -22,20 +22,11 @@ class CreateGraph(object):
         self.edges_weight = []
         self.cosine_threshold = cosine_threshold
 
-    def get_edges_dict(self):
-        return self.edges_dict
-
-    def get_edges_weight(self):
-        return self.edges_weight
-
     def do_create(self):
         """Main method to be executed to create a graph.
         """
         self.__create_nodes()
         self.__create_edges()
-
-    def get_graph(self):
-        return self.g
 
     def get_nodes_id(self):
         """Get node identifier.
