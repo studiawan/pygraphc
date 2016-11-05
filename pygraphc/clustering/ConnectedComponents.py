@@ -7,8 +7,9 @@ class ConnectedComponents:
 
     References
     ----------
-    .. [Studiawan2016a] H. Studiawan, B. A. Pratomo, and R. Anggoro, Connected component detection for authentication log
-                        clustering, The 2nd International Seminar on Science and Technology, 2016, pp. 495-496.
+    .. [Studiawan2016a] H. Studiawan, B. A. Pratomo, and R. Anggoro, Connected component detection for
+                        authentication log clustering, The 2nd International Seminar on Science and Technology,
+                        pp. 495-496, 2016.
     """
     def __init__(self, graph):
         """This is a constructor for ConnectedComponent class.
