@@ -1,5 +1,4 @@
 import csv
-
 from pygraphc.abstraction.ClusterAbstraction import ClusterAbstraction
 from pygraphc.clustering.ClusterUtility import ClusterUtility
 
@@ -13,8 +12,11 @@ class AnomalyScore(object):
         Parameters
         ----------
         graph       : graph
+            A graph to be analyzed for its anomaly.
         clusters    : dict[list]
+            Dictionary of list containing node identifier for each clusters.
         filename    : str
+            Filename for anomaly detection result.
         """
         self.graph = graph
         self.clusters = clusters
