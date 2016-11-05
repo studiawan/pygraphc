@@ -5,7 +5,7 @@ class ClusterAbstraction(object):
     References
     ----------
     .. [jtjacques2010] jtjacques, Longest common substring from more than two strings - Python.
-           http://stackoverflow.com/questions/2892931/longest-common-substring-from-more-than-two-strings-python.
+       http://stackoverflow.com/questions/2892931/longest-common-substring-from-more-than-two-strings-python.
     """
     @staticmethod
     def dp_lcs(graph, clusters):
