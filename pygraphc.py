@@ -2,13 +2,12 @@ from optparse import OptionParser
 from time import time  # , sleep
 
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
-from pygraphc.clustering.ClusterUtility import ClusterUtility
 from pygraphc.clustering.ConnectedComponents import ConnectedComponents
 from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.clustering.KCliquePercolation import KCliquePercolation, KCliquePercolationWeighted
 from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolation, MaxCliquesPercolationWeighted
-from pygraphc.evaluation.ClusterEvaluation import ClusterEvaluation
+from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
 from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.visualization.GraphStreaming import GraphStreaming
@@ -54,7 +53,7 @@ def main():
                       action='store',
                       dest='method',
                       choices=methods,
-                      default='graph_entropy',
+                      default='improved_majorclust',
                       help='Graph clustering method to run.')
     parser.add_option('-k', '--kpercolation',
                       action='store',
@@ -104,8 +103,8 @@ def main():
     # preprocess log file
     p = PreprocessLog(analyzed_file)
     p.do_preprocess()
-    events_unique = p.get_eventsunique()
-    logs = p.get_logs()
+    events_unique = p.events_unique
+    logs = p.logs
 
     # variable initialization for return value
     prediction_file = ''
@@ -117,9 +116,9 @@ def main():
         # create graph
         g = CreateGraph(events_unique, options.c)
         g.do_create()
-        graph = g.get_graph()
-        edges = g.get_edges_dict()
-        edges_weight = g.get_edges_weight()
+        graph = g.g
+        edges = g.edges_dict
+        edges_weight = g.edges_weight
         nodes_id = g.get_nodes_id()
 
         # prediction result file
@@ -177,7 +176,7 @@ def main():
                 graph_streaming(graph, edges, removed_edges)
 
         # get prediction file
-        ClusterUtility.set_cluster_label_id(graph, clusters, logs, prediction_file)
+        ExternalEvaluation.set_cluster_label_id(graph, clusters, logs, prediction_file)
 
         # get anomaly score
         anomaly_score = AnomalyScore(graph, clusters, '')
@@ -187,11 +186,11 @@ def main():
         pass
 
     # get evaluation of clustering performance
-    adj_rand_score = ClusterEvaluation.get_adjusted_rand_score(groundtruth_file, prediction_file)
-    adj_mutual_info_score = ClusterEvaluation.get_adjusted_mutual_info_score(groundtruth_file, prediction_file)
-    norm_mutual_info_score = ClusterEvaluation.get_normalized_mutual_info_score(groundtruth_file, prediction_file)
-    homogeneity_completeness_vmeasure = ClusterEvaluation.get_homogeneity_completeness_vmeasure(groundtruth_file,
-                                                                                                prediction_file)
+    adj_rand_score = ExternalEvaluation.get_adjusted_rand_score(groundtruth_file, prediction_file)
+    adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info_score(groundtruth_file, prediction_file)
+    norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info_score(groundtruth_file, prediction_file)
+    homogeneity_completeness_vmeasure = ExternalEvaluation.get_homogeneity_completeness_vmeasure(groundtruth_file,
+                                                                                                 prediction_file)
     return [len(nodes_id), len(edges), len(removed_edges) if removed_edges else 0, len(clusters),
             options.k, options.g, options.c, adj_rand_score, adj_mutual_info_score, norm_mutual_info_score,
             homogeneity_completeness_vmeasure]
