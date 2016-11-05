@@ -29,6 +29,11 @@ class MaxCliquesPercolation(KCliquePercolation):
             List of all node identifier.
         k               : int
             Number of percolation or intersection between an individual clique.
+
+        Notes
+        -----
+        max_cliques : list[frozenset]
+            List of frozenset containing node id for each maximal clique.
         """
         super(MaxCliquesPercolation, self).__init__(graph, edges_weight, nodes_id, k)
         self.max_cliques = None
@@ -54,16 +59,6 @@ class MaxCliquesPercolation(KCliquePercolation):
         clusters = super(MaxCliquesPercolation, self)._get_clusters()
 
         return clusters
-
-    def get_maxcliques(self):
-        """Get enumerated maximal cliques.
-
-        Returns
-        -------
-        max_cliques : list[frozenset]
-            List of frozenset containing node id for each maximal clique.
-        """
-        return self.max_cliques
 
     def _find_maxcliques(self):
         """Find maximal cliques using `find_clique` function from NetworkX.
