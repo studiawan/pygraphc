@@ -11,6 +11,7 @@ Event log clustering tool using Python.
 * numpy 1.8.2
 * Gephi 0.8.2
 * Sphinx 1.3.1
+* numpydoc 0.6.0
 
 ## License
 MIT License. Please check [LICENSE](https://github.com/studiawan/pygraphc/blob/master/LICENSE).
