@@ -1,4 +1,5 @@
 from itertools import combinations
+from datetime import datetime
 
 
 class ClusterUtility(object):
@@ -80,7 +81,7 @@ class ClusterUtility(object):
                 graph.node[node]['cluster'] = cluster_id
 
     @staticmethod
-    def get_cluster_property(graph, clusters):
+    def get_cluster_property(graph, clusters, year=None):
         """Get cluster property.
 
         Parameters
@@ -89,17 +90,42 @@ class ClusterUtility(object):
             Graph to be analyzed.
         clusters    : dict[list]
             Dictionary contains sequence of nodes in all clusters.
+        year        : str
+            Year of the log file. We need this parameter since log file does not provide it.
 
         Returns
         -------
         cluster_property    : dict
             Property of a cluster. For example: frequency of event logs.
+
+        Notes
+        -----
+        frequency           : frequency of event logs in a cluster.
+        member              : number of nodes in a cluster.
+        interarrival_rate   : inter-arrival time of event logs timestamp in a cluster.
         """
         cluster_property = {}      # event log frequency per cluster
         for cluster_id, nodes in clusters.iteritems():
             properties = {}
+            datetimes = []
             for node_id in nodes:
                 properties['frequency'] = properties.get('frequency', 0) + graph.node[node_id]['frequency']
+                properties['member'] = properties.get('member', 0) + 1
+                datetimes.append(graph.node[node_id]['start'])
+                datetimes.append(graph.node[node_id]['end'])
+
+            # get inter-arrival rate
+            sorted_datetimes = sorted(datetimes)
+            start_temp, end_temp = sorted_datetimes[0].split(), sorted_datetimes[-1].split()  # note that it is -1 not 1
+            start = datetime.strptime(' '.join(start_temp[:2]) + ' ' + year + ' ' + ' '.join(start_temp[2:]),
+                                      '%b %d %Y %H:%M:%S')
+            end = datetime.strptime(' '.join(end_temp[:2]) + ' ' + year + ' ' + ' '.join(end_temp[2:]),
+                                    '%b %d %Y %H:%M:%S')
+            interarrival_times = end - start
+            interarrival = interarrival_times.seconds if interarrival_times.seconds != 0 else 1
+            properties['interarrival_rate'] = float(properties['frequency']) / float(interarrival)
+
+            # set cluster property
             cluster_property[cluster_id] = properties
 
         return cluster_property
