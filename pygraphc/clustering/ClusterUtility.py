@@ -81,7 +81,7 @@ class ClusterUtility(object):
                 graph.node[node]['cluster'] = cluster_id
 
     @staticmethod
-    def get_cluster_property(graph, clusters, year=None):
+    def get_cluster_property(graph, clusters, year):
         """Get cluster property.
 
         Parameters

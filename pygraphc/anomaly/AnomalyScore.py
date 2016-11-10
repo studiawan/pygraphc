@@ -6,7 +6,7 @@ from pygraphc.clustering.ClusterUtility import ClusterUtility
 class AnomalyScore(object):
     """A class to calculate anomaly score in a cluster.
     """
-    def __init__(self, graph, clusters, filename):
+    def __init__(self, graph, clusters, filename, year):
         """The constructor of class AnomalyScore.
 
         Parameters
@@ -21,15 +21,16 @@ class AnomalyScore(object):
         self.graph = graph
         self.clusters = clusters
         self.filename = filename
+        self.year = year
         # get cluster abstraction and its properties
         self.abstraction = ClusterAbstraction.dp_lcs(self.graph, self.clusters)
-        self.property = ClusterUtility.get_cluster_property(self.graph, self.clusters)
+        self.property = ClusterUtility.get_cluster_property(self.graph, self.clusters, self.year)
 
     def write_property(self):
         """Write cluster property to a file.
         """
         # write to csv
-        f = open(self.filename + '_anomaly.csv', 'wt')
+        f = open(self.filename + '.anomaly.csv', 'wt')
         writer = csv.writer(f)
 
         # set header
