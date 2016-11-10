@@ -1,6 +1,6 @@
 import networkx as nx
 from itertools import combinations
-from pygraphc.clustering.ClusterDistance import ClusterDistance
+from pygraphc.clustering.StringSimilarity import StringSimilarity
 
 
 class CreateGraph(object):
@@ -54,7 +54,7 @@ class CreateGraph(object):
             # get cosine similarity between two nodes
             tfidf1, tfidf2 = self.g.node[ec[0]]['tf-idf'], self.g.node[ec[1]]['tf-idf']
             length1, length2 = self.g.node[ec[0]]['length'], self.g.node[ec[1]]['length']
-            cosine_similarity = ClusterDistance.get_cosine_similarity(tfidf1, tfidf2, length1, length2)
+            cosine_similarity = StringSimilarity.get_cosine_similarity(tfidf1, tfidf2, length1, length2)
 
             # create edge if cosine similarity measure is bigger then threshold
             if cosine_similarity > self.cosine_threshold:
