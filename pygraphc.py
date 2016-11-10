@@ -1,6 +1,5 @@
 from optparse import OptionParser
 from time import time  # , sleep
-
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
 from pygraphc.clustering.ConnectedComponents import ConnectedComponents
 from pygraphc.clustering.GraphEntropy import GraphEntropy
@@ -11,6 +10,7 @@ from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
 from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.visualization.GraphStreaming import GraphStreaming
+from pygraphc.output.Output import Output
 
 
 def main():
@@ -53,7 +53,7 @@ def main():
                       action='store',
                       dest='method',
                       choices=methods,
-                      default='improved_majorclust',
+                      default='graph_entropy',
                       help='Graph clustering method to run.')
     parser.add_option('-k', '--kpercolation',
                       action='store',
@@ -90,6 +90,16 @@ def main():
                       dest='f',
                       default='dec-7.log',
                       help='A log file to be analyzed.')
+    parser.add_option('-o', '--output-txt',
+                      action='store',
+                      dest='o',
+                      default='dec-7.log.percluster',
+                      help='Output in text file.')
+    parser.add_option('-y', '--year',
+                      action='store',
+                      dest='y',
+                      default='2014',
+                      help='Year in log file. In some log files, this data is not available.')
 
     # get options
     (options, args) = parser.parse_args()
@@ -99,6 +109,8 @@ def main():
     groundtruth_path = options.d
     groundtruth_file = groundtruth_path + options.t
     analyzed_file = groundtruth_path + options.f
+    result_file = options.o
+    year = options.y
 
     # preprocess log file
     p = PreprocessLog(analyzed_file)
@@ -124,12 +136,12 @@ def main():
         # prediction result file
         if options.method in ['maxclique_percolation', 'maxclique_percolation_weighted', 'kclique_percolation',
                               'kclique_percolation_weighted']:
-            prediction_file = './results-k=' + str(k) + '-g=' + str(geometric_mean_threshold) + \
-                              '-c=' + str(options.c) + '.log'
+            prediction_file = './' + options.f + 'results-k=' + str(k) + '-g=' + str(geometric_mean_threshold) + \
+                              '-c=' + str(options.c)
         elif options.method in ['connected_components']:
-            prediction_file = './results-c=' + str(options.c) + '.log'
+            prediction_file = './' + options.f + 'results-c=' + str(options.c)
         elif options.method in ['majorclust', 'improved_majorclust', 'graph_entropy']:
-            prediction_file = './results.log'
+            prediction_file = './' + options.f + '.results'
 
         # run the selected method
         if options.method == 'kclique_percolation':
@@ -179,8 +191,12 @@ def main():
         ExternalEvaluation.set_cluster_label_id(graph, clusters, logs, prediction_file)
 
         # get anomaly score
-        anomaly_score = AnomalyScore(graph, clusters, '')
+        anomaly_score = AnomalyScore(graph, clusters, options.f, year)
         anomaly_score.write_property()
+
+        # get output
+        output_txt = Output(graph, clusters, logs, result_file)
+        output_txt.to_txt()
 
     elif options.method in nongraph_method:
         pass
@@ -200,8 +216,6 @@ def graph_streaming(graph, edges, removed_edges):
     stream = GraphStreaming(graph, edges, 0)
     stream.gephi_streaming()
     if removed_edges:
-        # print 'sleeping for 120 seconds ...'
-        # sleep(120)
         stream.remove_outcluster(removed_edges)
 
 if __name__ == '__main__':
