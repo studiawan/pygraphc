@@ -1,5 +1,5 @@
 
-class ClusterDistance(object):
+class StringSimilarity(object):
     """Class for distance measurement between two vertices.
     """
     @staticmethod
