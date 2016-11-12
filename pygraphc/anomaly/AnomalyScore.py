@@ -6,7 +6,7 @@ from pygraphc.clustering.ClusterUtility import ClusterUtility
 class AnomalyScore(object):
     """A class to calculate anomaly score in a cluster.
     """
-    def __init__(self, graph, clusters, filename, year):
+    def __init__(self, graph, clusters, anomaly_path, year):
         """The constructor of class AnomalyScore.
 
         Parameters
@@ -15,31 +15,35 @@ class AnomalyScore(object):
             A graph to be analyzed for its anomaly.
         clusters    : dict[list]
             Dictionary of list containing node identifier for each clusters.
-        filename    : str
+        anomaly_path    : str
             Filename for anomaly detection result.
         """
         self.graph = graph
         self.clusters = clusters
-        self.filename = filename
+        self.anomaly_path = anomaly_path
         self.year = year
         # get cluster abstraction and its properties
         self.abstraction = ClusterAbstraction.dp_lcs(self.graph, self.clusters)
         self.property = ClusterUtility.get_cluster_property(self.graph, self.clusters, self.year)
+        self.anomaly_score = {}
 
     def write_property(self):
         """Write cluster property to a file.
         """
+        # get anomaly score
+        self.get_anomaly_score()
+
         # write to csv
-        f = open(self.filename + '.anomaly.csv', 'wt')
+        f = open(self.anomaly_path, 'wt')
         writer = csv.writer(f)
 
         # set header
-        header = ('cluster_id', 'cluster_abstraction') + tuple(self.property[0].keys())
+        header = ('cluster_id', 'cluster_abstraction') + tuple(self.property[0].keys()) + ('anomaly_score',)
         writer.writerow(header)
 
         # write data
         for cluster_id, abstract in self.abstraction.iteritems():
-            row = (cluster_id, abstract) + tuple(self.property[cluster_id].values())
+            row = (cluster_id, abstract) + tuple(self.property[cluster_id].values()) + (self.anomaly_score[cluster_id],)
             writer.writerow(row)
 
     def get_anomaly_score(self):
@@ -50,7 +54,6 @@ class AnomalyScore(object):
         anomaly_score   : dict
             Dictionary of anomaly score per cluster.
         """
-        anomaly_score = {}
         total_nodes = 0
         total_frequency = 0
 
@@ -61,7 +64,5 @@ class AnomalyScore(object):
 
         # calculate anomaly score
         for cluster_id, properties in self.property.iteritems():
-            anomaly_score[cluster_id] = (properties['member'] * properties['frequency']) / \
-                                        (total_nodes * total_frequency) * properties['interarrival_rate']
-
-        return anomaly_score
+            self.anomaly_score[cluster_id] = float(properties['member'] * properties['frequency']) / \
+                                        float(total_nodes * total_frequency) * properties['interarrival_rate']
