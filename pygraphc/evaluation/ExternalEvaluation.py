@@ -150,7 +150,7 @@ class ExternalEvaluation(object):
         return evaluation_labels
 
     @staticmethod
-    def get_adjusted_rand_score(standard_file, prediction_file):
+    def get_adjusted_rand(standard_file, prediction_file):
         """Get adjusted rand index [Hubert1985]_.
 
         Parameters
@@ -177,7 +177,7 @@ class ExternalEvaluation(object):
         return adjusted_rand_index
 
     @staticmethod
-    def get_adjusted_mutual_info_score(standard_file, prediction_file):
+    def get_adjusted_mutual_info(standard_file, prediction_file):
         """Get adjusted mutual information (AMI) [Vinh2009]_.
 
         Parameters
@@ -206,7 +206,7 @@ class ExternalEvaluation(object):
         return adjusted_mutual_info
 
     @staticmethod
-    def get_normalized_mutual_info_score(standard_file, prediction_file):
+    def get_normalized_mutual_info(standard_file, prediction_file):
         """Get normalized mutual information (NMI) [Strehl2002]_.
 
         Parameters
