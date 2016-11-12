@@ -46,6 +46,8 @@ class AnomalyScore(object):
             row = (cluster_id, abstract) + tuple(self.property[cluster_id].values()) + (self.anomaly_score[cluster_id],)
             writer.writerow(row)
 
+        f.close()
+
     def get_anomaly_score(self):
         """Get anomaly score per cluster.
 
