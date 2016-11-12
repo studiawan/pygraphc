@@ -20,6 +20,7 @@ class PreprocessLog(object):
         self.loglength = 0
         self.events_list = []
         self.events_unique = []
+        self.word_count = {}
 
     def do_preprocess(self):
         """Main method to execute preprocess log.
@@ -113,6 +114,21 @@ class PreprocessLog(object):
         count = float(count)
         return count
 
+    def __get_word_in_docs(self, word, docs):
+        count = 0
+
+        # if word exist in dictionary
+        if word in self.word_count.keys():
+            count = self.word_count[word]
+        else:
+            for doc in docs:
+                if word in doc:
+                    count += 1
+            self.word_count[word] = count
+
+        count = float(count)
+        return count
+
     def get_tfidf(self, doc, total_docs, docs):
         """Calculate tf-idf (term frequency-inverse document frequency).
 
@@ -149,7 +165,8 @@ class PreprocessLog(object):
         tfidf = []
         for t in tf.most_common():
             normalized_tf = float(t[1]) / float(words_total)    # normalized word frequency
-            wid = self.__get_wordindocs(t[0], docs)             # calculate word occurrence in all documents
+            # wid = self.__get_wordindocs(t[0], docs)             # calculate word occurrence in all documents
+            wid = self.__get_word_in_docs(t[0], docs)
             try:
                 idf = 1 + log(total_docs / wid)                 # calculate idf
             except ZeroDivisionError:
