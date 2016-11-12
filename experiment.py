@@ -1,5 +1,7 @@
 import fnmatch
 import os
+import csv
+from time import time
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
@@ -16,18 +18,21 @@ def get_dataset(dataset, dataset_path, file_extension, method):
         for filename in fnmatch.filter(filenames, file_extension):
             matches.append(os.path.join(root, filename))
 
-    # get file identifier, log file, labeled log file, result per cluster, result per line, and anomaly report
+    # get file name to save all of the results
     files = {}
-    result_path = './result/' + method + '/'
+    result_path = '/home/hudan/Git/pygraphc/result/' + method + '/'
     for match in matches:
         identifier = match.split(dataset)
         index = dataset + identifier[1]
         files[index] = {'log_path': match, 'labeled_path': str(match) + '.labeled',
                         'result_percluster': result_path + index + '.percluster',
                         'result_perline': result_path + index + '.perline',
-                        'anomaly_report': result_path + index + '.anomaly'}
+                        'anomaly_report': result_path + index + '.anomaly.csv'}
 
-    return files
+    # file to save evaluation performance per method
+    evaluation_file = result_path + dataset + '.evaluation.csv'
+
+    return files, evaluation_file
 
 
 def get_evaluation(evaluated_graph, clusters, logs, properties, year):
@@ -43,25 +48,35 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year):
     output_txt.to_txt()
 
     # get evaluation of clustering performance
-    adj_rand_score = ExternalEvaluation.get_adjusted_rand_score(properties['labeled_path'],
-                                                                properties['result_perline'])
-    adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info_score(properties['labeled_path'],
-                                                                              properties['result_perline'])
-    norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info_score(properties['labeled_path'],
-                                                                                 properties['result_perline'])
-    homogeneity_completeness_vmeasure = ExternalEvaluation.get_homogeneity_completeness_vmeasure(
-        properties['labeled_path'], properties['result_perline'])
+    ar = ExternalEvaluation.get_adjusted_rand_score(properties['labeled_path'], properties['result_perline'])
+    ami = ExternalEvaluation.get_adjusted_mutual_info_score(properties['labeled_path'], properties['result_perline'])
+    nmi = ExternalEvaluation.get_normalized_mutual_info_score(properties['labeled_path'], properties['result_perline'])
+    h = ExternalEvaluation.get_homogeneity(properties['labeled_path'], properties['result_perline'])
+    c = ExternalEvaluation.get_completeness(properties['labeled_path'], properties['result_perline'])
+    v = ExternalEvaluation.get_vmeasure(properties['labeled_path'], properties['result_perline'])
 
-    return adj_rand_score, adj_mutual_info_score, norm_mutual_info_score, homogeneity_completeness_vmeasure
+    return ar, ami, nmi, h, c, v
 
 
 def main(dataset, year, method):
     # get dataset files
     files = {}
+    evaluation_file = ''
     if dataset == 'Hofstede2014':
-        files = get_dataset(dataset, '/home/hudan/Git/labeled-authlog/dataset/Hofstede2014', '*.anon', method)
+        files, evaluation_file = get_dataset(dataset, '/home/hudan/Git/labeled-authlog/dataset/Hofstede2014',
+                                             '*.anon', method)
     elif dataset == 'SecRepo':
-        files = get_dataset(dataset, '/home/hudan/Git/labeled-authlog/dataset/SecRepo', '*.log', method)
+        files, evaluation_file = get_dataset(dataset, '/home/hudan/Git/labeled-authlog/dataset/SecRepo',
+                                             '*.log', method)
+
+    # open evaluation file
+    f = open(evaluation_file, 'wt')
+    writer = csv.writer(f)
+
+    # set header
+    header = ('file_name', 'adjusted_rand', 'adjusted_mutual_info', 'normalized_mutual_info',
+              'homogeneity', 'completeness', 'v-measure')
+    writer.writerow(header)
 
     # main process
     for file_identifier, properties in files.iteritems():
@@ -76,6 +91,9 @@ def main(dataset, year, method):
         g.do_create()
         graph = g.g
 
+        # initialization
+        ar, ami, nmi, h, c, v = 0., 0., 0., 0., 0., 0.
+
         if method == 'majorclust':
             # run MajorClust method
             mc_graph = graph.copy()
@@ -83,7 +101,7 @@ def main(dataset, year, method):
             mc_clusters = mc.get_majorclust(graph)
 
             # do evaluation performance and clear graph
-            get_evaluation(mc_graph, mc_clusters, original_logs, properties, year)
+            ar, ami, nmi, h, c, v = get_evaluation(mc_graph, mc_clusters, original_logs, properties, year)
             mc_graph.clear()
 
         elif method == 'improved_majorclust':
@@ -93,7 +111,7 @@ def main(dataset, year, method):
             imc_clusters = imc.get_improved_majorclust()
 
             # do evaluation performance and clear graph
-            get_evaluation(imc_graph, imc_clusters, original_logs, properties, year)
+            ar, ami, nmi, h, c, v = get_evaluation(imc_graph, imc_clusters, original_logs, properties, year)
             imc_graph.clear()
 
         elif method == 'graph_entropy':
@@ -103,11 +121,19 @@ def main(dataset, year, method):
             ge_clusters = ge.get_graph_entropy()
 
             # do evaluation performance and clear graph
-            get_evaluation(ge_graph, ge_clusters, original_logs, properties, year)
+            ar, ami, nmi, h, c, v = get_evaluation(ge_graph, ge_clusters, original_logs, properties, year)
             ge_graph.clear()
 
+        # writer evaluation result to file
+        row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v)
+        writer.writerow(row)
+
+    f.close()
 
 if __name__ == '__main__':
+    start = time()
     data = 'Hofstede2014'
     clustering_method = 'improved_majorclust'
     main(data, '2014', clustering_method)
+    duration = time() - start
+    print 'Runtime:', duration, 'seconds'
