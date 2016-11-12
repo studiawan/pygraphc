@@ -6,7 +6,7 @@ from pygraphc.clustering.StringSimilarity import StringSimilarity
 class CreateGraph(object):
     """A class for generating graph from preprocessed logs.
     """
-    def __init__(self, events_unique, cosine_threshold):
+    def __init__(self, events_unique, cosine_threshold=0):
         """Constructor for class CreateGraph.
 
         Parameters
