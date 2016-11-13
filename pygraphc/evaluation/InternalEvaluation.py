@@ -16,6 +16,7 @@ class InternalEvaluation(object):
 
     @staticmethod
     def get_node_silhoutte(graph, clusters):
+        # please check for cluster with only one node
         cid = set(clusters.keys())
         intracluster_avg, intercluster_avg, node_silhouttes = {}, {}, {}
 
@@ -39,3 +40,23 @@ class InternalEvaluation(object):
             # get vertex silhoutte
             node_silhouttes[node] = (intercluster_avg[node] - intracluster_avg[node]) / max(intercluster_avg[node],
                                                                                             intracluster_avg[node])
+        return node_silhouttes
+
+    @staticmethod
+    def get_cluster_silhoutte(graph, clusters):
+        node_silhouttes = InternalEvaluation.get_node_silhoutte(graph, clusters)
+        cluster_silhouttes = {}
+        for cluster_id, cluster in clusters.iteritems():
+            silhoutte = []
+            for node in cluster:
+                silhoutte.append(node_silhouttes[node])
+            cluster_silhouttes[cluster_id] = average(silhoutte)
+
+        return cluster_silhouttes
+
+    @staticmethod
+    def get_silhoutte_index(graph, clusters):
+        cluster_silhouttes = InternalEvaluation.get_cluster_silhoutte(graph, clusters)
+        silhoutte_index = average(cluster_silhouttes.values())
+
+        return silhoutte_index
