@@ -7,6 +7,7 @@ from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
 from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
+from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
 from pygraphc.output.Output import Output
 
@@ -48,14 +49,15 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year):
     output_txt.to_txt()
 
     # get evaluation of clustering performance
-    ar = ExternalEvaluation.get_adjusted_rand_score(properties['labeled_path'], properties['result_perline'])
-    ami = ExternalEvaluation.get_adjusted_mutual_info_score(properties['labeled_path'], properties['result_perline'])
-    nmi = ExternalEvaluation.get_normalized_mutual_info_score(properties['labeled_path'], properties['result_perline'])
+    ar = ExternalEvaluation.get_adjusted_rand(properties['labeled_path'], properties['result_perline'])
+    ami = ExternalEvaluation.get_adjusted_mutual_info(properties['labeled_path'], properties['result_perline'])
+    nmi = ExternalEvaluation.get_normalized_mutual_info(properties['labeled_path'], properties['result_perline'])
     h = ExternalEvaluation.get_homogeneity(properties['labeled_path'], properties['result_perline'])
     c = ExternalEvaluation.get_completeness(properties['labeled_path'], properties['result_perline'])
     v = ExternalEvaluation.get_vmeasure(properties['labeled_path'], properties['result_perline'])
+    silhoutte_index = InternalEvaluation.get_silhoutte_index(evaluated_graph, clusters)
 
-    return ar, ami, nmi, h, c, v
+    return ar, ami, nmi, h, c, v, silhoutte_index
 
 
 def main(dataset, year, method):
@@ -75,7 +77,7 @@ def main(dataset, year, method):
 
     # set header
     header = ('file_name', 'adjusted_rand', 'adjusted_mutual_info', 'normalized_mutual_info',
-              'homogeneity', 'completeness', 'v-measure')
+              'homogeneity', 'completeness', 'v-measure', 'silhoutte_index')
     writer.writerow(header)
 
     # main process
@@ -92,7 +94,7 @@ def main(dataset, year, method):
         graph = g.g
 
         # initialization
-        ar, ami, nmi, h, c, v = 0., 0., 0., 0., 0., 0.
+        ar, ami, nmi, h, c, v, silhoutte = 0., 0., 0., 0., 0., 0., 0.
 
         if method == 'majorclust':
             # run MajorClust method
@@ -101,7 +103,7 @@ def main(dataset, year, method):
             mc_clusters = mc.get_majorclust(graph)
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v = get_evaluation(mc_graph, mc_clusters, original_logs, properties, year)
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(mc_graph, mc_clusters, original_logs, properties, year)
             mc_graph.clear()
 
         elif method == 'improved_majorclust':
@@ -111,7 +113,7 @@ def main(dataset, year, method):
             imc_clusters = imc.get_improved_majorclust()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v = get_evaluation(imc_graph, imc_clusters, original_logs, properties, year)
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(imc_graph, imc_clusters, original_logs, properties, year)
             imc_graph.clear()
 
         elif method == 'graph_entropy':
@@ -121,11 +123,11 @@ def main(dataset, year, method):
             ge_clusters = ge.get_graph_entropy()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v = get_evaluation(ge_graph, ge_clusters, original_logs, properties, year)
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(ge_graph, ge_clusters, original_logs, properties, year)
             ge_graph.clear()
 
         # writer evaluation result to file
-        row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v)
+        row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte)
         writer.writerow(row)
 
     f.close()
