@@ -2,17 +2,21 @@ from pyparsing import Word, alphas, Suppress, Combine, nums, string, Optional, R
 
 
 class LogGrammar(object):
-    """A class to define the format (grammar) of a log file. We heavily rely on pyparsing in this case.
-    """
-    def __init__(self, log_line):
-        """The constructor of LogGrammar.
+    """A class to define the format (grammar) of a log file.
 
-        Parameters
-        ----------
-        log_line    : str
-            A log line to be parsed.
+    We heavily rely on pyparsing in this case. The code for auth.log grammar is derived from syslog parser
+    by L. Silva [Silva2012]_.
+
+    References
+    ----------
+    .. [Silva2012] L. Silva, Parsing syslog files with Python and PyParsing, 2012.
+                   https://gist.github.com/leandrosilva/3651640
+    """
+    def __init__(self, log_type=None):
+        """The constructor of LogGrammar.
         """
-        self.log_line = log_line
+        self.log_type = log_type
+        self.authlog_grammar = self.__get_authlog_grammar()
 
     @staticmethod
     def __get_authlog_grammar():
@@ -27,15 +31,15 @@ class LogGrammar(object):
         timestamp = month + day + hour
 
         # hostname, service name, message
-        hostname = Word(alphas + nums + "_" + "-" + ".")
+        hostname_or_ip = Word(alphas + nums + "_" + "-" + ".")
         appname = Word(alphas + "/" + "-" + "_" + ".") + Optional(Suppress("[") + ints + Suppress("]")) + Suppress(":")
         message = Regex(".*")
 
         # auth log grammar
-        authlog_grammar = timestamp + hostname + appname + message
+        authlog_grammar = timestamp + hostname_or_ip + appname + message
         return authlog_grammar
 
-    def parse_authlog(self):
+    def parse_authlog(self, log_line):
         """Parse auth.log based on defined grammar.
 
         Returns
@@ -43,16 +47,22 @@ class LogGrammar(object):
         parsed  : dict[str, str]
             A parsed auth.log containing these elements: timestamp, hostname, service, pid, and message.
         """
-        # get auth.log grammar
-        authlog_grammar = self.__get_authlog_grammar()
-        parsed_authlog = authlog_grammar.parseString(self.log_line)
+        parsed_authlog = self.authlog_grammar.parseString(log_line)
 
         # get parsed auth.log
         parsed = dict()
         parsed['timestamp'] = parsed_authlog[0] + ' ' + parsed_authlog[1] + ' ' + parsed_authlog[2]
-        parsed['hostname'] = parsed_authlog[3]
+        if self.log_type == 'Hofstede2014':
+            parsed['ip_address'] = parsed_authlog[3]
+        else:
+            parsed['hostname'] = parsed_authlog[3]
+
         parsed['service'] = parsed_authlog[4]
-        parsed['pid'] = parsed_authlog[5]
-        parsed['message'] = parsed_authlog[6]
+
+        if len(parsed_authlog) < 7:
+            parsed['message'] = parsed_authlog[5]
+        else:
+            parsed['pid'] = parsed_authlog[5]
+            parsed['message'] = parsed_authlog[6]
 
         return parsed
