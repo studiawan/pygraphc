@@ -26,6 +26,7 @@ class AnomalyScore(object):
         self.abstraction = ClusterAbstraction.dp_lcs(self.graph, self.clusters)
         self.property = ClusterUtility.get_cluster_property(self.graph, self.clusters, self.year)
         self.anomaly_score = {}
+        self.quadratic_score = {}
 
     def write_property(self):
         """Write cluster property to a file.
@@ -68,3 +69,21 @@ class AnomalyScore(object):
         for cluster_id, properties in self.property.iteritems():
             self.anomaly_score[cluster_id] = float(properties['member'] * properties['frequency']) / \
                                         float(total_nodes * total_frequency) * properties['interarrival_rate']
+
+    def transfrom_score(self):
+        """Transform anomaly score to quadratic score.
+
+        This model will generate:
+        - Low intensity attack  : high score
+        - High intensity attack : high score
+        - Normal                : low score.
+        """
+        # the anomaly score need to be normalized first
+        normalization_score = {}
+        min_score = min(self.anomaly_score.values())
+        max_score = max(self.anomaly_score.values())
+        for cluster_id, score in self.anomaly_score.iteritems():
+            normalization_score[cluster_id] = (score - min_score) / (max_score - min_score)
+
+        for cluster_id, score in normalization_score.iteritems():
+            self.quadratic_score[cluster_id] = 4 * (score ** 2) - (4 * score) + 1
