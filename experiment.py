@@ -36,12 +36,12 @@ def get_dataset(dataset, dataset_path, file_extension, method):
     return files, evaluation_file
 
 
-def get_evaluation(evaluated_graph, clusters, logs, properties, year):
+def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict):
     # get prediction file
     ExternalEvaluation.set_cluster_label_id(evaluated_graph, clusters, logs, properties['result_perline'])
 
     # get anomaly score
-    anomaly_score = AnomalyScore(evaluated_graph, clusters, properties['anomaly_report'], year)
+    anomaly_score = AnomalyScore(evaluated_graph, clusters, properties['anomaly_report'], year, edges_dict)
     anomaly_score.write_property()
 
     # get output
@@ -92,6 +92,7 @@ def main(dataset, year, method):
         g = CreateGraph(events_unique)
         g.do_create()
         graph = g.g
+        edges_dict = g.edges_dict
 
         # initialization
         ar, ami, nmi, h, c, v, silhoutte = 0., 0., 0., 0., 0., 0., 0.
@@ -103,7 +104,8 @@ def main(dataset, year, method):
             mc_clusters = mc.get_majorclust(graph)
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(mc_graph, mc_clusters, original_logs, properties, year)
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(mc_graph, mc_clusters, original_logs, properties,
+                                                              year, edges_dict)
             mc_graph.clear()
 
         elif method == 'improved_majorclust':
@@ -113,7 +115,8 @@ def main(dataset, year, method):
             imc_clusters = imc.get_improved_majorclust()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(imc_graph, imc_clusters, original_logs, properties, year)
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(imc_graph, imc_clusters, original_logs, properties,
+                                                              year, edges_dict)
             imc_graph.clear()
 
         elif method == 'graph_entropy':
@@ -123,7 +126,8 @@ def main(dataset, year, method):
             ge_clusters = ge.get_graph_entropy()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(ge_graph, ge_clusters, original_logs, properties, year)
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(ge_graph, ge_clusters, original_logs, properties,
+                                                              year, edges_dict)
             ge_graph.clear()
 
         # writer evaluation result to file
