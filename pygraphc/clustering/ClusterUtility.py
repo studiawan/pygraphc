@@ -155,9 +155,12 @@ class ClusterUtility(object):
         num_edges = {}
         edges = edges_dict.keys()
         for cluster_id, cluster in clusters.iteritems():
-            for u, v in combinations(cluster, 2):
-                if (u, v) in edges or (v, u) in edges:
-                    num_edges[cluster_id] += 1
+            if len(cluster) == 1:
+                num_edges[cluster_id] = 0
+            else:
+                for u, v in combinations(cluster, 2):
+                    if (u, v) in edges or (v, u) in edges:
+                        num_edges[cluster_id] = num_edges.get(cluster_id, 0) + 1
 
         return num_edges
 
