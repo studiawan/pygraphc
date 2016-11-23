@@ -65,8 +65,9 @@ def main(dataset, year, method):
     files = {}
     evaluation_file = ''
     if dataset == 'Hofstede2014':
-        files, evaluation_file = get_dataset(dataset, '/home/hudan/Git/labeled-authlog/dataset/Hofstede2014',
-                                             '*.anon', method)
+        files, evaluation_file = get_dataset(dataset,
+                                             '/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday',
+                                             '*.log', method)
     elif dataset == 'SecRepo':
         files, evaluation_file = get_dataset(dataset, '/home/hudan/Git/labeled-authlog/dataset/SecRepo',
                                              '*.log', method)
