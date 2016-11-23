@@ -129,6 +129,7 @@ class ClusterUtility(object):
             interarrival = interarrival_times.seconds if interarrival_times.seconds != 0 else 1
             properties['interarrival_rate'] = float(properties['frequency']) / float(interarrival)
             properties['edges_number'] = num_edges[cluster_id]
+            properties['density'] = ClusterUtility.get_cluster_density(properties['edges_number'], properties['member'])
 
             # set cluster property
             cluster_property[cluster_id] = properties
@@ -159,3 +160,29 @@ class ClusterUtility(object):
                     num_edges[cluster_id] += 1
 
         return num_edges
+
+    @staticmethod
+    def get_cluster_density(num_edges, num_nodes):
+        """Get cluster density.
+
+        Note that a cluster is equal with a subgraph. And the formula of the subgraph density is
+        based on [WikiDenseSubgraph2016]_.
+
+        References
+        ----------
+        .. [WikiDenseSubgraph2016] Dense subgraph. https://en.wikipedia.org/wiki/Dense_subgraph.
+
+        Parameters
+        ----------
+        num_edges   : int
+            Number of edges in a clusters.
+        num_nodes   : int
+            Number of nodes in a clusters.
+
+        Returns
+        -------
+        cluster_density : float
+            The cluster density value for a cluster.
+        """
+        cluster_density = float(num_edges) / float(num_nodes)
+        return cluster_density
