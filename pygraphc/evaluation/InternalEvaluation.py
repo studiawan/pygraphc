@@ -29,7 +29,7 @@ class InternalEvaluation(object):
         distance = []
         for node_id, weight in neigbors_weight.iteritems():
             if node_id in neighbors:
-                distance.append(weight['weight'])
+                distance.append(weight[0]['weight'])
 
         avg_distance = average(distance)
         return avg_distance
@@ -73,8 +73,9 @@ class InternalEvaluation(object):
                 intercluster_avg[node] = distance
 
             # get vertex silhoutte
-            node_silhouttes[node] = (intercluster_avg[node] - intracluster_avg[node]) / max(intercluster_avg[node],
-                                                                                            intracluster_avg[node])
+            for node in cluster:
+                node_silhouttes[node] = (intercluster_avg[node] - intracluster_avg[node]) / max(intercluster_avg[node],
+                                                                                                intracluster_avg[node])
         return node_silhouttes
 
     @staticmethod
