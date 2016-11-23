@@ -53,7 +53,7 @@ def main():
                       action='store',
                       dest='method',
                       choices=methods,
-                      default='graph_entropy',
+                      default='improved_majorclust',
                       help='Graph clustering method to run.')
     parser.add_option('-k', '--kpercolation',
                       action='store',
@@ -75,26 +75,31 @@ def main():
                       dest='s',
                       default=False,
                       help='Streaming the processed graph to Gephi.')
-    parser.add_option('-d', '--ground-truth-dir',
-                      action='store',
-                      dest='d',
-                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1/161.166.232.17/',
-                      help='A path for ground truth directory.')
     parser.add_option('-t', '--ground-truth-file',
                       action='store',
                       dest='t',
-                      default='dec-7.log.labeled',
+                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday/Dec 1.log.labeled',
                       help='A ground truth for analyzed log file.')
     parser.add_option('-f', '--analyzed-file',
                       action='store',
                       dest='f',
-                      default='dec-7.log',
+                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday/Dec 1.log',
                       help='A log file to be analyzed.')
     parser.add_option('-o', '--output-txt',
                       action='store',
                       dest='o',
-                      default='dec-7.log.percluster',
-                      help='Output in text file.')
+                      default='/home/hudan/Git/pygraphc/result/misc/Dec 1.log.percluster',
+                      help='Output in text file per cluster.')
+    parser.add_option('-a', '--anomaly-file',
+                      action='store',
+                      dest='a',
+                      default='/home/hudan/Git/pygraphc/result/misc/Dec 1.log.anomaly.csv',
+                      help='Output of anomaly detection in csv file.')
+    parser.add_option('-p', '--prediction-file',
+                      action='store',
+                      dest='p',
+                      default='/home/hudan/Git/pygraphc/result/misc/Dec 1.log.prediction',
+                      help='Output of anomaly detection in csv file.')
     parser.add_option('-y', '--year',
                       action='store',
                       dest='y',
@@ -106,10 +111,11 @@ def main():
     k = options.k
     geometric_mean_threshold = options.g
 
-    groundtruth_path = options.d
-    groundtruth_file = groundtruth_path + options.t
-    analyzed_file = groundtruth_path + options.f
-    result_file = options.o
+    groundtruth_file = options.t
+    analyzed_file = options.f
+    percluster_file = options.o
+    anomaly_file = options.a
+    prediction_file = options.p
     year = options.y
 
     # preprocess log file
@@ -119,7 +125,6 @@ def main():
     logs = p.logs
 
     # variable initialization for return value
-    prediction_file = ''
     nodes_id = []
     edges = {}
     clusters, removed_edges = None, None
@@ -131,17 +136,8 @@ def main():
         graph = g.g
         edges = g.edges_dict
         edges_weight = g.edges_weight
+        edges_dict = g.edges_dict
         nodes_id = g.get_nodes_id()
-
-        # prediction result file
-        if options.method in ['maxclique_percolation', 'maxclique_percolation_weighted', 'kclique_percolation',
-                              'kclique_percolation_weighted']:
-            prediction_file = './' + options.f + 'results-k=' + str(k) + '-g=' + str(geometric_mean_threshold) + \
-                              '-c=' + str(options.c)
-        elif options.method in ['connected_components']:
-            prediction_file = './' + options.f + 'results-c=' + str(options.c)
-        elif options.method in ['majorclust', 'improved_majorclust', 'graph_entropy']:
-            prediction_file = './' + options.f + '.results'
 
         # run the selected method
         if options.method == 'kclique_percolation':
@@ -191,20 +187,20 @@ def main():
         ExternalEvaluation.set_cluster_label_id(graph, clusters, logs, prediction_file)
 
         # get anomaly score
-        anomaly_score = AnomalyScore(graph, clusters, options.f, year)
+        anomaly_score = AnomalyScore(graph, clusters, anomaly_file, year, edges_dict)
         anomaly_score.write_property()
 
         # get output
-        output_txt = Output(graph, clusters, logs, result_file)
+        output_txt = Output(graph, clusters, logs, percluster_file)
         output_txt.to_txt()
 
     elif options.method in nongraph_method:
         pass
 
     # get evaluation of clustering performance
-    adj_rand_score = ExternalEvaluation.get_adjusted_rand_score(groundtruth_file, prediction_file)
-    adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info_score(groundtruth_file, prediction_file)
-    norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info_score(groundtruth_file, prediction_file)
+    adj_rand_score = ExternalEvaluation.get_adjusted_rand(groundtruth_file, prediction_file)
+    adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info(groundtruth_file, prediction_file)
+    norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info(groundtruth_file, prediction_file)
     homogeneity_completeness_vmeasure = ExternalEvaluation.get_homogeneity_completeness_vmeasure(groundtruth_file,
                                                                                                  prediction_file)
     return [len(nodes_id), len(edges), len(removed_edges) if removed_edges else 0, len(clusters),
