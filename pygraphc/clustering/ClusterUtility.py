@@ -81,7 +81,7 @@ class ClusterUtility(object):
                 graph.node[node]['cluster'] = cluster_id
 
     @staticmethod
-    def get_cluster_property(graph, clusters, year, edges_weight):
+    def get_cluster_property(graph, clusters, year, edges_dict):
         """Get cluster property.
 
         Parameters
@@ -92,7 +92,7 @@ class ClusterUtility(object):
             Dictionary contains sequence of nodes in all clusters.
         year            : str
             Year of the log file. We need this parameter since log file does not provide it.
-        edges_weight    : dict
+        edges_dict      : dict
             Dictionary of edges. Keys: (node1, node2), values: index.
 
         Returns
@@ -105,9 +105,10 @@ class ClusterUtility(object):
         frequency           : frequency of event logs in a cluster.
         member              : number of nodes in a cluster.
         interarrival_rate   : inter-arrival time of event logs timestamp in a cluster.
+        edges_number        : number of edges in a cluster.
         """
         cluster_property = {}      # event log frequency per cluster
-        num_edges = ClusterUtility.get_numedges(clusters, edges_weight)
+        num_edges = ClusterUtility.get_num_edges(clusters, edges_dict)
         for cluster_id, nodes in clusters.iteritems():
             properties = {}
             datetimes = []
@@ -135,14 +136,14 @@ class ClusterUtility(object):
         return cluster_property
 
     @staticmethod
-    def get_numedges(clusters, edges_weight):
+    def get_num_edges(clusters, edges_dict):
         """Find number of edges in the cluster.
 
         Parameters
         ----------
-        clusters        : dict
+        clusters    : dict
             Dictionary contains sequence of nodes in all clusters.
-        edges_weight    : dict
+        edges_dict  : dict
             Dictionary of edges. Keys: (node1, node2), values: index.
 
         Returns
@@ -151,7 +152,7 @@ class ClusterUtility(object):
             Number of edges per cluster. Key: cluster id, values: number of edges.
         """
         num_edges = {}
-        edges = edges_weight.keys()
+        edges = edges_dict.keys()
         for cluster_id, cluster in clusters.iteritems():
             for u, v in combinations(cluster, 2):
                 if (u, v) in edges or (v, u) in edges:
