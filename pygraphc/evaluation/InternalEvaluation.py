@@ -30,8 +30,10 @@ class InternalEvaluation(object):
         for node_id, weight in neigbors_weight.iteritems():
             if node_id in neighbors:
                 distance.append(weight[0]['weight'])
+            else:
+                distance.append(-1)
 
-        avg_distance = average(distance)
+        avg_distance = round(average(distance), 5)
         return avg_distance
 
     @staticmethod
@@ -51,31 +53,36 @@ class InternalEvaluation(object):
         node_silhouttes : dict[int, float]
             A dictionary containing silhoutte per node. Key: node identifier, value: silhoutte.
         """
-        # please note this method has not supported for cluster with only one node (singleton)
         cid = set(clusters.keys())
         intracluster_avg, intercluster_avg, node_silhouttes = {}, {}, {}
 
         for cluster_id, cluster in clusters.iteritems():
-            # get average of intra-cluster distance
-            for node in cluster:
-                distance = InternalEvaluation.__get_avg_distance(graph, node, cluster)
-                intracluster_avg[node] = distance
+            # handle cluster with only one node (singleton)
+            if len(cluster) == 1:
+                node_silhouttes[cluster[0]] = -1
+            else:
+                # get average of intra-cluster distance
+                for node in cluster:
+                    intracluster_avg[node] = InternalEvaluation.__get_avg_distance(graph, node, cluster)
 
-            # all cluster - current cluster, get all nodes in inter cluster
-            neighbor_cluster = cid - {cluster_id}
-            intercluster_nodes = []
-            for neighbor in neighbor_cluster:
-                intercluster_nodes += clusters[neighbor]
+                # all cluster - current cluster, get all nodes in inter cluster
+                neighbor_cluster = cid - {cluster_id}
+                intercluster_nodes = {}
+                for neighbor in neighbor_cluster:
+                    intercluster_nodes[neighbor] = clusters[neighbor]
 
-            # get average of inter-cluster distance
-            for node in cluster:
-                distance = InternalEvaluation.__get_avg_distance(graph, node, intercluster_nodes)
-                intercluster_avg[node] = distance
+                # get average of inter-cluster distance
+                for node in cluster:
+                    distance = {}
+                    for neighbor in neighbor_cluster:
+                        distance[neighbor] = InternalEvaluation.__get_avg_distance(graph, node,
+                                                                                   intercluster_nodes[neighbor])
+                    intercluster_avg[node] = min(distance.values())
 
-            # get vertex silhoutte
-            for node in cluster:
-                node_silhouttes[node] = (intercluster_avg[node] - intracluster_avg[node]) / max(intercluster_avg[node],
-                                                                                                intracluster_avg[node])
+                # get vertex silhoutte
+                for node in cluster:
+                    node_silhouttes[node] = (intercluster_avg[node] - intracluster_avg[node]) / \
+                                            max(intercluster_avg[node], intracluster_avg[node])
         return node_silhouttes
 
     @staticmethod
@@ -107,7 +114,7 @@ class InternalEvaluation(object):
 
     @staticmethod
     def get_silhoutte_index(graph, clusters):
-        """Get silhoutte index for a graph.
+        """Get silhoutte index for a graph [Almeida2011]_.
 
         Parameters
         ----------
@@ -121,6 +128,13 @@ class InternalEvaluation(object):
         -------
         silhoutte_index : float
             The silhoutte index for a graph.
+
+        References
+        ----------
+        .. [Almeida2011] Helio Almeida, Dorgival Guedes, Wagner Meira Jr, and Mohammed J. Zaki.
+                         "Is there a best quality metric for graph clusters?."
+                         In Joint European Conference on Machine Learning and Knowledge Discovery in Databases,
+                         pp. 44-59. Springer Berlin Heidelberg, 2011.
         """
         cluster_silhouttes = InternalEvaluation.__get_cluster_silhoutte(graph, clusters)
         silhoutte_index = average(cluster_silhouttes.values())
