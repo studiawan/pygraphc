@@ -29,9 +29,13 @@ class InternalEvaluation(object):
         distance = []
         for node_id, weight in neigbors_weight.iteritems():
             if node_id in neighbors:
-                distance.append(weight[0]['weight'])
+                distance.append(1 - weight[0]['weight'])
             else:
-                distance.append(-1)
+                continue
+
+        # if list is empty
+        if not distance:
+            distance.append(0)
 
         avg_distance = round(average(distance), 5)
         return avg_distance
@@ -59,7 +63,7 @@ class InternalEvaluation(object):
         for cluster_id, cluster in clusters.iteritems():
             # handle cluster with only one node (singleton)
             if len(cluster) == 1:
-                node_silhouttes[cluster[0]] = -1
+                node_silhouttes[cluster[0]] = 1
             else:
                 # get average of intra-cluster distance
                 for node in cluster:
@@ -75,14 +79,17 @@ class InternalEvaluation(object):
                 for node in cluster:
                     distance = {}
                     for neighbor in neighbor_cluster:
-                        distance[neighbor] = InternalEvaluation.__get_avg_distance(graph, node,
-                                                                                   intercluster_nodes[neighbor])
-                    intercluster_avg[node] = min(distance.values())
+                        temp_distance = InternalEvaluation.__get_avg_distance(graph, node, intercluster_nodes[neighbor])
+                        if temp_distance != 0:
+                            distance[neighbor] = temp_distance
+
+                    intercluster_avg[node] = min(distance.values()) if len(distance.keys()) > 0 else 0
 
                 # get vertex silhoutte
                 for node in cluster:
                     node_silhouttes[node] = (intercluster_avg[node] - intracluster_avg[node]) / \
                                             max(intercluster_avg[node], intracluster_avg[node])
+
         return node_silhouttes
 
     @staticmethod
