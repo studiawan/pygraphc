@@ -7,6 +7,7 @@ from pygraphc.clustering.KCliquePercolation import KCliquePercolation, KCliquePe
 from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolation, MaxCliquesPercolationWeighted
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
+from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
 from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.visualization.GraphStreaming import GraphStreaming
@@ -78,27 +79,27 @@ def main():
     parser.add_option('-t', '--ground-truth-file',
                       action='store',
                       dest='t',
-                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday/Dec 1.log.labeled',
+                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday/Dec 25.log.labeled',
                       help='A ground truth for analyzed log file.')
     parser.add_option('-f', '--analyzed-file',
                       action='store',
                       dest='f',
-                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday/Dec 1.log',
+                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday/Dec 25.log',
                       help='A log file to be analyzed.')
     parser.add_option('-o', '--output-txt',
                       action='store',
                       dest='o',
-                      default='/home/hudan/Git/pygraphc/result/misc/Dec 1.log.percluster',
+                      default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.percluster',
                       help='Output in text file per cluster.')
     parser.add_option('-a', '--anomaly-file',
                       action='store',
                       dest='a',
-                      default='/home/hudan/Git/pygraphc/result/misc/Dec 1.log.anomaly.csv',
+                      default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.anomaly.csv',
                       help='Output of anomaly detection in csv file.')
     parser.add_option('-p', '--prediction-file',
                       action='store',
                       dest='p',
-                      default='/home/hudan/Git/pygraphc/result/misc/Dec 1.log.prediction',
+                      default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.perline',
                       help='Output of anomaly detection in csv file.')
     parser.add_option('-y', '--year',
                       action='store',
@@ -128,6 +129,7 @@ def main():
     nodes_id = []
     edges = {}
     clusters, removed_edges = None, None
+    silhoutte_index = None
 
     if options.method in graph_method:
         # create graph
@@ -194,18 +196,22 @@ def main():
         output_txt = Output(graph, clusters, logs, percluster_file)
         output_txt.to_txt()
 
+        # get internal evaluation
+        silhoutte_index = InternalEvaluation.get_silhoutte_index(graph, clusters)
+
     elif options.method in nongraph_method:
         pass
 
-    # get evaluation of clustering performance
+    # get external evaluation of clustering performance
     adj_rand_score = ExternalEvaluation.get_adjusted_rand(groundtruth_file, prediction_file)
     adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info(groundtruth_file, prediction_file)
     norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info(groundtruth_file, prediction_file)
     homogeneity_completeness_vmeasure = ExternalEvaluation.get_homogeneity_completeness_vmeasure(groundtruth_file,
                                                                                                  prediction_file)
+
     return [len(nodes_id), len(edges), len(removed_edges) if removed_edges else 0, len(clusters),
             options.k, options.g, options.c, adj_rand_score, adj_mutual_info_score, norm_mutual_info_score,
-            homogeneity_completeness_vmeasure]
+            homogeneity_completeness_vmeasure, silhoutte_index]
 
 
 def graph_streaming(graph, edges, removed_edges):
@@ -229,4 +235,5 @@ if __name__ == '__main__':
     print 'Adj mutual    :', properties[8]
     print 'Norm mutual   :', properties[9]
     print 'Hom, comp, v  :', properties[10]
+    print 'Silhoutte     :', properties[11]
     print 'Runtime       :', duration, 'seconds'
