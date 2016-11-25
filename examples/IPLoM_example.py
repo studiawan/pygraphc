@@ -1,17 +1,13 @@
-# for local run, before pygraphc packaging
-import sys
-sys.path.insert(0, '../pygraphc/misc')
-from IPLoM import *
-sys.path.insert(0, '../pygraphc/evaluation')
-from ExternalEvaluation import *
+from pygraphc.misc.IPLoM import *
+from pygraphc.evaluation.ExternalEvaluation import *
 
-# set path
+# set input path
 ip_address = '161.166.232.17'
-standard_path = '/home/hudan/Git/labeled-authlog/dataset/' + ip_address
+standard_path = '/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1/' + ip_address
 standard_file = standard_path + 'auth.log.anon.labeled'
 analyzed_file = 'auth.log.anon'
 prediction_file = 'iplom-result-' + ip_address + '.txt'
-OutputPath = './results'
+OutputPath = './result'
 para = Para(path=standard_path, logname=analyzed_file, save_path=OutputPath)
 
 # call IPLoM and get clusters
@@ -23,7 +19,7 @@ original_logs = myparser.logs
 # set cluster label to get evaluation metrics
 ExternalEvaluation.set_cluster_label_id(None, clusters, original_logs, prediction_file)
 homogeneity_completeness_vmeasure = ExternalEvaluation.get_homogeneity_completeness_vmeasure(standard_file,
-                                                                                            prediction_file)
-
+                                                                                             prediction_file)
+# print evaluation result
 print homogeneity_completeness_vmeasure
 print ('The running time of IPLoM is', time)
