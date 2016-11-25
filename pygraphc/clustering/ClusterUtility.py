@@ -104,8 +104,10 @@ class ClusterUtility(object):
         -----
         frequency           : frequency of event logs in a cluster.
         member              : number of nodes in a cluster.
-        interarrival_rate   : inter-arrival time of event logs timestamp in a cluster.
+        interarrival_rate   : inter-arrival rate of event logs timestamp in a cluster.
         edges_number        : number of edges in a cluster.
+        density             : density of a cluster.
+        interarrival_time   : inter-arrival time in a cluster.
         """
         cluster_property = {}      # event log frequency per cluster
         num_edges = ClusterUtility.get_num_edges(clusters, edges_dict)
@@ -127,7 +129,8 @@ class ClusterUtility(object):
                                     '%b %d %Y %H:%M:%S')
             interarrival_times = end - start
             interarrival = interarrival_times.seconds if interarrival_times.seconds != 0 else 1
-            properties['interarrival_rate'] = float(properties['frequency']) / float(interarrival)
+            properties['interarrival_time'] = interarrival
+            properties['interarrival_rate'] = float(interarrival) / float(properties['frequency'])
             properties['edges_number'] = num_edges[cluster_id]
             properties['density'] = ClusterUtility.get_cluster_density(properties['edges_number'], properties['member'])
 
