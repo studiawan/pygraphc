@@ -1,4 +1,5 @@
 from textblob import TextBlob
+from operator import itemgetter
 
 
 class SentimentAnalysis(object):
@@ -13,8 +14,27 @@ class SentimentAnalysis(object):
                    part-of-speech tagging, noun phrase extraction, translation, and more.
                    https://github.com/sloria/TextBlob/
     """
-    def __init__(self, cluster_message):
-        self.cluster_message = cluster_message
+    def __init__(self, graph, clusters):
+        self.graph = graph
+        self.clusters = clusters
+        self.cluster_message = {}
+
+    def get_cluster_message(self):
+        """Get most frequent message in a cluster.
+        """
+        word_frequency = {}
+        for cluster_id, cluster in self.clusters.iteritems():
+            # get word frequency per cluster
+            frequency = {}
+            for node in cluster:
+                event = self.graph.node[node]['preprocessed_event']
+                for word in event.split():
+                    frequency[word] = frequency.get(word, 0) + 1
+            # sorted_frequency = dict(sorted(frequency.items(), key=itemgetter(1), reverse=True))
+            # word_frequency[cluster_id] = sorted_frequency
+            # self.cluster_message[cluster_id] = ' '.join(sorted_frequency.keys())
+            word_frequency[cluster_id] = frequency
+            self.cluster_message[cluster_id] = ' '.join(frequency.keys())
 
     def get_sentiment(self):
         """Get negative or positive sentiment.
