@@ -41,12 +41,12 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
     ExternalEvaluation.set_cluster_label_id(evaluated_graph, clusters, logs, properties['result_perline'])
 
     # get anomaly score
-    anomaly_score = AnomalyScore(evaluated_graph, clusters, properties['anomaly_report'], year, edges_dict)
-    anomaly_score.write_property()
-
-    # get output
-    output_txt = Output(evaluated_graph, clusters, logs, properties['result_percluster'])
-    output_txt.to_txt()
+    anomaly = AnomalyScore(evaluated_graph, clusters, year, edges_dict)
+    anomaly.get_anomaly_score()
+    score = anomaly.anomaly_score
+    cluster_property = anomaly.property
+    cluster_abstraction = anomaly.abstraction
+    normalized_score = anomaly.quadratic_score
 
     # get evaluation of clustering performance
     ar = ExternalEvaluation.get_adjusted_rand(properties['labeled_path'], properties['result_perline'])
@@ -56,6 +56,19 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
     c = ExternalEvaluation.get_completeness(properties['labeled_path'], properties['result_perline'])
     v = ExternalEvaluation.get_vmeasure(properties['labeled_path'], properties['result_perline'])
     silhoutte_index = InternalEvaluation.get_silhoutte_index(evaluated_graph, clusters)
+
+    # arrange dictionary of evaluation metrics
+    evaluation_metrics = {
+        'adj_rand_score': ar, 'adj_mutual_info_score': ami, 'norm_mutual_info_score': nmi,
+        'homogeneity': h, 'completeness': c, 'vmeasure': v,
+        'silhoutte_index': silhoutte_index
+    }
+
+    # get output per cluster
+    output = Output(evaluated_graph, clusters, logs, properties['result_percluster'],
+                    score, normalized_score, cluster_property, cluster_abstraction, properties['anomaly_report'],
+                    evaluation_metrics)
+    output.txt_percluster()
 
     return ar, ami, nmi, h, c, v, silhoutte_index
 
@@ -140,6 +153,7 @@ def main(dataset, year, method):
 if __name__ == '__main__':
     start = time()
     data = 'Hofstede2014'
+    # available methods: majorclust, improved_majorclust, graph_entropy
     clustering_method = 'improved_majorclust'
     main(data, '2014', clustering_method)
     duration = time() - start
