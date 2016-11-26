@@ -3,6 +3,7 @@
 from optparse import OptionParser
 from time import time
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
+from pygraphc.anomaly.SentimentAnalysis import SentimentAnalysis
 from pygraphc.clustering.ConnectedComponents import ConnectedComponents
 from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.clustering.KCliquePercolation import KCliquePercolation, KCliquePercolationWeighted
@@ -129,7 +130,7 @@ def main():
 
     # variable initialization
     graph, clusters, removed_edges = None, None, None
-    score, normalized_score, cluster_property, cluster_abstraction = {}, {}, {}, {}
+    score, normalized_score, cluster_property, cluster_abstraction, sentiment_score = {}, {}, {}, {}, {}
 
     if options.method in graph_method:
         # create graph
@@ -196,6 +197,11 @@ def main():
         cluster_abstraction = anomaly.abstraction
         normalized_score = anomaly.quadratic_score
 
+        # get sentiment analysis
+        sentiment = SentimentAnalysis(graph, clusters)
+        sentiment.get_cluster_message()
+        sentiment_score = sentiment.get_normalized_sentiment()
+
     elif options.method in nongraph_method:
         pass
 
@@ -220,7 +226,7 @@ def main():
 
     # get output per cluster
     output = Output(graph, clusters, logs, percluster_file,
-                    score, normalized_score, cluster_property, cluster_abstraction, anomaly_file,
+                    score, normalized_score, cluster_property, cluster_abstraction, anomaly_file, sentiment_score,
                     evaluation_metrics)
     output.txt_percluster()
 

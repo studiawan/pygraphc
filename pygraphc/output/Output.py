@@ -5,7 +5,7 @@ class Output(object):
     """Output the clustering result to various types of file such as txt, csv, and html.
     """
     def __init__(self, graph, clusters, original_logs, percluster_file,
-                 anomaly_score, normalized_score, cluster_property, cluster_abstraction, anomaly_file,
+                 anomaly_score, normalized_score, cluster_property, cluster_abstraction, anomaly_file, sentiment_score,
                  evaluation_metrics):
         """The constructor of class Output.
 
@@ -29,6 +29,8 @@ class Output(object):
             Dictionary of cluster abstraction.
         anomaly_file            : str
             Filename and full path for anomaly score and cluster property.
+        sentiment_score         : dict
+            Dictionary of sentiment score per cluster
         evaluation_metrics      : dict
             Dictionary of all evaluation metrics, both internal and external evaluation.
         """
@@ -41,6 +43,7 @@ class Output(object):
         self.cluster_property = cluster_property
         self.cluster_abstraction = cluster_abstraction
         self.anomaly_file = anomaly_file
+        self.sentiment_score = sentiment_score
         self.evaluation_metrics = evaluation_metrics
 
     def txt_percluster(self):
@@ -66,14 +69,14 @@ class Output(object):
 
         # set header
         header = ('cluster_id', 'cluster_abstraction') + tuple(self.cluster_property[0].keys()) + \
-                 ('anomaly_score', 'normalized_score')
+                 ('anomaly_score', 'normalized_score', 'sentiment_score')
         writer.writerow(header)
 
         # write data
         for cluster_id, abstract in self.cluster_abstraction.iteritems():
             row = (cluster_id, abstract) + \
                   tuple(self.cluster_property[cluster_id].values()) + \
-                  (self.anomaly_score[cluster_id], self.normalized_score[cluster_id])
+                  (self.anomaly_score[cluster_id], self.normalized_score[cluster_id], self.sentiment_score[cluster_id])
             writer.writerow(row)
 
         # write evaluation metrics
