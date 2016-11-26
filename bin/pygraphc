@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from optparse import OptionParser
-from time import time  # , sleep
+from time import time
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
 from pygraphc.clustering.ConnectedComponents import ConnectedComponents
 from pygraphc.clustering.GraphEntropy import GraphEntropy
@@ -127,11 +127,9 @@ def main():
     events_unique = p.events_unique
     logs = p.logs
 
-    # variable initialization for return value
-    nodes_id = []
-    edges = {}
-    clusters, removed_edges = None, None
-    silhoutte_index = None
+    # variable initialization
+    graph, clusters, removed_edges = None, None, None
+    score, normalized_score, cluster_property, cluster_abstraction = {}, {}, {}, {}
 
     if options.method in graph_method:
         # create graph
@@ -191,15 +189,12 @@ def main():
         ExternalEvaluation.set_cluster_label_id(graph, clusters, logs, prediction_file)
 
         # get anomaly score
-        anomaly_score = AnomalyScore(graph, clusters, anomaly_file, year, edges_dict)
-        anomaly_score.write_property()
-
-        # get output
-        output_txt = Output(graph, clusters, logs, percluster_file)
-        output_txt.to_txt()
-
-        # get internal evaluation
-        silhoutte_index = InternalEvaluation.get_silhoutte_index(graph, clusters)
+        anomaly = AnomalyScore(graph, clusters, year, edges_dict)
+        anomaly.get_anomaly_score()
+        score = anomaly.anomaly_score
+        cluster_property = anomaly.property
+        cluster_abstraction = anomaly.abstraction
+        normalized_score = anomaly.quadratic_score
 
     elif options.method in nongraph_method:
         pass
@@ -208,12 +203,29 @@ def main():
     adj_rand_score = ExternalEvaluation.get_adjusted_rand(groundtruth_file, prediction_file)
     adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info(groundtruth_file, prediction_file)
     norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info(groundtruth_file, prediction_file)
-    homogeneity_completeness_vmeasure = ExternalEvaluation.get_homogeneity_completeness_vmeasure(groundtruth_file,
-                                                                                                 prediction_file)
+    homogeneity = ExternalEvaluation.get_homogeneity(groundtruth_file, prediction_file)
+    completeness = ExternalEvaluation.get_completeness(groundtruth_file, prediction_file)
+    vmeasure = ExternalEvaluation.get_vmeasure(groundtruth_file, prediction_file)
 
-    return [len(nodes_id), len(edges), len(removed_edges) if removed_edges else 0, len(clusters),
-            options.k, options.g, options.c, adj_rand_score, adj_mutual_info_score, norm_mutual_info_score,
-            homogeneity_completeness_vmeasure, silhoutte_index]
+    # get internal evaluation
+    silhoutte_index = InternalEvaluation.get_silhoutte_index(graph, clusters)
+
+    # arrange dictionary of evaluation metrics
+    evaluation_metrics = {
+        'adj_rand_score': adj_rand_score, 'adj_mutual_info_score': adj_mutual_info_score,
+        'norm_mutual_info_score': norm_mutual_info_score,
+        'homogeneity': homogeneity, 'completeness': completeness, 'vmeasure': vmeasure,
+        'silhoutte_index': silhoutte_index
+    }
+
+    # get output per cluster
+    output = Output(graph, clusters, logs, percluster_file,
+                    score, normalized_score, cluster_property, cluster_abstraction, anomaly_file,
+                    evaluation_metrics)
+    output.txt_percluster()
+
+    # get output cluster property and anomaly score
+    output.csv_cluster_property()
 
 
 def graph_streaming(graph, edges, removed_edges):
@@ -226,16 +238,4 @@ if __name__ == '__main__':
     start = time()
     properties = main()
     duration = time() - start
-    print 'Nodes         :', properties[0]
-    print 'Edges         :', properties[1]
-    print 'Removed edges :', properties[2]
-    print 'Clusters      :', properties[3]
-    print 'k             :', properties[4]
-    print 'I             :', properties[5]
-    print 'C             :', properties[6]
-    print 'Adj rand      :', properties[7]
-    print 'Adj mutual    :', properties[8]
-    print 'Norm mutual   :', properties[9]
-    print 'Hom, comp, v  :', properties[10]
-    print 'Silhoutte     :', properties[11]
     print 'Runtime       :', duration, 'seconds'
