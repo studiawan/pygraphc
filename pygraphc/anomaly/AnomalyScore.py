@@ -19,11 +19,13 @@ class AnomalyScore(object):
         self.clusters = clusters
         self.year = year
         self.edges_dict = edges_dict
+
         # get cluster abstraction and its properties
         self.abstraction = ClusterAbstraction.dp_lcs(self.graph, self.clusters)
         self.property = ClusterUtility.get_cluster_property(self.graph, self.clusters, self.year, self.edges_dict)
         self.anomaly_score = {}
         self.quadratic_score = {}
+        self.normalization_score = {}
 
     def get_anomaly_score(self):
         """Get anomaly score per cluster.
@@ -52,16 +54,25 @@ class AnomalyScore(object):
         """Transform anomaly score to quadratic score.
 
         This model will generate:
-        - Low intensity attack  : high score
-        - High intensity attack : high score
-        - Normal                : low score.
+        - Low intensity attack  : low score
+        - High intensity attack : low score
+        - Normal                : high score.
         """
         # the anomaly score need to be normalized first
-        normalization_score = {}
+        # first normalization: from 0 to 1
+        first_normalization = {}
         min_score = min(self.anomaly_score.values())
         max_score = max(self.anomaly_score.values())
         for cluster_id, score in self.anomaly_score.iteritems():
-            normalization_score[cluster_id] = (score - min_score) / (max_score - min_score)
+            first_normalization[cluster_id] = (score - min_score) / (max_score - min_score)
 
-        for cluster_id, score in normalization_score.iteritems():
-            self.quadratic_score[cluster_id] = 4 * (score ** 2) - (4 * score) + 1
+        # quadratic score to have a more appropriate anomaly score
+        for cluster_id, score in first_normalization.iteritems():
+            self.quadratic_score[cluster_id] = -4 * (score ** 2) + (4 * score)
+
+        # second normalization: from -1 to 1 to have a threshold in 0
+        min_score = min(self.quadratic_score.values())
+        max_score = max(self.quadratic_score.values())
+        a, b = -1, 1
+        for cluster_id, score in self.quadratic_score.iteritems():
+            self.normalization_score[cluster_id] = a + ((score - min_score) * (b - a)) / (max_score - min_score)
