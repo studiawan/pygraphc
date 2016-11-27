@@ -6,7 +6,7 @@ class Output(object):
     """
     def __init__(self, graph, clusters, original_logs, percluster_file,
                  anomaly_score, quadratic_score, normalized_score, cluster_property, cluster_abstraction, anomaly_file,
-                 sentiment_score, evaluation_metrics):
+                 sentiment_score, evaluation_metrics, anomaly_decision):
         """The constructor of class Output.
 
         Parameters
@@ -35,6 +35,8 @@ class Output(object):
             Dictionary of sentiment score per cluster
         evaluation_metrics      : dict
             Dictionary of all evaluation metrics, both internal and external evaluation.
+        anomaly_decision        : dict
+            Dictionary of anomaly decision per cluster.
         """
         self.graph = graph
         self.clusters = clusters
@@ -48,6 +50,7 @@ class Output(object):
         self.anomaly_file = anomaly_file
         self.sentiment_score = sentiment_score
         self.evaluation_metrics = evaluation_metrics
+        self.anomaly_decision = anomaly_decision
 
     def txt_percluster(self):
         """Write clustering result to txt file.
@@ -72,7 +75,7 @@ class Output(object):
 
         # set header
         header = ('cluster_id', 'cluster_abstraction') + tuple(self.cluster_property[0].keys()) + \
-                 ('anomaly_score', 'quadratic_score', 'normalized_score', 'sentiment_score')
+                 ('anomaly_score', 'quadratic_score', 'normalized_score', 'sentiment_score', 'final_score', 'decision')
         writer.writerow(header)
 
         # write data
@@ -80,7 +83,7 @@ class Output(object):
             row = (cluster_id, abstract) + \
                   tuple(self.cluster_property[cluster_id].values()) + \
                   (self.anomaly_score[cluster_id], self.quadratic_score[cluster_id], self.normalized_score[cluster_id],
-                   self.sentiment_score[cluster_id])
+                   self.sentiment_score[cluster_id]) + self.anomaly_decision[cluster_id]
             writer.writerow(row)
 
         # write evaluation metrics
