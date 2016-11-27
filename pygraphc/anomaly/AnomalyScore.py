@@ -5,35 +5,39 @@ from pygraphc.clustering.ClusterUtility import ClusterUtility
 class AnomalyScore(object):
     """A class to calculate anomaly score in a cluster.
     """
-    def __init__(self, graph, clusters, year, edges_dict):
+    def __init__(self, graph, clusters, year, edges_dict, sentiment_score):
         """The constructor of class AnomalyScore.
 
         Parameters
         ----------
-        graph       : graph
+        graph           : graph
             A graph to be analyzed for its anomaly.
-        clusters    : dict[list]
+        clusters        : dict[list]
             Dictionary of list containing node identifier for each clusters.
+        year            : str
+            Year of event logs.
+        edges_dict      : dict
+            Dictionary of edges in the analyzed graph. Key: (node1, node2), value: index.
+        sentiment_score : dict
+            Dictionary of sentiment score per cluster.
         """
         self.graph = graph
         self.clusters = clusters
         self.year = year
         self.edges_dict = edges_dict
+        self.sentiment_score = sentiment_score
+
+        self.anomaly_score = {}
+        self.quadratic_score = {}
+        self.normalization_score = {}
+        self.anomaly_decision = {}
 
         # get cluster abstraction and its properties
         self.abstraction = ClusterAbstraction.dp_lcs(self.graph, self.clusters)
         self.property = ClusterUtility.get_cluster_property(self.graph, self.clusters, self.year, self.edges_dict)
-        self.anomaly_score = {}
-        self.quadratic_score = {}
-        self.normalization_score = {}
 
     def get_anomaly_score(self):
         """Get anomaly score per cluster.
-
-        Returns
-        -------
-        anomaly_score   : dict
-            Dictionary of anomaly score per cluster.
         """
         total_nodes = 0
         total_frequency = 0
@@ -48,9 +52,9 @@ class AnomalyScore(object):
             self.anomaly_score[cluster_id] = float(properties['member'] * properties['frequency']) / \
                                         float(total_nodes * total_frequency) * properties['interarrival_rate']
         # normalized anomaly score
-        self.transform_score()
+        self.__transform_score()
 
-    def transform_score(self):
+    def __transform_score(self):
         """Transform anomaly score to quadratic score.
 
         This model will generate:
@@ -76,3 +80,10 @@ class AnomalyScore(object):
         a, b = -1, 1
         for cluster_id, score in self.quadratic_score.iteritems():
             self.normalization_score[cluster_id] = a + ((score - min_score) * (b - a)) / (max_score - min_score)
+
+    def get_anomaly_decision(self):
+        """Get decision whether an event log is anomaly or normal.
+        """
+        for cluster_id, anomaly_score in self.normalization_score.iteritems():
+            final_score = (anomaly_score + self.sentiment_score[cluster_id]) / 2
+            self.anomaly_decision[cluster_id] = (final_score, 'anomaly') if final_score < 0 else (final_score, 'normal')
