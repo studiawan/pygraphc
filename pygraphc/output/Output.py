@@ -5,8 +5,8 @@ class Output(object):
     """Output the clustering result to various types of file such as txt, csv, and html.
     """
     def __init__(self, graph, clusters, original_logs, percluster_file,
-                 anomaly_score, normalized_score, cluster_property, cluster_abstraction, anomaly_file, sentiment_score,
-                 evaluation_metrics):
+                 anomaly_score, quadratic_score, normalized_score, cluster_property, cluster_abstraction, anomaly_file,
+                 sentiment_score, evaluation_metrics):
         """The constructor of class Output.
 
         Parameters
@@ -21,6 +21,8 @@ class Output(object):
             File name of output file.
         anomaly_score           : dict
             Dictionary of anomaly score per cluster.
+        quadratic_score         : dict
+            Dictionary of quadratic transformation of anomaly score.
         normalized_score        : dict
             Dictionary of normalized anomaly score.
         cluster_property        : dict
@@ -39,6 +41,7 @@ class Output(object):
         self.original_logs = original_logs
         self.percluster_file = percluster_file
         self.anomaly_score = anomaly_score
+        self.quadratic_score = quadratic_score
         self.normalized_score = normalized_score
         self.cluster_property = cluster_property
         self.cluster_abstraction = cluster_abstraction
@@ -69,14 +72,15 @@ class Output(object):
 
         # set header
         header = ('cluster_id', 'cluster_abstraction') + tuple(self.cluster_property[0].keys()) + \
-                 ('anomaly_score', 'normalized_score', 'sentiment_score')
+                 ('anomaly_score', 'quadratic_score', 'normalized_score', 'sentiment_score')
         writer.writerow(header)
 
         # write data
         for cluster_id, abstract in self.cluster_abstraction.iteritems():
             row = (cluster_id, abstract) + \
                   tuple(self.cluster_property[cluster_id].values()) + \
-                  (self.anomaly_score[cluster_id], self.normalized_score[cluster_id], self.sentiment_score[cluster_id])
+                  (self.anomaly_score[cluster_id], self.quadratic_score[cluster_id], self.normalized_score[cluster_id],
+                   self.sentiment_score[cluster_id])
             writer.writerow(row)
 
         # write evaluation metrics
