@@ -20,8 +20,8 @@ from pygraphc.output.Output import Output
 def main():
     """This is the main function to run pygraphc in one line command.
 
-    Returns
-    -------
+    Notes
+    -----
     len(nodes_id)       : int
         Number of nodes in the analyzed graph.
     len(edges)          : int
@@ -44,6 +44,8 @@ def main():
         Normalized mutual information.
     homogeneity_completeness_vmeasure   : float
         Homogeneity, completeness and V-measure.
+    silhoutte_index     : float
+        Silhoutte index for internal evaluation of clustering.
     """
     graph_method = ['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
                     'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust',
@@ -130,8 +132,8 @@ def main():
 
     # variable initialization
     graph, clusters, removed_edges = None, None, None
-    score, quadratic_score, normalized_score, cluster_property, cluster_abstraction, sentiment_score = \
-        {}, {}, {}, {}, {}, {}
+    score, quadratic_score, normalized_score, cluster_property, cluster_abstraction = {}, {}, {}, {}, {}
+    sentiment_score, anomaly_decision = {}, {}
 
     if options.method in graph_method:
         # create graph
@@ -190,19 +192,23 @@ def main():
         # get prediction file
         ExternalEvaluation.set_cluster_label_id(graph, clusters, logs, prediction_file)
 
-        # get anomaly score
-        anomaly = AnomalyScore(graph, clusters, year, edges_dict)
+        # get sentiment analysis
+        sentiment = SentimentAnalysis(graph, clusters)
+        sentiment.get_cluster_message()
+        sentiment_score = sentiment.get_sentiment()
+
+        # get anomaly score and the decision
+        anomaly = AnomalyScore(graph, clusters, year, edges_dict, sentiment_score)
         anomaly.get_anomaly_score()
+        anomaly.get_anomaly_decision()
+
+        # get anomaly-related value
         score = anomaly.anomaly_score
         cluster_property = anomaly.property
         cluster_abstraction = anomaly.abstraction
         quadratic_score = anomaly.quadratic_score
         normalized_score = anomaly.normalization_score
-
-        # get sentiment analysis
-        sentiment = SentimentAnalysis(graph, clusters)
-        sentiment.get_cluster_message()
-        sentiment_score = sentiment.get_sentiment()
+        anomaly_decision = anomaly.anomaly_decision
 
     elif options.method in nongraph_method:
         pass
@@ -229,7 +235,7 @@ def main():
     # get output per cluster
     output = Output(graph, clusters, logs, percluster_file,
                     score, quadratic_score, normalized_score, cluster_property, cluster_abstraction, anomaly_file,
-                    sentiment_score, evaluation_metrics)
+                    sentiment_score, evaluation_metrics, anomaly_decision)
     output.txt_percluster()
 
     # get output cluster property and anomaly score
@@ -244,6 +250,6 @@ def graph_streaming(graph, edges, removed_edges):
 
 if __name__ == '__main__':
     start = time()
-    properties = main()
+    main()
     duration = time() - start
     print 'Runtime       :', duration, 'seconds'
