@@ -49,20 +49,3 @@ class SentimentAnalysis(object):
                 sentiment_score[cluster_id] = possible_sentiment.sentiment.polarity
 
         return sentiment_score
-
-    def get_normalized_sentiment(self):
-        """Get normalized sentiment score.
-
-        Returns
-        -------
-        normalized_score    : dict
-            A dictionary containing key: cluster id and value: normalized sentiment score.
-        """
-        sentiment_score = self.get_sentiment()
-        normalized_score = {}
-        min_score = min(sentiment_score.values())
-        max_score = max(sentiment_score.values())
-        for cluster_id, score in sentiment_score.iteritems():
-            normalized_score[cluster_id] = (score - min_score) / (max_score - min_score)
-
-        return normalized_score
