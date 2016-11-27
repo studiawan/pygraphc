@@ -15,6 +15,15 @@ class SentimentAnalysis(object):
                    https://github.com/sloria/TextBlob/
     """
     def __init__(self, graph, clusters):
+        """The constructor of class SentimentAnalysis.
+
+        Parameters
+        ----------
+        graph       : graph
+            The analyzed graph.
+        clusters    : dict
+            Dictionary of cluster id and its vertices member.
+        """
         self.graph = graph
         self.clusters = clusters
         self.cluster_message = {}
@@ -34,6 +43,7 @@ class SentimentAnalysis(object):
         """Get negative or positive sentiment.
 
         Default score for sentiment score is -1 to 1. The value that close to 1 means more positive and vice versa.
+        The threshold >= 0.
 
         Returns
         -------
