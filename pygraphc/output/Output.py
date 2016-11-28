@@ -1,11 +1,12 @@
 import csv
+from operator import itemgetter
 
 
 class Output(object):
     """Output the clustering result to various types of file such as txt, csv, and html.
     """
     def __init__(self, graph, clusters, original_logs, percluster_file,
-                 anomaly_score, quadratic_score, normalized_score, cluster_property, cluster_abstraction, anomaly_file,
+                 anomaly_score, quadratic_score, normalized_score, cluster_property, cluster_abstraction, report_file,
                  sentiment_score, evaluation_metrics, anomaly_decision):
         """The constructor of class Output.
 
@@ -29,7 +30,7 @@ class Output(object):
             Dictionary of cluster property.
         cluster_abstraction     : dict
             Dictionary of cluster abstraction.
-        anomaly_file            : str
+        report_file             : str
             Filename and full path for anomaly score and cluster property.
         sentiment_score         : dict
             Dictionary of sentiment score per cluster
@@ -47,10 +48,11 @@ class Output(object):
         self.normalized_score = normalized_score
         self.cluster_property = cluster_property
         self.cluster_abstraction = cluster_abstraction
-        self.anomaly_file = anomaly_file
+        self.report_file = report_file
         self.sentiment_score = sentiment_score
         self.evaluation_metrics = evaluation_metrics
         self.anomaly_decision = anomaly_decision
+        self.anomaly_perline_file = ''
 
     def txt_percluster(self):
         """Write clustering result to txt file.
@@ -70,7 +72,7 @@ class Output(object):
         """Write cluster property to a csv file.
         """
         # write to csv
-        f = open(self.anomaly_file, 'wt')
+        f = open(self.report_file, 'wt')
         writer = csv.writer(f)
 
         # set header
@@ -92,4 +94,21 @@ class Output(object):
         for metrics, value in self.evaluation_metrics.iteritems():
             writer.writerow((metrics, value))
 
+        f.close()
+
+    def txt_write_anomaly(self):
+        """Write anomaly detection result per log line.
+        """
+        decision_perlog = {}
+        for cluster_id, decision in self.anomaly_decision.iteritems():
+            for node in self.clusters[cluster_id]:
+                members = self.graph.node[node]['member']
+                for member in members:
+                    decision_perlog[member] = decision
+        # sorted(decision_perlog.items(), key=itemgetter(0))
+
+        # write to file
+        f = open(self.anomaly_perline_file, 'w')
+        for rowid, decision in decision_perlog.iteritems():
+            f.write(decision + '; ' + + self.original_logs[rowid])
         f.close()
