@@ -1,5 +1,5 @@
 import csv
-from operator import itemgetter
+# from operator import itemgetter
 
 
 class Output(object):
@@ -96,7 +96,7 @@ class Output(object):
 
         f.close()
 
-    def txt_write_anomaly(self):
+    def txt_anomaly_perline(self):
         """Write anomaly detection result per log line.
         """
         decision_perlog = {}
