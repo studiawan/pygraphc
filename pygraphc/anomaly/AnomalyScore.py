@@ -86,4 +86,4 @@ class AnomalyScore(object):
         """
         for cluster_id, anomaly_score in self.normalization_score.iteritems():
             final_score = (anomaly_score + self.sentiment_score[cluster_id]) / 2
-            self.anomaly_decision[cluster_id] = (final_score, 'anomaly') if final_score < 0 else (final_score, 'normal')
+            self.anomaly_decision[cluster_id] = (final_score, 'attack') if final_score < 0 else (final_score, 'normal')
