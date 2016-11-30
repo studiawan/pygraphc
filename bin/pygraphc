@@ -14,7 +14,7 @@ from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
 from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.visualization.GraphStreaming import GraphStreaming
-from pygraphc.output.Output import Output
+from pygraphc.output.OutputText import OutputText
 
 
 def main():
@@ -95,17 +95,22 @@ def main():
                       action='store',
                       dest='o',
                       default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.percluster',
-                      help='Output in text file per cluster.')
+                      help='OutputText of clustering result in text file per cluster.')
     parser.add_option('-a', '--anomaly-file',
                       action='store',
                       dest='a',
                       default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.anomaly.csv',
-                      help='Output of anomaly detection in csv file.')
+                      help='OutputText of anomaly detection in csv file.')
+    parser.add_option('-n', '--anomaly-perline-file',
+                      action='store',
+                      dest='n',
+                      default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.anomaly.perline.txt',
+                      help='OutputText of anomaly detection in txt file per log line.')
     parser.add_option('-p', '--prediction-file',
                       action='store',
                       dest='p',
                       default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.perline',
-                      help='Output of anomaly detection in csv file.')
+                      help='OutputText of clustering result in txt file per line.')
     parser.add_option('-y', '--year',
                       action='store',
                       dest='y',
@@ -122,6 +127,7 @@ def main():
     percluster_file = options.o
     anomaly_file = options.a
     prediction_file = options.p
+    anomaly_perline_file = options.n
     year = options.y
 
     # preprocess log file
@@ -232,14 +238,11 @@ def main():
         'silhoutte_index': silhoutte_index
     }
 
-    # get output per cluster
-    output = Output(graph, clusters, logs, percluster_file,
-                    score, quadratic_score, normalized_score, cluster_property, cluster_abstraction, anomaly_file,
-                    sentiment_score, evaluation_metrics, anomaly_decision)
-    output.txt_percluster()
-
-    # get output cluster property and anomaly score
-    output.csv_cluster_property()
+    # get output per cluster, cluster property, and anomaly score
+    OutputText.txt_percluster(percluster_file, clusters, graph, logs)
+    OutputText.csv_cluster_property(anomaly_file, cluster_property, cluster_abstraction, score, quadratic_score,
+                                    normalized_score, sentiment_score, anomaly_decision, evaluation_metrics)
+    OutputText.txt_anomaly_perline(anomaly_decision, clusters, graph, anomaly_perline_file, logs)
 
 
 def graph_streaming(graph, edges, removed_edges):
