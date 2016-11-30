@@ -1,5 +1,6 @@
 from sklearn import metrics
 from operator import itemgetter
+from pygraphc.output.OutputText import OutputText
 
 
 class ExternalEvaluation(object):
@@ -16,7 +17,7 @@ class ExternalEvaluation(object):
     """
 
     @staticmethod
-    def set_cluster_label_id(graph, clusters, original_logs, analysis_dir):
+    def set_cluster_label_id(graph, clusters, original_logs, perline_file):
         """Get all logs per cluster, get most dominant cluster label, and write clustering result to file [Manning2008]_.
 
         Parameters
@@ -27,7 +28,7 @@ class ExternalEvaluation(object):
             Dictionary contains sequence of nodes in all clusters.
         original_logs   :
             List of event logs.
-        analysis_dir    : str
+        perline_file    : str
             Path to save the analysis result.
 
         References
@@ -36,8 +37,8 @@ class ExternalEvaluation(object):
                          in Introduction to Information Retrieval, 2008, Cambridge University Press.
                          http://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-clustering-1.html
         """
-        new_cluster_member_label = {}  # store individiual cluster id for each cluster member
-        dominant_cluster_labels = {}  # store dominant cluster label from all clusters
+        new_cluster_member_label = {}   # store individiual cluster id for each cluster member
+        dominant_cluster_labels = {}    # store dominant cluster label from all clusters
         cluster_labels = ['accepted password', 'accepted publickey', 'authentication failure', 'check pass',
                           'connection closed', 'connection reset by peer', 'did not receive identification string',
                           'failed password', 'ignoring max retries', 'invalid user', 'pam adding faulty module',
@@ -47,7 +48,16 @@ class ExternalEvaluation(object):
                           'error connect', 'open failed', 'root login refused', 'bad protocol version identification',
                           'subsystem request', 'protocol major versions differ', 'failed none', 'expired password',
                           'unable open env file', 'dispatch protocol error', 'syslogin perform logout',
-                          'corrupted mac', 'write ident string']
+                          'corrupted mac', 'write ident string', 'successful su', 'root:nobody', 'change user',
+                          'changed password', 'new group', 'new user', 'changed user', 'password changed', 'root:',
+                          'error: bind to port', 'received sighup', 'user not in sudoers', 'exiting on signal',
+                          ':root', 'new password not acceptable', 'user1 : tty=', 'root : tty=pts',
+                          'user3 : tty=', 'root : tty=unknown', 'unable to resolve host', 'failed su',
+                          'delete user', 'removed group', 'failed login',
+                          'lastlog_openseek', 'lastlog_perform_login', 'pam_succeed_if', 'illegal user',
+                          'start: ', 'scanned from', 'last message repeated',
+                          'fatal: mm_request_send:', 'fatal: timeout before authentication',
+                          'fail: ', 'pam_timestamp: updated timestamp', 'root privileges on behalf']
         max_cluster_id = len(cluster_labels) - 1
 
         for cluster_id, cluster in clusters.iteritems():
@@ -119,15 +129,9 @@ class ExternalEvaluation(object):
             for cluster in clusters:
                 for c in cluster:
                     analysis_result[c] = new_cluster_member_label[c]
-        # get sorted log line id - cluster id results
-        sorted(analysis_result.items(), key=itemgetter(0))
 
-        # write clustering result to file (clustering result for all members in a node)
-        fopen = open(analysis_dir, 'w')
-        for rowid, cluster_id in analysis_result.iteritems():
-            cluster_label = 'undefined' if cluster_id > max_cluster_id else cluster_labels[cluster_id]
-            fopen.write(str(cluster_id) + '; ' + cluster_label + '; ' + original_logs[rowid])
-        fopen.close()
+        # write clustering result per line to file (clustering result for all members in a node)
+        OutputText.txt_perline(perline_file, analysis_result, max_cluster_id, cluster_labels, original_logs)
 
     @staticmethod
     def get_evaluated(evaluated_file):
