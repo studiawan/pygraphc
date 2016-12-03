@@ -87,8 +87,11 @@ class InternalEvaluation(object):
 
                 # get vertex silhoutte
                 for node in cluster:
-                    node_silhouttes[node] = (intercluster_avg[node] - intracluster_avg[node]) / \
-                                            max(intercluster_avg[node], intracluster_avg[node])
+                    try:
+                        node_silhouttes[node] = (intercluster_avg[node] - intracluster_avg[node]) / \
+                                                max(intercluster_avg[node], intracluster_avg[node])
+                    except ZeroDivisionError:
+                        node_silhouttes[node] = 0
 
         return node_silhouttes
 
