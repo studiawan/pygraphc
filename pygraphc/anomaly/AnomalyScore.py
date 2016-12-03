@@ -68,7 +68,10 @@ class AnomalyScore(object):
         min_score = min(self.anomaly_score.values())
         max_score = max(self.anomaly_score.values())
         for cluster_id, score in self.anomaly_score.iteritems():
-            first_normalization[cluster_id] = (score - min_score) / (max_score - min_score)
+            try:
+                first_normalization[cluster_id] = (score - min_score) / (max_score - min_score)
+            except ZeroDivisionError:
+                first_normalization[cluster_id] = 0
 
         # quadratic score to have a more appropriate anomaly score
         for cluster_id, score in first_normalization.iteritems():
@@ -79,7 +82,10 @@ class AnomalyScore(object):
         max_score = max(self.quadratic_score.values())
         a, b = -1, 1
         for cluster_id, score in self.quadratic_score.iteritems():
-            self.normalization_score[cluster_id] = a + ((score - min_score) * (b - a)) / (max_score - min_score)
+            try:
+                self.normalization_score[cluster_id] = a + ((score - min_score) * (b - a)) / (max_score - min_score)
+            except ZeroDivisionError:
+                self.normalization_score[cluster_id] = 0.
 
     def get_anomaly_decision(self):
         """Get decision whether an event log is anomaly or normal.
