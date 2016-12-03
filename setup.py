@@ -20,7 +20,7 @@ setup(name='pygraphc',
       scripts=['bin/pygraphc'],
       install_requires=[
             'networkx',
-            'scikit-learn',
+            'sklearn',  # scikit-learn
             'nltk',
             'numpy',
             'Sphinx',
