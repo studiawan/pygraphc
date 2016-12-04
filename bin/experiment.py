@@ -6,6 +6,7 @@ from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
 from pygraphc.clustering.GraphEntropy import GraphEntropy
+from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
 from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
@@ -31,7 +32,6 @@ def get_dataset(dataset, dataset_path, file_extension, method):
     result_path = '/home/hudan/Git/pygraphc/result/' + method + '/'
     for match in matches:
         identifier = match.split(dataset)
-        print match, identifier
         index = dataset + identifier[1]
         files[index] = {'log_path': match, 'labeled_path': str(match) + '.labeled',
                         'result_percluster': result_path + index + '.percluster',
@@ -98,7 +98,7 @@ def main(dataset, year, method):
     master_path = '/home/hudan/Git/labeled-authlog/dataset/'
     dataset_path = {
         'Hofstede2014': master_path + 'Hofstede2014/dataset1_perday',
-        'SecRepo': master_path + 'SecRepo/auth_perday',
+        'SecRepo': master_path + 'SecRepo/auth-perday',
         'forensic-challenge-2010': master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-perday',
         'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
         'hnet-hon-2006':
@@ -129,7 +129,9 @@ def main(dataset, year, method):
         g = CreateGraph(events_unique)
         g.do_create()
         graph = g.g
+        edges_weight = g.edges_weight
         edges_dict = g.edges_dict
+        nodes_id = g.get_nodes_id()
 
         # initialization
         ar, ami, nmi, h, c, v, silhoutte = 0., 0., 0., 0., 0., 0., 0.
@@ -167,6 +169,17 @@ def main(dataset, year, method):
                                                               year, edges_dict)
             ge_graph.clear()
 
+        elif method == 'max_clique':
+            maxc_graph = graph.copy()
+            k, threshold = 2, 0.1
+            maxc = MaxCliquesPercolationWeighted(maxc_graph, edges_weight, nodes_id, k, threshold)
+            maxc_clusters = maxc.get_maxcliques_percolation_weighted()
+
+            # do evaluation performance and clear graph
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(maxc_graph, maxc_clusters, original_logs, properties,
+                                                              year, edges_dict)
+            maxc_graph.clear()
+
         # writer evaluation result to file
         row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte)
         writer.writerow(row)
@@ -175,10 +188,11 @@ def main(dataset, year, method):
 
 if __name__ == '__main__':
     start = time()
-    data = 'hnet-hon-2006'
+    # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006
+    data = 'forensic-challenge-2010'
 
-    # available methods: majorclust, improved_majorclust, graph_entropy
-    clustering_method = 'improved_majorclust'
+    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique
+    clustering_method = 'max_clique'
     main(data, '2010', clustering_method)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
