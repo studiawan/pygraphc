@@ -17,7 +17,7 @@ setup(name='pygraphc',
       author_email='studiawan@gmail.com',
       license='MIT',
       packages=['pygraphc'],
-      scripts=['bin/pygraphc'],
+      scripts=['scripts/pygraphc'],
       install_requires=[
             'networkx',
             'sklearn',  # scikit-learn
