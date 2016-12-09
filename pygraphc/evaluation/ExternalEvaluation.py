@@ -126,7 +126,7 @@ class ExternalEvaluation(object):
                 for member in members:
                     analysis_result[member] = new_cluster_member_label[node[0]]
         elif graph is None:
-            for cluster in clusters:
+            for cluster_id, cluster in clusters.iteritems():
                 for c in cluster:
                     analysis_result[c] = new_cluster_member_label[c]
 
