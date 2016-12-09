@@ -699,13 +699,15 @@ class IPLoM:
                 print ("*****************************************")
 
     def get_clusters(self):
-        clusters = []
+        clusters = {}
+        cluster_id = 0
         for idx in range(len(self.partitions_L)):
             if self.partitions_L[idx].valid:
                 cluster = []
                 for log in self.partitions_L[idx].logLL:
                     cluster.append(int(log[-2])-1)          # zero-based index
-                clusters.append(cluster)
+                clusters[cluster_id] = cluster
+                cluster_id += 1
 
         return clusters
 
