@@ -110,18 +110,18 @@ class IPLoM:
         self.get_output()
         t2 = time.time()
 
-        if not os.path.exists(self.para.savePath):
-            os.makedirs(self.para.savePath)
-        else:
-            self.delete_all_files(self.para.savePath)
+        # if not os.path.exists(self.para.savePath):
+        #    os.makedirs(self.para.savePath)
+        # else:
+        #    self.delete_all_files(self.para.savePath)
 
-        self.write_event_tofile(self.para.savePath + 'logTemplates.txt')
-        self.write_log_with_eventid(self.para.savePath + self.para.saveFileName)
+        # self.write_event_tofile(self.para.savePath + 'logTemplates.txt')
+        # self.write_log_with_eventid(self.para.savePath + self.para.saveFileName)
         
         # self.PrintPartitions()
-        clusters = self.get_clusters()
-        for cluster in clusters:
-            print cluster
+        # clusters = self.get_clusters()
+        # for cluster in clusters:
+        #    print cluster
 
         print('this process takes', t2 - t1)
         print('*********************************************')
