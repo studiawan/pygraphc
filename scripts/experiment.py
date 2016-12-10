@@ -7,6 +7,7 @@ from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
 from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
+from pygraphc.misc.IPLoM import Para, IPLoM
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
 from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
@@ -33,11 +34,13 @@ def get_dataset(dataset, dataset_path, file_extension, method):
     for match in matches:
         identifier = match.split(dataset)
         index = dataset + identifier[1]
-        files[index] = {'log_path': match, 'labeled_path': str(match) + '.labeled',
+        log_path = match.split('/')[-1] if method == 'IPLoM' else match
+        files[index] = {'log_path': log_path, 'labeled_path': str(match) + '.labeled',
                         'result_percluster': result_path + index + '.percluster',
                         'result_perline': result_path + index + '.perline',
                         'anomaly_report': result_path + index + '.anomaly.csv',
-                        'anomaly_perline': result_path + index + '.anomaly.perline.txt'}
+                        'anomaly_perline': result_path + index + '.anomaly.perline.txt',
+                        'result_path': result_path}
 
     # file to save evaluation performance per method
     evaluation_file = result_path + dataset + '.evaluation.csv'
@@ -93,7 +96,28 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
     return ar, ami, nmi, h, c, v, silhoutte_index
 
 
+def get_evaluation_cluster(evaluated_graph, clusters, logs, properties):
+    # get prediction file
+    ExternalEvaluation.set_cluster_label_id(evaluated_graph, clusters, logs, properties['result_perline'])
+
+    # get evaluation of clustering performance
+    ar = ExternalEvaluation.get_adjusted_rand(properties['labeled_path'], properties['result_perline'])
+    ami = ExternalEvaluation.get_adjusted_mutual_info(properties['labeled_path'], properties['result_perline'])
+    nmi = ExternalEvaluation.get_normalized_mutual_info(properties['labeled_path'], properties['result_perline'])
+    h = ExternalEvaluation.get_homogeneity(properties['labeled_path'], properties['result_perline'])
+    c = ExternalEvaluation.get_completeness(properties['labeled_path'], properties['result_perline'])
+    v = ExternalEvaluation.get_vmeasure(properties['labeled_path'], properties['result_perline'])
+
+    return ar, ami, nmi, h, c, v
+
+
 def main(dataset, year, method):
+    # list of methods
+    graph_method = ['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
+                    'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust',
+                    'graph_entropy']
+    # nongraph_method = ['IPLoM', 'LKE']
+
     # get dataset files
     master_path = '/home/hudan/Git/labeled-authlog/dataset/'
     dataset_path = {
@@ -119,22 +143,24 @@ def main(dataset, year, method):
 
     # main process
     for file_identifier, properties in files.iteritems():
-        # preprocess log file
-        preprocess = PreprocessLog(properties['log_path'])
-        preprocess.do_preprocess()
-        events_unique = preprocess.events_unique
-        original_logs = preprocess.logs
-
-        # create graph
-        g = CreateGraph(events_unique)
-        g.do_create()
-        graph = g.g
-        edges_weight = g.edges_weight
-        edges_dict = g.edges_dict
-        nodes_id = g.get_nodes_id()
-
         # initialization
         ar, ami, nmi, h, c, v, silhoutte = 0., 0., 0., 0., 0., 0., 0.
+        edges_weight, nodes_id = [], []
+
+        if method in graph_method:
+            # preprocess log file
+            preprocess = PreprocessLog(properties['log_path'])
+            preprocess.do_preprocess()
+            events_unique = preprocess.events_unique
+            original_logs = preprocess.logs
+
+            # create graph
+            g = CreateGraph(events_unique)
+            g.do_create()
+            graph = g.g
+            edges_weight = g.edges_weight
+            edges_dict = g.edges_dict
+            nodes_id = g.get_nodes_id()
 
         if method == 'majorclust':
             # run MajorClust method
@@ -180,6 +206,18 @@ def main(dataset, year, method):
                                                               year, edges_dict)
             maxc_graph.clear()
 
+        elif method == 'IPLoM':
+            # call IPLoM and get clusters
+            para = Para(path=dataset_path[dataset] + '/', logname=properties['log_path'],
+                        save_path=properties['result_path'])
+            myparser = IPLoM(para)
+            myparser.main_process()
+            iplom_clusters = myparser.get_clusters()
+            original_logs = myparser.logs
+
+            # do evaluation performance
+            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, iplom_clusters, original_logs, properties)
+
         # writer evaluation result to file
         row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte)
         writer.writerow(row)
@@ -189,10 +227,10 @@ def main(dataset, year, method):
 if __name__ == '__main__':
     start = time()
     # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006
-    data = 'forensic-challenge-2010'
+    data = 'hnet-hon-2006'
 
-    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique
-    clustering_method = 'max_clique'
-    main(data, '2010', clustering_method)
+    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM
+    clustering_method = 'IPLoM'
+    main(data, '2006', clustering_method)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
