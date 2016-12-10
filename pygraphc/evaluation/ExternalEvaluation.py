@@ -75,9 +75,10 @@ class ExternalEvaluation(object):
                     logs_per_cluster.append(original_logs[c])
 
                 # get dominant label in cluster
+                logs_lower = set([log.lower() for log in logs_per_cluster])
                 for label in cluster_labels:
-                    for log in logs_per_cluster:
-                        if label in log.lower():
+                    for log in logs_lower:
+                        if label in log:
                             label_counter[label] += 1
 
             # get most dominant cluster label
