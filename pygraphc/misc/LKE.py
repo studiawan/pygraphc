@@ -142,9 +142,11 @@ class LKE:
             print('========================================================================')
 
     def get_clusters(self):
-        clusters = []
+        clusters = {}
+        cluster_id = 0
         for rows in self.loglinesOfGroups:
-            clusters.append(rows)
+            clusters[cluster_id] = rows
+            cluster_id += 1
 
         return clusters
 
