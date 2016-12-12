@@ -69,10 +69,10 @@ class LKE:
                 self.wordLen.append(len(word_seq))
                 self.wordLL.append(tuple(word_seq))
         # delete all the files insidd this directory
-        if not os.path.exists(self.para.savePath + self.para.dataName + '/'):
-            os.makedirs(self.para.savePath + self.para.dataName + '/')
-        else:
-            delete_all_files(self.para.savePath + self.para.dataName + '/')
+        # if not os.path.exists(self.para.savePath + self.para.dataName + '/'):
+        #    os.makedirs(self.para.savePath + self.para.dataName + '/')
+        # else:
+        #    delete_all_files(self.para.savePath + self.para.dataName + '/')
 
     def clustering(self, t1):
         sys.setrecursionlimit(100000000)  # set the recursion limits number
