@@ -8,6 +8,7 @@ from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
 from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
 from pygraphc.misc.IPLoM import Para, IPLoM
+from pygraphc.misc.LKE import Para, LKE
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
 from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
@@ -34,7 +35,7 @@ def get_dataset(dataset, dataset_path, file_extension, method):
     for match in matches:
         identifier = match.split(dataset)
         index = dataset + identifier[1]
-        log_path = match.split('/')[-1] if method == 'IPLoM' else match
+        log_path = match.split('/')[-1] if method == 'IPLoM' or method == 'LKE' else match
         files[index] = {'log_path': log_path, 'labeled_path': str(match) + '.labeled',
                         'result_percluster': result_path + index + '.percluster',
                         'result_perline': result_path + index + '.perline',
@@ -125,8 +126,7 @@ def main(dataset, year, method):
         'SecRepo': master_path + 'SecRepo/auth-perday',
         'forensic-challenge-2010': master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-perday',
         'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
-        'hnet-hon-2006':
-            master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday'
+        'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday'
     }
 
     # note that in RedHat-based authentication log, parameter '*.log' is not used
@@ -142,6 +142,7 @@ def main(dataset, year, method):
     writer.writerow(header)
 
     # main process
+    lke_exception = ['secure.8', 'secure.9', 'secure.1', 'secure.6', 'secure.11']
     for file_identifier, properties in files.iteritems():
         # initialization
         ar, ami, nmi, h, c, v, silhoutte = 0., 0., 0., 0., 0., 0., 0.
@@ -208,6 +209,7 @@ def main(dataset, year, method):
 
         elif method == 'IPLoM':
             # call IPLoM and get clusters
+            print properties['log_path']
             para = Para(path=dataset_path[dataset] + '/', logname=properties['log_path'],
                         save_path=properties['result_path'])
             myparser = IPLoM(para)
@@ -218,7 +220,22 @@ def main(dataset, year, method):
             # do evaluation performance
             ar, ami, nmi, h, c, v = get_evaluation_cluster(None, iplom_clusters, original_logs, properties)
 
-        # writer evaluation result to file
+        elif method == 'LKE':
+            print properties['log_path']
+            if properties['log_path'] in lke_exception:
+                continue
+
+            para = Para(path=dataset_path[dataset] + '/', logname=properties['log_path'],
+                        save_path=properties['result_path'])
+            myparser = LKE(para)
+            myparser.main_process()
+            lke_clusters = myparser.get_clusters()
+            original_logs = myparser.logs
+
+            # do evaluation performance
+            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, lke_clusters, original_logs, properties)
+
+        # write evaluation result to file
         row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte)
         writer.writerow(row)
 
@@ -227,10 +244,10 @@ def main(dataset, year, method):
 if __name__ == '__main__':
     start = time()
     # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006
-    data = 'hnet-hon-2006'
+    data = 'hnet-hon-2004'
 
-    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM
-    clustering_method = 'IPLoM'
-    main(data, '2006', clustering_method)
+    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM, LKE
+    clustering_method = 'LKE'
+    main(data, '2004', clustering_method)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
