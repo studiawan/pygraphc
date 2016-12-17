@@ -30,6 +30,7 @@ class PySplunk(object):
         self.host = host
         self.output_mode = output_mode
         self.tmp_file = tmp_file
+        self.logs = []
 
     def get_splunk_cluster(self):
         """Get log clusters.
@@ -48,10 +49,10 @@ class PySplunk(object):
 
         # get clusters
         with open(self.tmp_file, 'r') as f:
-            logs = f.readlines()
+            self.logs = f.readlines()
 
         clusters = {}
-        for index, log in enumerate(logs):
+        for index, log in enumerate(self.logs):
             cluster_id = log.split(',')[0]
             clusters[cluster_id] = clusters.get(cluster_id, []) + [index]
 
