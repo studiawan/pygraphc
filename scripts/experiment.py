@@ -9,6 +9,7 @@ from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
 from pygraphc.misc.IPLoM import Para, IPLoM
 from pygraphc.misc.LKE import Para, LKE
+from pygraphc.misc.pysplunk import PySplunk
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
 from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
@@ -141,8 +142,11 @@ def main(dataset, year, method):
               'homogeneity', 'completeness', 'v-measure', 'silhoutte_index')
     writer.writerow(header)
 
+    # splunk host
+    splunk_host = {'Hofstede2014': 'box', 'SecRepo': 'box', 'forensic-challenge-2010': 'box',
+                   'hnet-hon-2004': 'hnet-hon-2004', 'hnet-hon-2006': 'box'}
+
     # main process
-    lke_exception = ['secure.8', 'secure.9', 'secure.1', 'secure.6', 'secure.11']
     for file_identifier, properties in files.iteritems():
         # initialization
         ar, ami, nmi, h, c, v, silhoutte = 0., 0., 0., 0., 0., 0., 0.
@@ -165,47 +169,43 @@ def main(dataset, year, method):
 
         if method == 'majorclust':
             # run MajorClust method
-            mc_graph = graph.copy()
-            mc = MajorClust(mc_graph)
+            mc = MajorClust(graph)
             mc_clusters = mc.get_majorclust(graph)
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(mc_graph, mc_clusters, original_logs, properties,
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(graph, mc_clusters, original_logs, properties,
                                                               year, edges_dict)
-            mc_graph.clear()
+            graph.clear()
 
         elif method == 'improved_majorclust':
             # run ImprovedMajorClust method
-            imc_graph = graph.copy()
-            imc = ImprovedMajorClust(imc_graph)
+            imc = ImprovedMajorClust(graph)
             imc_clusters = imc.get_improved_majorclust()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(imc_graph, imc_clusters, original_logs, properties,
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(graph, imc_clusters, original_logs, properties,
                                                               year, edges_dict)
-            imc_graph.clear()
+            graph.clear()
 
         elif method == 'graph_entropy':
             # run GraphEntropy method
-            ge_graph = graph.copy()
-            ge = GraphEntropy(ge_graph)
+            ge = GraphEntropy(graph)
             ge_clusters = ge.get_graph_entropy()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(ge_graph, ge_clusters, original_logs, properties,
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(graph, ge_clusters, original_logs, properties,
                                                               year, edges_dict)
-            ge_graph.clear()
+            graph.clear()
 
         elif method == 'max_clique':
-            maxc_graph = graph.copy()
             k, threshold = 2, 0.1
-            maxc = MaxCliquesPercolationWeighted(maxc_graph, edges_weight, nodes_id, k, threshold)
+            maxc = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id, k, threshold)
             maxc_clusters = maxc.get_maxcliques_percolation_weighted()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(maxc_graph, maxc_clusters, original_logs, properties,
+            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(graph, maxc_clusters, original_logs, properties,
                                                               year, edges_dict)
-            maxc_graph.clear()
+            graph.clear()
 
         elif method == 'IPLoM':
             # call IPLoM and get clusters
@@ -222,7 +222,8 @@ def main(dataset, year, method):
 
         elif method == 'LKE':
             print properties['log_path']
-            if properties['log_path'] in lke_exception:
+            lke_exception = ['secure.8', 'secure.9', 'secure.1', 'secure.6', 'secure.11']
+            if properties['log_path'] in lke_exception and dataset == 'hnet-hon-2004':
                 continue
 
             para = Para(path=dataset_path[dataset] + '/', logname=properties['log_path'],
@@ -235,6 +236,16 @@ def main(dataset, year, method):
             # do evaluation performance
             ar, ami, nmi, h, c, v = get_evaluation_cluster(None, lke_clusters, original_logs, properties)
 
+        elif method == 'PySplunk':
+            source = 'hnet-hon-2004-' + file_identifier.split('/')[-1] if dataset == 'hnet-hon-2004' \
+                else file_identifier.split('/')[-1]
+            pysplunk = PySplunk('admin', source, splunk_host[dataset], 'csv')
+            original_logs = pysplunk.logs
+            pysplunk_clusters = pysplunk.get_splunk_cluster()
+
+            # do evaluation performance
+            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, pysplunk_clusters, original_logs, properties)
+
         # write evaluation result to file
         row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte)
         writer.writerow(row)
@@ -244,10 +255,10 @@ def main(dataset, year, method):
 if __name__ == '__main__':
     start = time()
     # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006
-    data = 'hnet-hon-2004'
+    data = 'hnet-hon-2006'
 
-    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM, LKE
-    clustering_method = 'LKE'
-    main(data, '2004', clustering_method)
+    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM, LKE, PySplunk
+    clustering_method = 'PySplunk'
+    main(data, '2006', clustering_method)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
