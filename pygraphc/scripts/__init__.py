@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 from optparse import OptionParser
-from time import time
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
 from pygraphc.anomaly.SentimentAnalysis import SentimentAnalysis
 from pygraphc.clustering.ConnectedComponents import ConnectedComponents
@@ -250,9 +247,3 @@ def graph_streaming(graph, edges, removed_edges):
     stream.gephi_streaming()
     if removed_edges:
         stream.remove_outcluster(removed_edges)
-
-if __name__ == '__main__':
-    start = time()
-    main()
-    duration = time() - start
-    print 'Runtime       :', duration, 'seconds'

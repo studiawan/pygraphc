@@ -6,10 +6,10 @@ setup(name='pygraphc',
       long_description='This package contains event log clustering method including non-graph and '
                        'graph-based approaches.',
       classifiers=[
-            'Development Status :: 2 - Pre-Alpha',
-            'License :: OSI Approved :: MIT License',
-            'Programming Language :: Python :: 2.7',
-            'Topic :: Security',
+          'Development Status :: 2 - Pre-Alpha',
+          'License :: OSI Approved :: MIT License',
+          'Programming Language :: Python :: 2.7',
+          'Topic :: Security',
       ],
       keywords='log clustering graph anomaly',
       url='http://github.com/studiawan/pygraphc/',
@@ -19,15 +19,17 @@ setup(name='pygraphc',
       packages=['pygraphc'],
       scripts=['scripts/pygraphc'],
       entry_points={
-          'console_scripts': ['pygraphc = scripts:main']
+          'console_scripts': [
+              'pygraphc=pygraphc.scripts:main',
+          ]
       },
       install_requires=[
-            'networkx',
-            'scikit-learn',
-            'nltk',
-            'Sphinx',
-            'numpydoc',
-            'TextBlob',
+          'networkx',
+          'scikit-learn',
+          'nltk',
+          'Sphinx',
+          'numpydoc',
+          'TextBlob',
       ],
       include_package_data=True,
       zip_safe=False)
