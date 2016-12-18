@@ -1,6 +1,0 @@
-networkx
-scikit-learn
-nltk
-Sphinx
-numpydoc
-TextBlob

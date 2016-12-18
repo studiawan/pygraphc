@@ -17,7 +17,7 @@ setup(name='pygraphc',
       author_email='studiawan@gmail.com',
       license='MIT',
       packages=['pygraphc'],
-      # scripts=['pygraphc/scripts/pygraphc'],
+      scripts=['pygraphc/scripts/pygraphc'],
       entry_points={
           'console_scripts': [
               'pygraphc=pygraphc.scripts:main',
