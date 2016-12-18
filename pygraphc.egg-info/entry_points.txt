@@ -1,0 +1,3 @@
+[console_scripts]
+pygraphc = pygraphc.scripts:main
+
