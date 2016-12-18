@@ -19,7 +19,7 @@ setup(name='pygraphc',
       packages=['pygraphc'],
       scripts=['scripts/pygraphc'],
       entry_points={
-          'console_scripts': ['pygraphc=scripts.pygraphc:main']
+          'console_scripts': ['pygraphc = scripts:main']
       },
       install_requires=[
             'networkx',
