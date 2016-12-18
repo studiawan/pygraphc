@@ -1,5 +1,3 @@
 *.pyc
 **/.idea/
 **/result/
-/dist/
-/*.egg-info
