@@ -18,10 +18,11 @@ setup(name='pygraphc',
       license='MIT',
       packages=['pygraphc'],
       scripts=['scripts/pygraphc'],
+      entry_points={
+          'console_scripts': ['pygraphc=scripts.pygraphc:main']
+      },
       install_requires=[
             'networkx',
-            'numpy',
-            'scipy',
             'scikit-learn',
             'nltk',
             'Sphinx',
