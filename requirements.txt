@@ -1,6 +1,4 @@
 networkx
-numpy
-scipy
 scikit-learn
 nltk
 Sphinx
