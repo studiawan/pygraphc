@@ -8,6 +8,6 @@ addons:
       - liblapack-dev
       - libopenblas-base
       - libopenblas-dev
-before_install: "pip install numpy scipy"
+before_install: "pip install scipy"
 install: "pip install ."
 script: pygraphc
