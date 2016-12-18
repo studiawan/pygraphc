@@ -15,5 +15,5 @@ pygraphc.egg-info/entry_points.txt
 pygraphc.egg-info/not-zip-safe
 pygraphc.egg-info/requires.txt
 pygraphc.egg-info/top_level.txt
-scripts/pygraphc
+pygraphc/scripts/pygraphc
 tests/test_majorclust.py
