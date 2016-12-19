@@ -11,4 +11,4 @@ addons:
       - libopenblas-dev
 before_install: "pip install numpy scipy"
 install: "pip install ."
-script: "pygraphc"
+script: "pygraphc --help"
