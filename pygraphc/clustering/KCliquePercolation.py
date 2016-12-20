@@ -32,6 +32,15 @@ class KCliquePercolation(object):
             List of all node identifier.
         k               : int
             Number of percolation or intersection between an individual clique.
+
+        Notes
+        -----
+        removed_edges   : list[tuple]
+            List of tuple containing edge from (node1, node2).
+        percolated_nodes    : list
+            List of all percolated nodes.
+        clique_percolation  : dict[frozenset]
+            Dictionary of nodes in each cluster in frozenset.
         """
         print 'kclique_percolation: initialization ...'
         self.graph = graph
@@ -42,36 +51,6 @@ class KCliquePercolation(object):
         self.percolated_nodes = []
         self.removed_edges = []
         self.clique_percolation = {}
-
-    def get_percolation_nodes(self):
-        """Get percolation nodes after finished clustering.
-
-        Returns
-        -------
-        percolated_nodes    : list
-            List of all percolated nodes
-        """
-        return self.percolated_nodes
-
-    def get_removed_edges(self):
-        """Get removed edges after clustering process.
-
-        Returns
-        -------
-            removed_edges   : list[tuple]
-                List of tuple containing edge from (node1, node2)
-        """
-        return self.removed_edges
-
-    def get_clique_percolation(self):
-        """Get all cluster in percolation (temporary) graph.
-
-        Returns
-        -------
-        clique_percolation  : dict[frozenset]
-            Dictionary of nodes in each cluster in frozenset.
-        """
-        return self.clique_percolation
 
     def get_kclique_percolation(self):
         """This is the main method to call all k-clique percolation clustering.
