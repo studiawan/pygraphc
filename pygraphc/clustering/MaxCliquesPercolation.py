@@ -120,7 +120,7 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         """
         maxcliques = self._find_maxcliques()
         super(MaxCliquesPercolationWeighted, self)._get_percolation_graph(maxcliques)
-        percolations = super(MaxCliquesPercolationWeighted, self).get_clique_percolation()
+        percolations = super(MaxCliquesPercolationWeighted, self).clique_percolation
         self.__set_percolation_dict(percolations)
 
         # remove overlapping nodes
