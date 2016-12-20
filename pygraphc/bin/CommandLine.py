@@ -160,7 +160,7 @@ def run():
         elif options.method == 'kclique_percolation_weighted':
             kcpw = KCliquePercolationWeighted(graph, edges_weight, nodes_id, k, geometric_mean_threshold)
             clusters = kcpw.get_kclique_percolation()
-            removed_edges = kcpw.get_removed_edges()
+            removed_edges = kcpw.removed_edges
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
         elif options.method == 'connected_components':
