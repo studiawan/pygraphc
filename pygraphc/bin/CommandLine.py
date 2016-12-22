@@ -101,6 +101,11 @@ def run():
                       dest='a',
                       default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.anomaly.csv',
                       help='OutputText of anomaly detection in csv file.')
+    parser.add_option('-l', '--anomaly-ground-truth',
+                      action='store',
+                      dest='l',
+                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_attack/Dec 25.log.attack',
+                      help='Ground truth of anomaly detection file.')
     parser.add_option('-n', '--anomaly-perline-file',
                       action='store',
                       dest='n',
@@ -128,6 +133,7 @@ def run():
     anomaly_file = options.a
     prediction_file = options.p
     anomaly_perline_file = options.n
+    anomaly_groundtruth = options.l
     year = options.y
 
     # preprocess log file
@@ -230,12 +236,26 @@ def run():
     # get internal evaluation
     silhoutte_index = InternalEvaluation.get_silhoutte_index(graph, clusters)
 
+    # get external evaluation of anomaly detection performance
+    anomaly_adj_rand_score = ExternalEvaluation.get_adjusted_rand(anomaly_groundtruth, anomaly_perline_file)
+    anomaly_adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info(anomaly_groundtruth,
+                                                                                anomaly_perline_file)
+    anomaly_norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info(anomaly_groundtruth,
+                                                                                   anomaly_perline_file)
+    anomaly_homogeneity = ExternalEvaluation.get_homogeneity(anomaly_groundtruth, anomaly_perline_file)
+    anomaly_completeness = ExternalEvaluation.get_completeness(anomaly_groundtruth, anomaly_perline_file)
+    anomaly_vmeasure = ExternalEvaluation.get_vmeasure(anomaly_groundtruth, anomaly_perline_file)
+
     # arrange dictionary of evaluation metrics
     evaluation_metrics = {
         'adj_rand_score': adj_rand_score, 'adj_mutual_info_score': adj_mutual_info_score,
         'norm_mutual_info_score': norm_mutual_info_score,
         'homogeneity': homogeneity, 'completeness': completeness, 'vmeasure': vmeasure,
-        'silhoutte_index': silhoutte_index
+        'silhoutte_index': silhoutte_index,
+        'anomaly_adj_rand_score': anomaly_adj_rand_score,
+        'anomaly_adj_mutual_info_score': anomaly_adj_mutual_info_score,
+        'anomaly_norm_mutual_info_score': anomaly_norm_mutual_info_score, 'anomaly_homogeneity': anomaly_homogeneity,
+        'anomaly_completeness': anomaly_completeness, 'anomaly_vmeasure': anomaly_vmeasure
     }
 
     # get output per cluster, cluster property, and anomaly score
