@@ -1,4 +1,5 @@
-from os import system, remove
+import os
+import fnmatch
 
 
 class PySplunk(object):
@@ -45,7 +46,7 @@ class PySplunk(object):
                   ' host=' + self.host + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
                                          ' table cluster_id _raw | sort _time | reverse" ' + '--output_mode=' + \
                   self.output_mode + " > " + self.tmp_file
-        system(command)
+        os.system(command)
 
         # get clusters
         with open(self.tmp_file, 'r') as f:
@@ -57,5 +58,48 @@ class PySplunk(object):
             clusters[cluster_id] = clusters.get(cluster_id, []) + [index]
 
         # remove tmp_file
-        remove(self.tmp_file)
+        os.remove(self.tmp_file)
         return clusters
+
+
+class UploadToSplunk(object):
+    def __init__(self, username, password, dataset, sourcetype='linux_secure'):
+        self.username = username
+        self.password = password
+        self.dataset = dataset
+        self.sourcetype = sourcetype
+
+    def single_upload(self, log_path):
+        log_file = log_path.split('/')[-1]
+        command = 'python upload.py --username=' + self.username + ' --password=' + self.password + \
+                  ' --sourcetype=' + self.sourcetype + ' --eventhost=' + self.dataset + \
+                  ' --source=' + self.dataset + '-' + log_file + ' ' + log_path
+        os.system(command)
+
+    def bulk_upload(self):
+        # get dataset files
+        master_path = '/home/hudan/Git/labeled-authlog/dataset/'
+        dataset_path = {
+            'Hofstede2014': master_path + 'Hofstede2014/dataset1_perday',
+            'SecRepo': master_path + 'SecRepo/auth-perday',
+            'forensic-challenge-2010':
+                master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-perday',
+            'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
+            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday'
+        }
+
+        # get all log files under dataset directory
+        matches = []
+        # Debian-based: /var/log/auth.log
+        if self.dataset == 'Hofstede2014' or self.dataset == 'SecRepo' or self.dataset == 'forensic-challenge-2010':
+            for root, dirnames, filenames in os.walk(dataset_path[self.dataset]):
+                for filename in fnmatch.filter(filenames, '*.log'):
+                    matches.append(os.path.join(root, filename))
+        # RedHat-based: /var/log/secure
+        elif self.dataset == 'hnet-hon-2004' or self.dataset == 'hnet-hon-2006':
+            file_lists = os.listdir(dataset_path[self.dataset])
+            matches = [dataset_path[self.dataset] + '/' + filename
+                       for filename in file_lists if not filename.endswith('.labeled')]
+
+        for match in matches:
+            self.single_upload(match)
