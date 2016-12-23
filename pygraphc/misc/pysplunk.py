@@ -10,13 +10,15 @@ class PySplunk(object):
     .. [SplunkDev2016] Command line examples in the Splunk SDK for Python.
                        http://dev.splunk.com/view/python-sdk/SP-CAAAEFK
     """
-    def __init__(self, username, source, host, output_mode, tmp_file='/tmp/pysplunk_cluster.csv'):
+    def __init__(self, username, password, source, host, output_mode, tmp_file='/tmp/pysplunk_cluster.csv'):
         """The constructor of class PySplunk.
 
         Parameters
         ----------
         username        : str
             Username to access Splunk daemon. No password required since we use Splunk free version.
+        password        : str
+            Password to access Splunk daemon.
         source          : str
             Identifier for log source. It is usually filename of log.
         host            : str
@@ -27,6 +29,7 @@ class PySplunk(object):
             Path for temporary clustering result.
         """
         self.username = username
+        self.password = password
         self.source = source.replace(' ', '\ ')
         self.host = host
         self.output_mode = output_mode
@@ -42,7 +45,8 @@ class PySplunk(object):
             Dictionary of log cluster. Key: cluster_id, value: list of log line identifier.
         """
         # run Python Splunk API command
-        command = 'python search.py --username=' + self.username + ' "search source=' + self.source + \
+        command = 'python search.py --username=' + self.username + ' --password=' + self.password + \
+                  ' "search source=' + self.source + \
                   ' host=' + self.host + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
                                          ' table cluster_id _raw | sort _time | reverse" ' + '--output_mode=' + \
                   self.output_mode + " > " + self.tmp_file
@@ -63,13 +67,35 @@ class PySplunk(object):
 
 
 class UploadToSplunk(object):
+    """Upload log file to Splunk.
+    """
     def __init__(self, username, password, dataset, sourcetype='linux_secure'):
+        """The constructor of class UploadToSplunk.
+
+        Parameters
+        ----------
+        username    : str
+            Username to access Splunk daemon.
+        password    : str
+            Password to access Splunk daemon.
+        dataset     : str
+            Dataset type for event log.
+        sourcetype  : str
+            Type of event log. By default, it is set to 'linux_secure'
+        """
         self.username = username
         self.password = password
         self.dataset = dataset
         self.sourcetype = sourcetype
 
     def single_upload(self, log_path):
+        """Upload a single log file to Splunk.
+
+        Parameters
+        ----------
+        log_path    : str
+            Path for log file to be uploaded to Splunk.
+        """
         log_file = log_path.split('/')[-1]
         command = 'python upload.py --username=' + self.username + ' --password=' + self.password + \
                   ' --sourcetype=' + self.sourcetype + ' --eventhost=' + self.dataset + \
@@ -77,6 +103,8 @@ class UploadToSplunk(object):
         os.system(command)
 
     def bulk_upload(self):
+        """Bulk upload of many event log files to Splunk.
+        """
         # get dataset files
         master_path = '/home/hudan/Git/labeled-authlog/dataset/'
         dataset_path = {
@@ -101,5 +129,10 @@ class UploadToSplunk(object):
             matches = [dataset_path[self.dataset] + '/' + filename
                        for filename in file_lists if not filename.endswith('.labeled')]
 
+        # upload to Splunk
         for match in matches:
             self.single_upload(match)
+
+if __name__ == '__main__':
+    upload = UploadToSplunk('admin', '123', 'hnet-hon-2004')
+    upload.bulk_upload()
