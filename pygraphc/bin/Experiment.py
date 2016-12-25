@@ -9,7 +9,6 @@ from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
 from pygraphc.misc.IPLoM import Para, IPLoM
 from pygraphc.misc.LKE import Para, LKE
-from pygraphc.misc.pysplunk import PySplunk
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
 from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
@@ -236,16 +235,6 @@ def main(dataset, year, method):
             # do evaluation performance
             ar, ami, nmi, h, c, v = get_evaluation_cluster(None, lke_clusters, original_logs, properties)
 
-        elif method == 'PySplunk':
-            source = 'hnet-hon-2004-' + file_identifier.split('/')[-1] if dataset == 'hnet-hon-2004' \
-                else file_identifier.split('/')[-1]
-            pysplunk = PySplunk('admin', source, splunk_host[dataset], 'csv')
-            original_logs = pysplunk.logs
-            pysplunk_clusters = pysplunk.get_splunk_cluster()
-
-            # do evaluation performance
-            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, pysplunk_clusters, original_logs, properties)
-
         # write evaluation result to file
         row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte)
         writer.writerow(row)
@@ -257,8 +246,8 @@ if __name__ == '__main__':
     # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006
     data = 'hnet-hon-2006'
 
-    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM, LKE, PySplunk
-    clustering_method = 'PySplunk'
+    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM, LKE
+    clustering_method = 'improved_majorclust'
     main(data, '2006', clustering_method)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
