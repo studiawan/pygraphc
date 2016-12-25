@@ -141,10 +141,6 @@ def main(dataset, year, method):
               'homogeneity', 'completeness', 'v-measure', 'silhoutte_index')
     writer.writerow(header)
 
-    # splunk host
-    splunk_host = {'Hofstede2014': 'box', 'SecRepo': 'box', 'forensic-challenge-2010': 'box',
-                   'hnet-hon-2004': 'hnet-hon-2004', 'hnet-hon-2006': 'box'}
-
     # main process
     for file_identifier, properties in files.iteritems():
         # initialization
