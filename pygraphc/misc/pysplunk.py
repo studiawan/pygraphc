@@ -1,5 +1,7 @@
 import os
 import fnmatch
+import csv
+from pygraphc.bin.Experiment import get_dataset, get_evaluation_cluster
 
 
 class PySplunk(object):
@@ -10,7 +12,7 @@ class PySplunk(object):
     .. [SplunkDev2016] Command line examples in the Splunk SDK for Python.
                        http://dev.splunk.com/view/python-sdk/SP-CAAAEFK
     """
-    def __init__(self, username, password, source, host, output_mode, tmp_file='/tmp/pysplunk_cluster.csv'):
+    def __init__(self, username, password, output_mode, tmp_file='/tmp/pysplunk_cluster.csv'):
         """The constructor of class PySplunk.
 
         Parameters
@@ -19,10 +21,6 @@ class PySplunk(object):
             Username to access Splunk daemon. No password required since we use Splunk free version.
         password        : str
             Password to access Splunk daemon.
-        source          : str
-            Identifier for log source. It is usually filename of log.
-        host            : str
-            Hostname for the source log.
         output_mode     : str
             Output for clustering result. Recommended output is csv
         tmp_file        : str
@@ -30,14 +28,19 @@ class PySplunk(object):
         """
         self.username = username
         self.password = password
-        self.source = source.replace(' ', '\ ')
-        self.host = host
         self.output_mode = output_mode
         self.tmp_file = tmp_file
         self.logs = []
 
-    def get_splunk_cluster(self):
+    def get_splunk_cluster(self, source, host):
         """Get log clusters.
+
+        Parameters
+        ----------
+        source      : str
+            Identifier for log source. It is usually filename of log.
+        host        : str
+            Hostname for the source log.
 
         Returns
         -------
@@ -45,10 +48,11 @@ class PySplunk(object):
             Dictionary of log cluster. Key: cluster_id, value: list of log line identifier.
         """
         # run Python Splunk API command
+        source = source.replace(' ', '\ ')
         command = 'python search.py --username=' + self.username + ' --password=' + self.password + \
-                  ' "search source=' + self.source + \
-                  ' host=' + self.host + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
-                                         ' table cluster_id _raw | sort _time | reverse" ' + '--output_mode=' + \
+                  ' "search source=' + source + \
+                  ' host=' + host + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
+                                    ' table cluster_id _raw | sort _time | reverse" ' + '--output_mode=' + \
                   self.output_mode + " > " + self.tmp_file
         os.system(command)
 
@@ -64,6 +68,42 @@ class PySplunk(object):
         # remove tmp_file
         os.remove(self.tmp_file)
         return clusters
+
+    def get_bulk_cluster(self, dataset):
+        # get dataset files
+        master_path = '/home/hudan/Git/labeled-authlog/dataset/'
+        dataset_path = {
+            'Hofstede2014': master_path + 'Hofstede2014/dataset1_perday',
+            'SecRepo': master_path + 'SecRepo/auth-perday',
+            'forensic-challenge-2010':
+                master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-perday',
+            'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
+            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday'
+        }
+
+        # note that in RedHat-based authentication log, parameter '*.log' is not used
+        files, evaluation_file = get_dataset(dataset, dataset_path[dataset], '*.log', 'PySplunk')
+
+        # open evaluation file
+        f = open(evaluation_file, 'wt')
+        writer = csv.writer(f)
+
+        # set header
+        header = ('file_name', 'adjusted_rand', 'adjusted_mutual_info', 'normalized_mutual_info',
+                  'homogeneity', 'completeness', 'v-measure', 'silhoutte_index')
+        writer.writerow(header)
+
+        # main process to cluster log file
+        for file_identifier, properties in files.iteritems():
+            clusters = self.get_splunk_cluster(properties['log_path'], dataset_path[dataset])
+            original_logs = self.logs
+            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, clusters, original_logs, properties)
+
+            # write evaluation result to file
+            row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v)
+            writer.writerow(row)
+
+        f.close()
 
 
 class UploadToSplunk(object):
@@ -97,6 +137,7 @@ class UploadToSplunk(object):
             Path for log file to be uploaded to Splunk.
         """
         log_file = log_path.split('/')[-1]
+        log_path = log_path.replace(' ', '\ ')
         command = 'python upload.py --username=' + self.username + ' --password=' + self.password + \
                   ' --sourcetype=' + self.sourcetype + ' --eventhost=' + self.dataset + \
                   ' --source=' + self.dataset + '-' + log_file + ' ' + log_path
