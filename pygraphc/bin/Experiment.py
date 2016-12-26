@@ -16,7 +16,7 @@ from pygraphc.anomaly.SentimentAnalysis import SentimentAnalysis
 from pygraphc.output.OutputText import OutputText
 
 
-def get_dataset(dataset, dataset_path, file_extension, method):
+def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
     # get all log files under dataset directory
     matches = []
     # Debian-based: /var/log/auth.log
@@ -41,6 +41,7 @@ def get_dataset(dataset, dataset_path, file_extension, method):
                         'result_perline': result_path + index + '.perline',
                         'anomaly_report': result_path + index + '.anomaly.csv',
                         'anomaly_perline': result_path + index + '.anomaly.perline.txt',
+                        'anomaly_groundtruth': anomaly_path + index + '.attack',
                         'result_path': result_path}
 
     # file to save evaluation performance per method
@@ -94,7 +95,16 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
                                     evaluation_metrics)
     OutputText.txt_anomaly_perline(anomaly_decision, clusters, evaluated_graph, properties['anomaly_perline'], logs)
 
-    return ar, ami, nmi, h, c, v, silhoutte_index
+    # get evaluation of anomaly detection
+    anomaly_ar = ExternalEvaluation.get_adjusted_rand('', properties['anomaly_perline'])
+    anomaly_ami = ExternalEvaluation.get_adjusted_mutual_info('', properties['anomaly_perline'])
+    anomaly_nmi = ExternalEvaluation.get_normalized_mutual_info('', properties['anomaly_perline'])
+    anomaly_h = ExternalEvaluation.get_homogeneity('', properties['anomaly_perline'])
+    anomaly_c = ExternalEvaluation.get_completeness('', properties['anomaly_perline'])
+    anomaly_v = ExternalEvaluation.get_vmeasure('', properties['anomaly_perline'])
+    anomaly_evaluation = (anomaly_ar, anomaly_ami, anomaly_nmi, anomaly_h, anomaly_c, anomaly_v)
+
+    return ar, ami, nmi, h, c, v, silhoutte_index, anomaly_evaluation
 
 
 def get_evaluation_cluster(evaluated_graph, clusters, logs, properties):
@@ -129,8 +139,17 @@ def main(dataset, year, method):
         'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday'
     }
 
+    # anomaly dataset
+    anomaly_path = {
+        'Hofstede2014': master_path + 'Hofstede2014/dataset1_attack/',
+        'SecRepo': master_path + 'SecRepo/auth-attack/',
+        'forensic-challenge-2010': master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-attack/',
+        'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-attack/',
+        'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-attack/'
+    }
+
     # note that in RedHat-based authentication log, parameter '*.log' is not used
-    files, evaluation_file = get_dataset(dataset, dataset_path[dataset], '*.log', method)
+    files, evaluation_file = get_dataset(dataset, dataset_path[dataset], anomaly_path[dataset], '*.log', method)
 
     # open evaluation file
     f = open(evaluation_file, 'wt')
@@ -168,8 +187,8 @@ def main(dataset, year, method):
             mc_clusters = mc.get_majorclust(graph)
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(graph, mc_clusters, original_logs, properties,
-                                                              year, edges_dict)
+            ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, mc_clusters, original_logs,
+                                                                                  properties, year, edges_dict)
             graph.clear()
 
         elif method == 'improved_majorclust':
@@ -178,8 +197,8 @@ def main(dataset, year, method):
             imc_clusters = imc.get_improved_majorclust()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(graph, imc_clusters, original_logs, properties,
-                                                              year, edges_dict)
+            ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, imc_clusters, original_logs,
+                                                                                  properties, year, edges_dict)
             graph.clear()
 
         elif method == 'graph_entropy':
@@ -188,8 +207,8 @@ def main(dataset, year, method):
             ge_clusters = ge.get_graph_entropy()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(graph, ge_clusters, original_logs, properties,
-                                                              year, edges_dict)
+            ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, ge_clusters, original_logs,
+                                                                                  properties, year, edges_dict)
             graph.clear()
 
         elif method == 'max_clique':
@@ -198,8 +217,8 @@ def main(dataset, year, method):
             maxc_clusters = maxc.get_maxcliques_percolation_weighted()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte = get_evaluation(graph, maxc_clusters, original_logs, properties,
-                                                              year, edges_dict)
+            ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, maxc_clusters, original_logs,
+                                                                                  properties, year, edges_dict)
             graph.clear()
 
         elif method == 'IPLoM':
