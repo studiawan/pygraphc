@@ -195,3 +195,10 @@ class PreprocessLog(object):
 
         length = sqrt(length)
         return length
+
+    def remove_rex(self):
+        regexs = ['\.[0-9]*']
+        self.__read_log()
+        for line in self.logs:
+            for regex in regexs:
+                line = sub(regex, '', line)
