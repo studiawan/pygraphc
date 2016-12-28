@@ -49,8 +49,8 @@ class PySplunk(object):
         """
         # run Python Splunk API command
         source = source.replace(' ', '\ ')
-        command = 'python search.py --username=' + self.username + ' --password=' + self.password + \
-                  ' "search source=' + source + \
+        command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/search.py --username=' + \
+                  self.username + ' --password=' + self.password + ' "search source=' + source + \
                   ' host=' + host + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
                                     ' table cluster_id _raw | sort _time | reverse" ' + '--output_mode=' + \
                   self.output_mode + " > " + self.tmp_file
@@ -82,7 +82,7 @@ class PySplunk(object):
         }
 
         # note that in RedHat-based authentication log, parameter '*.log' is not used
-        files, evaluation_file = get_dataset(dataset, dataset_path[dataset], '*.log', 'PySplunk')
+        files, evaluation_file = get_dataset(dataset, dataset_path[dataset], '', '*.log', 'PySplunk')
 
         # open evaluation file
         f = open(evaluation_file, 'wt')
@@ -90,7 +90,7 @@ class PySplunk(object):
 
         # set header
         header = ('file_name', 'adjusted_rand', 'adjusted_mutual_info', 'normalized_mutual_info',
-                  'homogeneity', 'completeness', 'v-measure', 'silhoutte_index')
+                  'homogeneity', 'completeness', 'v-measure')
         writer.writerow(header)
 
         # main process to cluster log file
@@ -138,7 +138,8 @@ class UploadToSplunk(object):
         """
         log_file = log_path.split('/')[-1]
         log_path = log_path.replace(' ', '\ ')
-        command = 'python upload.py --username=' + self.username + ' --password=' + self.password + \
+        command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/upload.py --username=' + \
+                  self.username + ' --password=' + self.password + \
                   ' --sourcetype=' + self.sourcetype + ' --eventhost=' + self.dataset + \
                   ' --source=' + self.dataset + '-' + log_file + ' ' + log_path
         os.system(command)
@@ -175,5 +176,5 @@ class UploadToSplunk(object):
             self.single_upload(match)
 
 if __name__ == '__main__':
-    upload = UploadToSplunk('admin', '123', 'hnet-hon-2004')
-    upload.bulk_upload()
+    clustering = PySplunk('admin', '123', 'csv')
+    clustering.get_bulk_cluster('hnet-hon-2004')
