@@ -52,7 +52,7 @@ class PySplunk(object):
         command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/search.py ' + \
                   '--host=192.168.1.106 --port=8089 ' + \
                   '--username=' + self.username + ' --password=' + self.password + \
-                  ' "search source=' + self.dataset + source + \
+                  ' "search source=' + self.dataset + '-' + source + \
                   ' host=' + self.dataset + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
                                             ' table cluster_id _raw | sort _time | reverse" ' + '--output_mode=' + \
                   self.output_mode + " > " + self.tmp_file
