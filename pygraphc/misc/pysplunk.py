@@ -102,6 +102,7 @@ class PySplunk(object):
 
         # main process to cluster log file
         for file_identifier, properties in files.iteritems():
+            print file_identifier
             clusters = self.get_splunk_cluster(properties['log_path'])
             original_logs = self.logs
             ar, ami, nmi, h, c, v = get_evaluation_cluster(None, clusters, original_logs, properties)
