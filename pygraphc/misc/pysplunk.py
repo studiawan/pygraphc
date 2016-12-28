@@ -58,10 +58,15 @@ class PySplunk(object):
                   self.output_mode + " > " + self.tmp_file
         os.system(command)
 
-        # get clusters
+        # read clusters in temporary file
         with open(self.tmp_file, 'r') as f:
             self.logs = f.readlines()
 
+        # delete first and last element in logs
+        del self.logs[0]
+        del self.logs[-1]
+
+        # get clusters
         clusters = {}
         for index, log in enumerate(self.logs):
             cluster_id = log.split(',')[0]
