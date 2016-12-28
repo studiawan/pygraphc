@@ -12,7 +12,7 @@ class PySplunk(object):
     .. [SplunkDev2016] Command line examples in the Splunk SDK for Python.
                        http://dev.splunk.com/view/python-sdk/SP-CAAAEFK
     """
-    def __init__(self, username, password, output_mode, tmp_file='/tmp/pysplunk_cluster.csv'):
+    def __init__(self, username, password, output_mode, dataset, tmp_file='/tmp/pysplunk_cluster.csv'):
         """The constructor of class PySplunk.
 
         Parameters
@@ -29,18 +29,17 @@ class PySplunk(object):
         self.username = username
         self.password = password
         self.output_mode = output_mode
+        self.dataset = dataset
         self.tmp_file = tmp_file
         self.logs = []
 
-    def get_splunk_cluster(self, source, host):
+    def get_splunk_cluster(self, source):
         """Get log clusters.
 
         Parameters
         ----------
         source      : str
             Identifier for log source. It is usually filename of log.
-        host        : str
-            Hostname for the source log.
 
         Returns
         -------
@@ -49,11 +48,13 @@ class PySplunk(object):
         """
         # run Python Splunk API command
         source = source.replace(' ', '\ ')
+        source = source.split('/')[-1]
         command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/search.py ' + \
                   '--host=192.168.1.106 --port=8089 ' + \
-                  '--username=' + self.username + ' --password=' + self.password + ' "search source=' + source + \
-                  ' host=' + host + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
-                                    ' table cluster_id _raw | sort _time | reverse" ' + '--output_mode=' + \
+                  '--username=' + self.username + ' --password=' + self.password + \
+                  ' "search source=' + self.dataset + source + \
+                  ' host=' + self.dataset + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
+                                            ' table cluster_id _raw | sort _time | reverse" ' + '--output_mode=' + \
                   self.output_mode + " > " + self.tmp_file
         os.system(command)
 
@@ -70,7 +71,7 @@ class PySplunk(object):
         os.remove(self.tmp_file)
         return clusters
 
-    def get_bulk_cluster(self, dataset):
+    def get_bulk_cluster(self):
         # get dataset files
         master_path = '/home/hudan/Git/labeled-authlog/dataset/'
         dataset_path = {
@@ -83,7 +84,7 @@ class PySplunk(object):
         }
 
         # note that in RedHat-based authentication log, parameter '*.log' is not used
-        files, evaluation_file = get_dataset(dataset, dataset_path[dataset], '', '*.log', 'PySplunk')
+        files, evaluation_file = get_dataset(self.dataset, dataset_path[self.dataset], '', '*.log', 'PySplunk')
 
         # open evaluation file
         f = open(evaluation_file, 'wt')
@@ -96,7 +97,7 @@ class PySplunk(object):
 
         # main process to cluster log file
         for file_identifier, properties in files.iteritems():
-            clusters = self.get_splunk_cluster(properties['log_path'], dataset_path[dataset])
+            clusters = self.get_splunk_cluster(properties['log_path'])
             original_logs = self.logs
             ar, ami, nmi, h, c, v = get_evaluation_cluster(None, clusters, original_logs, properties)
 
@@ -178,5 +179,5 @@ class UploadToSplunk(object):
             self.single_upload(match)
 
 if __name__ == '__main__':
-    clustering = PySplunk('admin', '123', 'csv')
-    clustering.get_bulk_cluster('hnet-hon-2004')
+    clustering = PySplunk('admin', '123', 'csv', 'hnet-hon-2004')
+    clustering.get_bulk_cluster()
