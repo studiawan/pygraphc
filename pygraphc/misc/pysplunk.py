@@ -49,8 +49,9 @@ class PySplunk(object):
         """
         # run Python Splunk API command
         source = source.replace(' ', '\ ')
-        command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/search.py --username=' + \
-                  self.username + ' --password=' + self.password + ' "search source=' + source + \
+        command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/search.py ' + \
+                  '--host=192.168.1.106 --port=8089 ' + \
+                  '--username=' + self.username + ' --password=' + self.password + ' "search source=' + source + \
                   ' host=' + host + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
                                     ' table cluster_id _raw | sort _time | reverse" ' + '--output_mode=' + \
                   self.output_mode + " > " + self.tmp_file
@@ -138,8 +139,9 @@ class UploadToSplunk(object):
         """
         log_file = log_path.split('/')[-1]
         log_path = log_path.replace(' ', '\ ')
-        command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/upload.py --username=' + \
-                  self.username + ' --password=' + self.password + \
+        command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/upload.py' + \
+                  ' --host=192.168.1.106 --port=8089 ' + \
+                  ' --username=' + self.username + ' --password=' + self.password + \
                   ' --sourcetype=' + self.sourcetype + ' --eventhost=' + self.dataset + \
                   ' --source=' + self.dataset + '-' + log_file + ' ' + log_path
         os.system(command)
