@@ -219,7 +219,7 @@ class DeleteFromSplunk(object):
                   '--host=192.168.1.106 --port=8089 ' + \
                   '--username=' + self.username + ' --password=' + self.password + \
                   ' "search source=' + self.dataset + '-' + source + \
-                  ' host=' + self.dataset + ' sourcetype=linux_secure | delete'
+                  ' host=' + self.dataset + ' sourcetype=linux_secure | delete"'
         os.system(command)
 
     def bulk_delete(self):
@@ -246,5 +246,13 @@ class DeleteFromSplunk(object):
 
 
 if __name__ == '__main__':
-    clustering = PySplunk('admin', '123', 'csv', 'hnet-hon-2004')
-    clustering.get_bulk_cluster()
+    mode = 'clustering'
+    if mode == 'clustering':
+        clustering = PySplunk('admin', '123', 'csv', 'hnet-hon-2004')
+        clustering.get_bulk_cluster()
+    elif mode == 'upload':
+        upload = UploadToSplunk('admin', '123', 'hnet-hon-2004')
+        upload.bulk_upload()
+    elif mode == 'delete':
+        delete = DeleteFromSplunk('admin', '123', 'hnet-hon-2004')
+        delete.bulk_delete()
