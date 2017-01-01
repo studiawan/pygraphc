@@ -184,6 +184,67 @@ class UploadToSplunk(object):
         for match in matches:
             self.single_upload(match)
 
+
+class DeleteFromSplunk(object):
+    """Delete log from Splunk to avoid duplicates after re-indexing.
+    """
+    def __init__(self, username, password, dataset):
+        """Constructor for class DeleteFromSplunk.
+
+        Parameters
+        ----------
+        username    : str
+            Username to access Splunk daemon.
+        password    : str
+            Password to access Splunk daemon.
+        dataset     : str
+            Dataset type for event log.
+        """
+        self.username = username
+        self.password = password
+        self.dataset = dataset
+
+    def delete_log(self, source):
+        """Delete a single log file from Splunk.
+
+        Parameters
+        ----------
+        source  : str
+            Identifier for log source. It is usually filename of log.
+        """
+        # run Python Splunk API command
+        source = source.replace(' ', '\ ')
+        source = source.split('/')[-1]
+        command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/search.py ' + \
+                  '--host=192.168.1.106 --port=8089 ' + \
+                  '--username=' + self.username + ' --password=' + self.password + \
+                  ' "search source=' + self.dataset + '-' + source + \
+                  ' host=' + self.dataset + ' sourcetype=linux_secure | delete'
+        os.system(command)
+
+    def bulk_delete(self):
+        """Delete all files in the given dataset.
+        """
+        # get dataset files
+        master_path = '/home/hudan/Git/labeled-authlog/dataset/'
+        dataset_path = {
+            'Hofstede2014': master_path + 'Hofstede2014/dataset1_perday',
+            'SecRepo': master_path + 'SecRepo/auth-perday',
+            'forensic-challenge-2010':
+                master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-perday',
+            'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
+            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday'
+        }
+
+        # note that in RedHat-based authentication log, parameter '*.log' is not used
+        files, evaluation_file = get_dataset(self.dataset, dataset_path[self.dataset], '', '*.log', 'PySplunk')
+
+        # main process to delete log file and avoid duplicate after re-indexing
+        for file_identifier, properties in files.iteritems():
+            print file_identifier
+            self.delete_log(properties['log_path'])
+
+
 if __name__ == '__main__':
     clustering = PySplunk('admin', '123', 'csv', 'hnet-hon-2004')
     clustering.get_bulk_cluster()
