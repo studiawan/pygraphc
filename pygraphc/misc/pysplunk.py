@@ -134,7 +134,7 @@ class UploadToSplunk(object):
         self.username = username
         self.password = password
         self.dataset = dataset
-        self.sourcetype = sourcetype.replace(' ', '\ ')
+        self.sourcetype = sourcetype
 
     def single_upload(self, log_path):
         """Upload a single log file to Splunk.
@@ -145,6 +145,7 @@ class UploadToSplunk(object):
             Path for log file to be uploaded to Splunk.
         """
         log_file = log_path.split('/')[-1]
+        log_file = log_file.replace(' ', '\ ')
         log_path = log_path.replace(' ', '\ ')
         command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/upload.py' + \
                   ' --host=192.168.1.106 --port=8089 ' + \
