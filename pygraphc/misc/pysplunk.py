@@ -134,7 +134,7 @@ class UploadToSplunk(object):
         self.username = username
         self.password = password
         self.dataset = dataset
-        self.sourcetype = sourcetype
+        self.sourcetype = sourcetype.replace(' ', '\ ')
 
     def single_upload(self, log_path):
         """Upload a single log file to Splunk.
@@ -182,6 +182,7 @@ class UploadToSplunk(object):
 
         # upload to Splunk
         for match in matches:
+            print match
             self.single_upload(match)
 
 
@@ -246,13 +247,13 @@ class DeleteFromSplunk(object):
 
 
 if __name__ == '__main__':
-    mode = 'clustering'
+    mode = 'upload'
     if mode == 'clustering':
-        clustering = PySplunk('admin', '123', 'csv', 'hnet-hon-2004')
+        clustering = PySplunk('admin', '123', 'csv', 'Hofstede2014')
         clustering.get_bulk_cluster()
     elif mode == 'upload':
-        upload = UploadToSplunk('admin', '123', 'hnet-hon-2004')
+        upload = UploadToSplunk('admin', '123', 'Hofstede2014')
         upload.bulk_upload()
     elif mode == 'delete':
-        delete = DeleteFromSplunk('admin', '123', 'hnet-hon-2004')
+        delete = DeleteFromSplunk('admin', '123', 'Hofstede2014')
         delete.bulk_delete()
