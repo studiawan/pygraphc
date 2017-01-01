@@ -54,8 +54,8 @@ class PySplunk(object):
                   '--username=' + self.username + ' --password=' + self.password + \
                   ' "search source=' + self.dataset + '-' + source + \
                   ' host=' + self.dataset + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
-                                            ' table cluster_id _raw | sort _time | reverse" ' + '--output_mode=' + \
-                  self.output_mode + " > " + self.tmp_file
+                                            ' table cluster_id _raw | sort 0 field _time | reverse" ' + \
+                  '--output_mode=' + self.output_mode + " > " + self.tmp_file
         os.system(command)
 
         # read clusters in temporary file
@@ -144,9 +144,8 @@ class UploadToSplunk(object):
         log_path    : str
             Path for log file to be uploaded to Splunk.
         """
-        log_file = log_path.split('/')[-1]
-        log_file = log_file.replace(' ', '\ ')
         log_path = log_path.replace(' ', '\ ')
+        log_file = log_path.split('/')[-1]
         command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/upload.py' + \
                   ' --host=192.168.1.106 --port=8089 ' + \
                   ' --username=' + self.username + ' --password=' + self.password + \
@@ -250,11 +249,11 @@ class DeleteFromSplunk(object):
 if __name__ == '__main__':
     mode = 'upload'
     if mode == 'clustering':
-        clustering = PySplunk('admin', '123', 'csv', 'Hofstede2014')
+        clustering = PySplunk('admin', '123', 'csv', 'SecRepo')
         clustering.get_bulk_cluster()
     elif mode == 'upload':
-        upload = UploadToSplunk('admin', '123', 'Hofstede2014')
+        upload = UploadToSplunk('admin', '123', 'SecRepo')
         upload.bulk_upload()
     elif mode == 'delete':
-        delete = DeleteFromSplunk('admin', '123', 'Hofstede2014')
+        delete = DeleteFromSplunk('admin', '123', 'SecRepo')
         delete.bulk_delete()
