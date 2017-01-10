@@ -84,37 +84,44 @@ def run():
     parser.add_option('-t', '--ground-truth-file',
                       action='store',
                       dest='t',
-                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday/Dec 25.log.labeled',
+                      # /home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday/Dec 25.log.labeled
+                      default='',
                       help='A ground truth for analyzed log file.')
     parser.add_option('-f', '--analyzed-file',
                       action='store',
                       dest='f',
-                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday/Dec 25.log',
+                      # /home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_perday/Dec 25.log
+                      default='',
                       help='A log file to be analyzed.')
     parser.add_option('-o', '--output-txt',
                       action='store',
                       dest='o',
-                      default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.percluster',
+                      # /home/hudan/Git/pygraphc/result/misc/Dec 25.log.percluster
+                      default='',
                       help='OutputText of clustering result in text file per cluster.')
     parser.add_option('-a', '--anomaly-file',
                       action='store',
                       dest='a',
-                      default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.anomaly.csv',
+                      # /home/hudan/Git/pygraphc/result/misc/Dec 25.log.anomaly.csv
+                      default='',
                       help='OutputText of anomaly detection in csv file.')
     parser.add_option('-l', '--anomaly-ground-truth',
                       action='store',
                       dest='l',
-                      default='/home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_attack/Dec 25.log.attack',
+                      # /home/hudan/Git/labeled-authlog/dataset/Hofstede2014/dataset1_attack/Dec 25.log.attack
+                      default='',
                       help='Ground truth of anomaly detection file.')
     parser.add_option('-n', '--anomaly-perline-file',
                       action='store',
                       dest='n',
-                      default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.anomaly.perline.txt',
+                      # /home/hudan/Git/pygraphc/result/misc/Dec 25.log.anomaly.perline.txt
+                      default='',
                       help='OutputText of anomaly detection in txt file per log line.')
     parser.add_option('-p', '--prediction-file',
                       action='store',
                       dest='p',
-                      default='/home/hudan/Git/pygraphc/result/misc/Dec 25.log.perline',
+                      # /home/hudan/Git/pygraphc/result/misc/Dec 25.log.perline
+                      default='',
                       help='OutputText of clustering result in txt file per line.')
     parser.add_option('-y', '--year',
                       action='store',
@@ -201,67 +208,73 @@ def run():
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
 
-        # get prediction file
-        ExternalEvaluation.set_cluster_label_id(graph, clusters, logs, prediction_file)
+        # check for evaluation
+        if groundtruth_file and anomaly_file and anomaly_groundtruth:
+            # get prediction file
+            ExternalEvaluation.set_cluster_label_id(graph, clusters, logs, prediction_file)
 
-        # get sentiment analysis
-        sentiment = SentimentAnalysis(graph, clusters)
-        sentiment.get_cluster_message()
-        sentiment_score = sentiment.get_sentiment()
+            # get sentiment analysis
+            sentiment = SentimentAnalysis(graph, clusters)
+            sentiment.get_cluster_message()
+            sentiment_score = sentiment.get_sentiment()
 
-        # get anomaly score and the decision
-        anomaly = AnomalyScore(graph, clusters, year, edges_dict, sentiment_score)
-        anomaly.get_anomaly_score()
-        anomaly.get_anomaly_decision()
+            # get anomaly score and the decision
+            anomaly = AnomalyScore(graph, clusters, year, edges_dict, sentiment_score)
+            anomaly.get_anomaly_score()
+            anomaly.get_anomaly_decision()
 
-        # get anomaly-related value
-        score = anomaly.anomaly_score
-        cluster_property = anomaly.property
-        cluster_abstraction = anomaly.abstraction
-        quadratic_score = anomaly.quadratic_score
-        normalized_score = anomaly.normalization_score
-        anomaly_decision = anomaly.anomaly_decision
+            # get anomaly-related value
+            score = anomaly.anomaly_score
+            cluster_property = anomaly.property
+            cluster_abstraction = anomaly.abstraction
+            quadratic_score = anomaly.quadratic_score
+            normalized_score = anomaly.normalization_score
+            anomaly_decision = anomaly.anomaly_decision
 
     elif options.method in nongraph_method:
         pass
 
-    # get external evaluation of clustering performance
-    adj_rand_score = ExternalEvaluation.get_adjusted_rand(groundtruth_file, prediction_file)
-    adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info(groundtruth_file, prediction_file)
-    norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info(groundtruth_file, prediction_file)
-    homogeneity = ExternalEvaluation.get_homogeneity(groundtruth_file, prediction_file)
-    completeness = ExternalEvaluation.get_completeness(groundtruth_file, prediction_file)
-    vmeasure = ExternalEvaluation.get_vmeasure(groundtruth_file, prediction_file)
+    # check for evaluation
+    if groundtruth_file and anomaly_file and anomaly_groundtruth:
+        # get external evaluation of clustering performance
+        adj_rand_score = ExternalEvaluation.get_adjusted_rand(groundtruth_file, prediction_file)
+        adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info(groundtruth_file, prediction_file)
+        norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info(groundtruth_file, prediction_file)
+        homogeneity = ExternalEvaluation.get_homogeneity(groundtruth_file, prediction_file)
+        completeness = ExternalEvaluation.get_completeness(groundtruth_file, prediction_file)
+        vmeasure = ExternalEvaluation.get_vmeasure(groundtruth_file, prediction_file)
 
-    # get internal evaluation
-    silhoutte_index = InternalEvaluation.get_silhoutte_index(graph, clusters)
+        # get internal evaluation
+        silhoutte_index = InternalEvaluation.get_silhoutte_index(graph, clusters)
 
-    # get external evaluation of anomaly detection performance
-    anomaly_adj_rand_score = ExternalEvaluation.get_adjusted_rand(anomaly_groundtruth, anomaly_perline_file)
-    anomaly_adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info(anomaly_groundtruth,
-                                                                                anomaly_perline_file)
-    anomaly_norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info(anomaly_groundtruth,
-                                                                                   anomaly_perline_file)
-    anomaly_homogeneity = ExternalEvaluation.get_homogeneity(anomaly_groundtruth, anomaly_perline_file)
-    anomaly_completeness = ExternalEvaluation.get_completeness(anomaly_groundtruth, anomaly_perline_file)
-    anomaly_vmeasure = ExternalEvaluation.get_vmeasure(anomaly_groundtruth, anomaly_perline_file)
+        # get external evaluation of anomaly detection performance
+        anomaly_adj_rand_score = ExternalEvaluation.get_adjusted_rand(anomaly_groundtruth, anomaly_perline_file)
+        anomaly_adj_mutual_info_score = ExternalEvaluation.get_adjusted_mutual_info(anomaly_groundtruth,
+                                                                                    anomaly_perline_file)
+        anomaly_norm_mutual_info_score = ExternalEvaluation.get_normalized_mutual_info(anomaly_groundtruth,
+                                                                                       anomaly_perline_file)
+        anomaly_homogeneity = ExternalEvaluation.get_homogeneity(anomaly_groundtruth, anomaly_perline_file)
+        anomaly_completeness = ExternalEvaluation.get_completeness(anomaly_groundtruth, anomaly_perline_file)
+        anomaly_vmeasure = ExternalEvaluation.get_vmeasure(anomaly_groundtruth, anomaly_perline_file)
 
-    # arrange dictionary of evaluation metrics
-    evaluation_metrics = {
-        'adj_rand_score': adj_rand_score, 'adj_mutual_info_score': adj_mutual_info_score,
-        'norm_mutual_info_score': norm_mutual_info_score,
-        'homogeneity': homogeneity, 'completeness': completeness, 'vmeasure': vmeasure,
-        'silhoutte_index': silhoutte_index,
-        'anomaly_adj_rand_score': anomaly_adj_rand_score,
-        'anomaly_adj_mutual_info_score': anomaly_adj_mutual_info_score,
-        'anomaly_norm_mutual_info_score': anomaly_norm_mutual_info_score, 'anomaly_homogeneity': anomaly_homogeneity,
-        'anomaly_completeness': anomaly_completeness, 'anomaly_vmeasure': anomaly_vmeasure
-    }
+        # arrange dictionary of evaluation metrics
+        evaluation_metrics = {
+            'adj_rand_score': adj_rand_score, 'adj_mutual_info_score': adj_mutual_info_score,
+            'norm_mutual_info_score': norm_mutual_info_score,
+            'homogeneity': homogeneity, 'completeness': completeness, 'vmeasure': vmeasure,
+            'silhoutte_index': silhoutte_index,
+            'anomaly_adj_rand_score': anomaly_adj_rand_score,
+            'anomaly_adj_mutual_info_score': anomaly_adj_mutual_info_score,
+            'anomaly_norm_mutual_info_score': anomaly_norm_mutual_info_score,
+            'anomaly_homogeneity': anomaly_homogeneity,
+            'anomaly_completeness': anomaly_completeness, 'anomaly_vmeasure': anomaly_vmeasure
+        }
+
+        OutputText.csv_cluster_property(anomaly_file, cluster_property, cluster_abstraction, score, quadratic_score,
+                                        normalized_score, sentiment_score, anomaly_decision, evaluation_metrics)
 
     # get output per cluster, cluster property, and anomaly score
     OutputText.txt_percluster(percluster_file, clusters, graph, logs)
-    OutputText.csv_cluster_property(anomaly_file, cluster_property, cluster_abstraction, score, quadratic_score,
-                                    normalized_score, sentiment_score, anomaly_decision, evaluation_metrics)
     OutputText.txt_anomaly_perline(anomaly_decision, clusters, graph, anomaly_perline_file, logs)
 
 
