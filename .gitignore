@@ -1,6 +1,7 @@
 *.pyc
 **/.idea/
 **/result/
+**/venv/
 
 /dist/
 /*.egg-info
