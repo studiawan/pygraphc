@@ -166,6 +166,14 @@ class ImprovedMajorClust(MajorClust):
 
         return self.clusters
 
+    def get_improved_majorclust_wo_refine(self):
+        # run majorclust
+        super(ImprovedMajorClust, self).get_majorclust(self.graph)
+        self.clusters = {}
+        super(ImprovedMajorClust, self)._get_cluster()
+
+        return self.clusters
+
     def _re_majorclust(self, node, graph):
         """Re-evaluation of a node after clustered by standard MajorClust.
 
