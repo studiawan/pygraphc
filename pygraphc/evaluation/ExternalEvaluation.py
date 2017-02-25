@@ -135,23 +135,32 @@ class ExternalEvaluation(object):
         OutputText.txt_perline(perline_file, analysis_result, max_cluster_id, cluster_labels, original_logs)
 
     @staticmethod
-    def get_evaluated(evaluated_file):
+    def get_evaluated(evaluated_file, isdict=False):
         """Get evaluated log file.
 
         Parameters
         ----------
         evaluated_file  : str
             The evaluated log file.
+        isdict          : bool
+            Flag for returned evaluation_labels (it is dictionary or not)
 
         Returns
         -------
-        evaluation_labels   : list
+        evaluation_labels   : dict
             Labels for each row in evaluated files.
         """
         with open(evaluated_file, 'r') as ef:
             evaluations = ef.readlines()
 
-        evaluation_labels = [evaluation.split(';')[0] for evaluation in evaluations]
+        labels = [evaluation.split(';')[0] for evaluation in evaluations]
+        if isdict:
+            evaluation_labels = {}
+            for index, label in enumerate(labels):
+                evaluation_labels[index] = label
+        else:
+            evaluation_labels = labels
+
         return evaluation_labels
 
     @staticmethod
@@ -333,3 +342,43 @@ class ExternalEvaluation(object):
         vmeasure_score = metrics.v_measure_score(standard_labels, prediction_labels)
 
         return vmeasure_score
+
+    @staticmethod
+    def get_confusion(standard_file, prediction_file):
+        standard_labels = ExternalEvaluation.get_evaluated(standard_file, True)
+        prediction_labels = ExternalEvaluation.get_evaluated(prediction_file, True)
+        true_positive, true_negative, false_positive, false_negative = 0.0, 0.0, 0.0, 0.0
+
+        # determine true_positive, true_negative, false_positive, false_negative
+        for key, condition in standard_labels.iteritems():
+            if prediction_labels[key] == 'normal' and condition == 'normal':
+                true_positive += 1.0
+            elif prediction_labels[key] == 'normal' and condition == 'attack':
+                false_positive += 1.0
+            elif prediction_labels[key] == 'attack' and condition == 'normal':
+                false_negative += 1.0
+            elif prediction_labels[key] == 'attack' and condition == 'attack':
+                true_negative += 1.0
+
+        # precision, recall, accuray, and F1-measure
+        try:
+            precision = true_positive / (true_positive + false_positive)
+        except ZeroDivisionError:
+            precision = 0
+            print standard_file, 'Precision: division by zero'
+
+        try:
+            recall = true_positive / (true_positive + false_negative)
+        except ZeroDivisionError:
+            recall = 0
+            print standard_file, 'Recall: division by zero'
+
+        try:
+            accuracy = (true_positive + true_negative) / \
+                       (true_positive + false_positive + false_negative + true_negative)
+        except ZeroDivisionError:
+            accuracy = 0
+            print standard_file, 'Accuracy: division by zero'
+
+        true_false = [true_positive, false_positive, false_negative, true_negative]
+        return true_false, precision, recall, accuracy
