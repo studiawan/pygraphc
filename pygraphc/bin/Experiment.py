@@ -122,6 +122,10 @@ def get_evaluation_cluster(evaluated_graph, clusters, logs, properties):
     return ar, ami, nmi, h, c, v
 
 
+def get_confusion(properties):
+    return ExternalEvaluation.get_confusion(properties['labeled_path'], properties['result_perline'])
+
+
 def main(dataset, year, method):
     # list of methods
     graph_method = ['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
@@ -157,13 +161,15 @@ def main(dataset, year, method):
 
     # set header
     header = ('file_name', 'adjusted_rand', 'adjusted_mutual_info', 'normalized_mutual_info',
-              'homogeneity', 'completeness', 'v-measure', 'silhoutte_index')
+              'homogeneity', 'completeness', 'v-measure', 'silhoutte_index',
+              'tp', 'fp', 'fn', 'tn', 'precision', 'recall', 'accuracy')
     writer.writerow(header)
 
     # main process
     for file_identifier, properties in files.iteritems():
         # initialization
         ar, ami, nmi, h, c, v, silhoutte = 0., 0., 0., 0., 0., 0., 0.
+        true_false, precision, recall, accuracy = [], 0., 0., 0.
         edges_weight, nodes_id = [], []
 
         if method in graph_method:
@@ -189,6 +195,7 @@ def main(dataset, year, method):
             # do evaluation performance and clear graph
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, mc_clusters, original_logs,
                                                                                   properties, year, edges_dict)
+            true_false, precision, recall, accuracy = get_confusion(properties)
             graph.clear()
 
         elif method == 'improved_majorclust':
@@ -199,6 +206,18 @@ def main(dataset, year, method):
             # do evaluation performance and clear graph
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, imc_clusters, original_logs,
                                                                                   properties, year, edges_dict)
+            true_false, precision, recall, accuracy = get_confusion(properties)
+            graph.clear()
+
+        elif method == 'improved_majorclust_wo_refine':
+            # run ImprovedMajorClust without refine phase
+            imcwr = ImprovedMajorClust(graph)
+            imcwr_clusters = imcwr.get_improved_majorclust_wo_refine()
+
+            # do evaluation performance and clear graph
+            ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, imcwr_clusters, original_logs,
+                                                                                  properties, year, edges_dict)
+            true_false, precision, recall, accuracy = get_confusion(properties)
             graph.clear()
 
         elif method == 'graph_entropy':
@@ -251,7 +270,8 @@ def main(dataset, year, method):
             ar, ami, nmi, h, c, v = get_evaluation_cluster(None, lke_clusters, original_logs, properties)
 
         # write evaluation result to file
-        row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte)
+        row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte,
+               true_false[0], true_false[1], true_false[2], true_false[3], precision, recall, accuracy)
         writer.writerow(row)
 
     f.close()
