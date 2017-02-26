@@ -360,7 +360,7 @@ class ExternalEvaluation(object):
             elif prediction_labels[key] == 'attack' and condition == 'attack':
                 true_negative += 1.0
 
-        # precision, recall, accuray, and F1-measure
+        # precision, recall, and accuracy
         try:
             precision = true_positive / (true_positive + false_positive)
         except ZeroDivisionError:
