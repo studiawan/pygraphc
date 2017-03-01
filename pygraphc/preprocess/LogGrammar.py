@@ -91,11 +91,15 @@ class LogGrammar(object):
 
     def parse_kipplog(self, log_line):
         parsed_kippolog = self.kippolog_grammar.parseString(log_line)
-        return parsed_kippolog
+        parsed = dict()
+        parsed['timestamp'] = parsed_kippolog[0] + ' ' + parsed_kippolog[1]
+        if len(parsed_kippolog) < 5:
+            parsed['service'] = parsed_kippolog[2]
+            parsed['message'] = parsed_kippolog[3]
+        else:
+            parsed['service'] = parsed_kippolog[2]
+            parsed['port'] = parsed_kippolog[3]
+            parsed['ip_address'] = parsed_kippolog[4]
+            parsed['message'] = parsed_kippolog[5]
 
-lg = LogGrammar()
-# msg = '2017-02-23 14:58:33+0000 [-] unauthorized login:'
-msg = '2017-02-23 14:58:34+0000 [SSHService ssh-userauth on HoneyPotTransport,13943,113.195.145.21] ' \
-      'root trying auth password'
-result = lg.parse_kipplog(msg)
-print result
+        return parsed
