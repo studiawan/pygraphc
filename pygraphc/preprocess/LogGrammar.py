@@ -17,6 +17,7 @@ class LogGrammar(object):
         """
         self.log_type = log_type
         self.authlog_grammar = self.__get_authlog_grammar()
+        self.kippolog_grammar = self.__get_kippolog_grammar()
 
     @staticmethod
     def __get_authlog_grammar():
@@ -64,5 +65,41 @@ class LogGrammar(object):
         else:
             parsed['pid'] = parsed_authlog[5]
             parsed['message'] = parsed_authlog[6]
+
+        return parsed
+
+    @staticmethod
+    def __get_kippolog_grammar():
+        ints = Word(nums)
+
+        # date and time
+        date = Combine(ints + '-' + ints + '-' + ints)
+        time = Combine(ints + ':' + ints + ':' + ints + '+0000')
+        datetime = date + time
+
+        # service = activity, port, and ip address
+        ip_address = Word(nums + '.')
+        activity = Word(alphas + nums + '-' + ' ') + Optional(Suppress(',') + ints + Suppress(',') + ip_address)
+        service = Suppress('[') + activity + Suppress(']')
+
+        # message
+        message = Regex(".*")
+
+        # kippo honeypot log grammar
+        kippolog_grammar = datetime + service + message
+        return kippolog_grammar
+
+    def parse_kipplog(self, log_line):
+        parsed_kippolog = self.kippolog_grammar.parseString(log_line)
+        parsed = dict()
+        parsed['timestamp'] = parsed_kippolog[0] + ' ' + parsed_kippolog[1]
+        if len(parsed_kippolog) < 5:
+            parsed['service'] = parsed_kippolog[2]
+            parsed['message'] = parsed_kippolog[3]
+        else:
+            parsed['service'] = parsed_kippolog[2]
+            parsed['port'] = parsed_kippolog[3]
+            parsed['ip_address'] = parsed_kippolog[4]
+            parsed['message'] = parsed_kippolog[5]
 
         return parsed
