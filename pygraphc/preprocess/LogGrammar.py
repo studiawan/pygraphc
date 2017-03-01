@@ -22,6 +22,11 @@ class LogGrammar(object):
     @staticmethod
     def __get_authlog_grammar():
         """The definition of auth.log grammar.
+
+        Returns
+        -------
+        authlog_grammar :
+            Grammar for auth.log
         """
         ints = Word(nums)
 
@@ -42,6 +47,11 @@ class LogGrammar(object):
 
     def parse_authlog(self, log_line):
         """Parse auth.log based on defined grammar.
+
+        Parameters
+        ----------
+        log_line    : str
+            A log line to be parsed.
 
         Returns
         -------
@@ -70,6 +80,13 @@ class LogGrammar(object):
 
     @staticmethod
     def __get_kippolog_grammar():
+        """The definition of Kippo honeypot log grammar.
+
+        Returns
+        -------
+        kippolog_grammar    :
+            Grammar for Kippo log.
+        """
         ints = Word(nums)
 
         # date and time
@@ -90,6 +107,19 @@ class LogGrammar(object):
         return kippolog_grammar
 
     def parse_kipplog(self, log_line):
+        """Parse Kippo log based on defined grammar.
+
+        Parameters
+        ----------
+        log_line    : str
+            A log line to be parsed.
+
+        Returns
+        -------
+        parsed      : dict[str, str]
+            A parsed Kippo honeypot log (kippo.log) containing these elements:
+            timestamp, service, message, port (optional), IP address (optional).
+        """
         parsed_kippolog = self.kippolog_grammar.parseString(log_line)
         parsed = dict()
         parsed['timestamp'] = parsed_kippolog[0] + ' ' + parsed_kippolog[1]
