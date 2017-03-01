@@ -17,6 +17,7 @@ class LogGrammar(object):
         """
         self.log_type = log_type
         self.authlog_grammar = self.__get_authlog_grammar()
+        self.kippolog_grammar = self.__get_kippolog_grammar()
 
     @staticmethod
     def __get_authlog_grammar():
@@ -76,13 +77,9 @@ class LogGrammar(object):
         time = Combine(ints + ':' + ints + ':' + ints + '+0000')
         datetime = date + time
 
-        # 2017-02-23 14:58:33+0000 [-] unauthorized login:
-        # 2017-02-23 14:58:34+0000 [SSHService ssh-userauth on HoneyPotTransport,13943,113.195.145.21]
-        # root trying auth password
-
         # service = activity, port, and ip address
-        activity = Word(alphas + nums + '_' + '-' + '.') + Optional(',') + Optional(ints) + \
-            Optional(',') + Optional(nums + '.')
+        ip_address = Word(nums + '.')
+        activity = Word(alphas + nums + '-' + ' ') + Optional(Suppress(',') + ints + Suppress(',') + ip_address)
         service = Suppress('[') + activity + Suppress(']')
 
         # message
@@ -91,3 +88,14 @@ class LogGrammar(object):
         # kippo honeypot log grammar
         kippolog_grammar = datetime + service + message
         return kippolog_grammar
+
+    def parse_kipplog(self, log_line):
+        parsed_kippolog = self.kippolog_grammar.parseString(log_line)
+        return parsed_kippolog
+
+lg = LogGrammar()
+# msg = '2017-02-23 14:58:33+0000 [-] unauthorized login:'
+msg = '2017-02-23 14:58:34+0000 [SSHService ssh-userauth on HoneyPotTransport,13943,113.195.145.21] ' \
+      'root trying auth password'
+result = lg.parse_kipplog(msg)
+print result
