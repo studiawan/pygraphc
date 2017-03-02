@@ -87,9 +87,15 @@ class AnomalyScore(object):
             except ZeroDivisionError:
                 self.normalization_score[cluster_id] = 0.
 
-    def get_anomaly_decision(self):
+    def get_anomaly_decision(self, sentiment=True):
         """Get decision whether an event log is anomaly or normal.
+
+        Parameters
+        ----------
+        sentiment   : bool
+            True if using sentiment analysis and false means the method only considering
+            normalization score (anomaly score).
         """
         for cluster_id, anomaly_score in self.normalization_score.iteritems():
-            final_score = (anomaly_score + self.sentiment_score[cluster_id]) / 2
+            final_score = (anomaly_score + self.sentiment_score[cluster_id]) / 2 if sentiment else anomaly_score
             self.anomaly_decision[cluster_id] = (final_score, 'attack') if final_score < 0 else (final_score, 'normal')
