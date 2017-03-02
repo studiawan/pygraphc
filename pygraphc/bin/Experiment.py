@@ -62,7 +62,8 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
     # get anomaly score
     anomaly = AnomalyScore(evaluated_graph, clusters, year, edges_dict, sentiment_score)
     anomaly.get_anomaly_score()
-    anomaly.get_anomaly_decision()
+    # please check this flag: False means without sentiment analysis included
+    anomaly.get_anomaly_decision(False)
 
     # get anomaly-related value
     score = anomaly.anomaly_score
@@ -96,12 +97,14 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
     OutputText.txt_anomaly_perline(anomaly_decision, clusters, evaluated_graph, properties['anomaly_perline'], logs)
 
     # get evaluation of anomaly detection
-    anomaly_ar = ExternalEvaluation.get_adjusted_rand('', properties['anomaly_perline'])
-    anomaly_ami = ExternalEvaluation.get_adjusted_mutual_info('', properties['anomaly_perline'])
-    anomaly_nmi = ExternalEvaluation.get_normalized_mutual_info('', properties['anomaly_perline'])
-    anomaly_h = ExternalEvaluation.get_homogeneity('', properties['anomaly_perline'])
-    anomaly_c = ExternalEvaluation.get_completeness('', properties['anomaly_perline'])
-    anomaly_v = ExternalEvaluation.get_vmeasure('', properties['anomaly_perline'])
+    anomaly_ar = ExternalEvaluation.get_adjusted_rand(properties['anomaly_groundtruth'], properties['anomaly_perline'])
+    anomaly_ami = ExternalEvaluation.get_adjusted_mutual_info(properties['anomaly_groundtruth'],
+                                                              properties['anomaly_perline'])
+    anomaly_nmi = ExternalEvaluation.get_normalized_mutual_info(properties['anomaly_groundtruth'],
+                                                                properties['anomaly_perline'])
+    anomaly_h = ExternalEvaluation.get_homogeneity(properties['anomaly_groundtruth'], properties['anomaly_perline'])
+    anomaly_c = ExternalEvaluation.get_completeness(properties['anomaly_groundtruth'], properties['anomaly_perline'])
+    anomaly_v = ExternalEvaluation.get_vmeasure(properties['anomaly_groundtruth'], properties['anomaly_perline'])
     anomaly_evaluation = (anomaly_ar, anomaly_ami, anomaly_nmi, anomaly_h, anomaly_c, anomaly_v)
 
     return ar, ami, nmi, h, c, v, silhoutte_index, anomaly_evaluation
@@ -123,7 +126,7 @@ def get_evaluation_cluster(evaluated_graph, clusters, logs, properties):
 
 
 def get_confusion(properties):
-    return ExternalEvaluation.get_confusion(properties['labeled_path'], properties['result_perline'])
+    return ExternalEvaluation.get_confusion(properties['anomaly_groundtruth'], properties['anomaly_perline'])
 
 
 def main(dataset, year, method):
@@ -279,10 +282,10 @@ def main(dataset, year, method):
 if __name__ == '__main__':
     start = time()
     # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006
-    data = 'hnet-hon-2006'
+    data = 'SecRepo'
 
     # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM, LKE
     clustering_method = 'improved_majorclust'
-    main(data, '2006', clustering_method)
+    main(data, '2015', clustering_method)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
