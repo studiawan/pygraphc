@@ -150,7 +150,7 @@ class PreprocessLog(object):
         """
         # remove number, stopwords
         doc = sub('[^a-zA-Z]', ' ', doc)
-        additional_stopwords = ['preauth', 'from', 'xxxxx', 'for', 'port', 'sshd', 'ssh']
+        additional_stopwords = ['preauth', 'from', 'xxxxx', 'for', 'port', 'sshd', 'ssh', 'root']
         for a in additional_stopwords:
             doc = doc.replace(a, '')
         doc.replace('_', ' ')
