@@ -41,7 +41,7 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
                         'result_perline': result_path + index + '.perline',
                         'anomaly_report': result_path + index + '.anomaly.csv',
                         'anomaly_perline': result_path + index + '.anomaly.perline.txt',
-                        'anomaly_groundtruth': anomaly_path + index + '.attack',
+                        'anomaly_groundtruth': anomaly_path + match.split('/')[-1] + '.attack',
                         'result_path': result_path}
 
     # file to save evaluation performance per method
