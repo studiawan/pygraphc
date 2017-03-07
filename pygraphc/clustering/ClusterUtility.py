@@ -81,7 +81,7 @@ class ClusterUtility(object):
                 graph.node[node]['cluster'] = cluster_id
 
     @staticmethod
-    def get_cluster_property(graph, clusters, year, edges_dict):
+    def get_cluster_property(graph, clusters, year, edges_dict, logtype):
         """Get cluster property.
 
         Parameters
@@ -94,6 +94,8 @@ class ClusterUtility(object):
             Year of the log file. We need this parameter since log file does not provide it.
         edges_dict      : dict
             Dictionary of edges. Keys: (node1, node2), values: index.
+        logtype         : str
+            Type of event log, e.g., auth or kippo
 
         Returns
         -------
@@ -122,11 +124,20 @@ class ClusterUtility(object):
 
             # get inter-arrival rate
             sorted_datetimes = sorted(datetimes)
-            start_temp, end_temp = sorted_datetimes[0].split(), sorted_datetimes[-1].split()  # note that it is -1 not 1
-            start = datetime.strptime(' '.join(start_temp[:2]) + ' ' + year + ' ' + ' '.join(start_temp[2:]),
-                                      '%b %d %Y %H:%M:%S')
-            end = datetime.strptime(' '.join(end_temp[:2]) + ' ' + year + ' ' + ' '.join(end_temp[2:]),
-                                    '%b %d %Y %H:%M:%S')
+            start, end = None, None
+            if logtype == 'auth':
+                start_temp = sorted_datetimes[0].split()
+                end_temp = sorted_datetimes[-1].split()  # note that it is -1 not 1
+                start = datetime.strptime(' '.join(start_temp[:2]) + ' ' + year + ' ' + ' '.join(start_temp[2:]),
+                                          '%b %d %Y %H:%M:%S')
+                end = datetime.strptime(' '.join(end_temp[:2]) + ' ' + year + ' ' + ' '.join(end_temp[2:]),
+                                        '%b %d %Y %H:%M:%S')
+            elif logtype == 'kippo':
+                start_temp = sorted_datetimes[0]
+                end_temp = sorted_datetimes[-1]
+                start = datetime.strptime(start_temp, '%Y-%m-%d %H:%M:%S')
+                end = datetime.strptime(end_temp, '%Y-%m-%d %H:%M:%S')
+
             interarrival_times = end - start
             interarrival = interarrival_times.seconds if interarrival_times.seconds != 0 else 1
             properties['interarrival_time'] = interarrival
