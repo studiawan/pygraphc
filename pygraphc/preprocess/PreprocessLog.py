@@ -2,25 +2,88 @@ from nltk import corpus
 from collections import Counter
 from math import log, pow, sqrt
 from re import sub
+from pygraphc.preprocess.LogGrammar import LogGrammar
 
 
 class PreprocessLog(object):
     """A class to preprocess event log before generating the graph model.
     """
-    def __init__(self, logfile=None):
+    def __init__(self, logtype, logfile=None):
         """Constructor of class PreprocessLog.
 
         Parameters
         ----------
+        logtype : str
+            Type of event log.
         logfile : str
             Name of a log file
         """
+        self.logtype = logtype
         self.logfile = logfile
         self.logs = []
         self.loglength = 0
         self.events_list = []
         self.events_unique = []
         self.word_count = {}
+
+    def preprocess(self):
+        self.__read_log()
+        grammar = LogGrammar()
+
+        parsed_log = []
+        logs_lower = []
+        for line in self.logs:
+            if self.logtype == 'auth':
+                parsed = grammar.parse_authlog(line)
+            elif self.logtype == 'kippo':
+                parsed = grammar.parse_kipplog(line)
+            parsed['message'] = parsed['message'].lower()
+            logs_lower.append(parsed['message'])
+            parsed_log.append(parsed)
+
+        # preprocess logs, add to ordinary list and unique list
+        events_list, events_unique = [], []
+        index, index_log = 0, 0
+        for l in parsed_log:
+            events_list.append(l['message'])
+            preprocessed_event, tfidf = self.get_tfidf(l['message'], self.loglength, logs_lower)
+            check_events_unique = [e[1]['preprocessed_event'] for e in events_unique]
+
+            # if not exist, add new element
+            if preprocessed_event not in check_events_unique:
+                # if event not in check_events_unique:
+                print index, preprocessed_event
+                length = self.get_doclength(tfidf)
+                events_unique.append([index, {'event': l['message'], 'tf-idf': tfidf, 'length': length, 'status': '',
+                                              'cluster': index, 'frequency': 1, 'member': [index_log],
+                                              'preprocessed_event': preprocessed_event}])
+                index += 1
+
+            # if exist, increment the frequency
+            else:
+                for e in events_unique:
+                    if preprocessed_event == e[1]['preprocessed_event']:
+                        # if event == e[1]['event']:
+                        member = e[1]['member']
+                        member.append(index_log)
+                        e[1]['member'] = member
+                        e[1]['frequency'] += 1
+
+            index_log += 1
+
+        # get inter-arrival time of unique event
+        timestamps = {}
+        for e in events_unique:
+            timestamps[e[1]['event']] = [' '.join(l.split()[:3]) for l in self.logs
+                                         if e[1]['event'] in ' '.join(l.lower().split())]
+
+        for e in events_unique:
+            for k, v in timestamps.iteritems():
+                if e[1]['event'] == k:
+                    e[1]['start'], e[1]['end'] = v[0], v[-1]
+
+        self.events_list = events_list
+        self.events_unique = events_unique
 
     def do_preprocess(self):
         """Main method to execute preprocess log.
