@@ -38,6 +38,7 @@ class PreprocessLog(object):
             elif self.logtype == 'kippo':
                 parsed = grammar.parse_kipplog(line)
             parsed['message'] = parsed['message'].lower()
+            parsed['timestamp'] = parsed['timestamp'][:-5]
             logs_lower.append(parsed['message'])
             parsed_log.append(parsed)
 
@@ -74,8 +75,11 @@ class PreprocessLog(object):
         # get inter-arrival time of unique event
         timestamps = {}
         for e in events_unique:
-            timestamps[e[1]['event']] = [' '.join(l.split()[:3]) for l in self.logs
-                                         if e[1]['event'] in ' '.join(l.lower().split())]
+            tmp_timestamp = []
+            for pars in parsed_log:
+                if e[1]['event'] in pars['message']:
+                    tmp_timestamp.append(pars['timestamp'])
+            timestamps[e[1]['event']] = tmp_timestamp
 
         for e in events_unique:
             for k, v in timestamps.iteritems():
