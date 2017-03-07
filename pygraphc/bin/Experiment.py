@@ -20,12 +20,14 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
     # get all log files under dataset directory
     matches = []
     # Debian-based: /var/log/auth.log
-    if dataset == 'Hofstede2014' or dataset == 'SecRepo' or dataset == 'forensic-challenge-2010':
+    auth_dataset = ['Hofstede2014', 'SecRepo', 'forensic-challenge-2010', 'Kippo']
+    secure_dataset = ['hnet-hon-2004', 'hnet-hon-2006']
+    if dataset in auth_dataset:
         for root, dirnames, filenames in os.walk(dataset_path):
             for filename in fnmatch.filter(filenames, file_extension):
                 matches.append(os.path.join(root, filename))
     # RedHat-based: /var/log/secure
-    elif dataset == 'hnet-hon-2004' or dataset == 'hnet-hon-2006':
+    elif dataset in secure_dataset:
         file_lists = os.listdir(dataset_path)
         matches = [dataset_path + '/' + filename for filename in file_lists if not filename.endswith('.labeled')]
 
@@ -111,6 +113,7 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
 
 
 def get_evaluation_cluster(evaluated_graph, clusters, logs, properties):
+    # this method is for IPLoM, LKE, and PySplunk
     # get prediction file
     ExternalEvaluation.set_cluster_label_id(evaluated_graph, clusters, logs, properties['result_perline'])
 
@@ -129,7 +132,7 @@ def get_confusion(properties):
     return ExternalEvaluation.get_confusion(properties['anomaly_groundtruth'], properties['anomaly_perline'])
 
 
-def main(dataset, year, method):
+def main(dataset, year, method, log_type):
     # list of methods
     graph_method = ['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
                     'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust',
@@ -143,7 +146,8 @@ def main(dataset, year, method):
         'SecRepo': master_path + 'SecRepo/auth-perday',
         'forensic-challenge-2010': master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-perday',
         'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
-        'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday'
+        'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday',
+        'Kippo': master_path + 'Kippo/per_day'
     }
 
     # anomaly dataset
@@ -152,7 +156,8 @@ def main(dataset, year, method):
         'SecRepo': master_path + 'SecRepo/auth-attack/',
         'forensic-challenge-2010': master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-attack/',
         'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-attack/',
-        'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-attack/'
+        'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-attack/',
+        'Kippo': master_path + 'Kippo/attack/'
     }
 
     # note that in RedHat-based authentication log, parameter '*.log' is not used
@@ -177,8 +182,9 @@ def main(dataset, year, method):
 
         if method in graph_method:
             # preprocess log file
-            preprocess = PreprocessLog(properties['log_path'])
-            preprocess.do_preprocess()
+            preprocess = PreprocessLog(log_type, properties['log_path'])
+            # preprocess.do_preprocess()
+            preprocess.preprocess()
             events_unique = preprocess.events_unique
             original_logs = preprocess.logs
 
@@ -281,11 +287,13 @@ def main(dataset, year, method):
 
 if __name__ == '__main__':
     start = time()
-    # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006
-    data = 'SecRepo'
+    # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006, Kippo
+    data = 'Kippo'
+    # available log type: auth, kippo
+    logtype = 'kippo'
 
     # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM, LKE
     clustering_method = 'improved_majorclust'
-    main(data, '2015', clustering_method)
+    main(data, '2017', clustering_method, logtype)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
