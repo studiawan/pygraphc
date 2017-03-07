@@ -17,7 +17,7 @@ class ExternalEvaluation(object):
     """
 
     @staticmethod
-    def set_cluster_label_id(graph, clusters, original_logs, perline_file):
+    def set_cluster_label_id(graph, clusters, original_logs, perline_file, logtype):
         """Get all logs per cluster, get most dominant cluster label, and write clustering result to file [Manning2008]_.
 
         Parameters
@@ -30,6 +30,8 @@ class ExternalEvaluation(object):
             List of event logs.
         perline_file    : str
             Path to save the analysis result.
+        logtype         : str
+            Type of event log.
 
         References
         ----------
@@ -39,25 +41,42 @@ class ExternalEvaluation(object):
         """
         new_cluster_member_label = {}   # store individiual cluster id for each cluster member
         dominant_cluster_labels = {}    # store dominant cluster label from all clusters
-        cluster_labels = ['accepted password', 'accepted publickey', 'authentication failure', 'check pass',
-                          'connection closed', 'connection reset by peer', 'did not receive identification string',
-                          'failed password', 'ignoring max retries', 'invalid user', 'pam adding faulty module',
-                          'pam unable to dlopen', 'received disconnect', 'received signal',
-                          'reverse mapping checking getaddrinfo', 'server listening', 'session closed',
-                          'session opened', 'this does not map back to the address', 'unknown option',
-                          'error connect', 'open failed', 'root login refused', 'bad protocol version identification',
-                          'subsystem request', 'protocol major versions differ', 'failed none', 'expired password',
-                          'unable open env file', 'dispatch protocol error', 'syslogin perform logout',
-                          'corrupted mac', 'write ident string', 'successful su', 'root:nobody', 'change user',
-                          'changed password', 'new group', 'new user', 'changed user', 'password changed', 'root:',
-                          'error: bind to port', 'received sighup', 'user not in sudoers', 'exiting on signal',
-                          ':root', 'new password not acceptable', 'user1 : tty=', 'root : tty=pts',
-                          'user3 : tty=', 'root : tty=unknown', 'unable to resolve host', 'failed su',
-                          'delete user', 'removed group', 'failed login',
-                          'lastlog_openseek', 'lastlog_perform_login', 'pam_succeed_if', 'illegal user',
-                          'start: ', 'scanned from', 'last message repeated',
-                          'fatal: mm_request_send:', 'fatal: timeout before authentication',
-                          'fail: ', 'pam_timestamp: updated timestamp', 'root privileges on behalf']
+        auth_labels = ['accepted password', 'accepted publickey', 'authentication failure', 'check pass',
+                       'connection closed', 'connection reset by peer', 'did not receive identification string',
+                       'failed password', 'ignoring max retries', 'invalid user', 'pam adding faulty module',
+                       'pam unable to dlopen', 'received disconnect', 'received signal',
+                       'reverse mapping checking getaddrinfo', 'server listening', 'session closed',
+                       'session opened', 'this does not map back to the address', 'unknown option',
+                       'error connect', 'open failed', 'root login refused', 'bad protocol version identification',
+                       'subsystem request', 'protocol major versions differ', 'failed none', 'expired password',
+                       'unable open env file', 'dispatch protocol error', 'syslogin perform logout',
+                       'corrupted mac', 'write ident string', 'successful su', 'root:nobody', 'change user',
+                       'changed password', 'new group', 'new user', 'changed user', 'password changed', 'root:',
+                       'error: bind to port', 'received sighup', 'user not in sudoers', 'exiting on signal',
+                       ':root', 'new password not acceptable', 'user1 : tty=', 'root : tty=pts',
+                       'user3 : tty=', 'root : tty=unknown', 'unable to resolve host', 'failed su',
+                       'delete user', 'removed group', 'failed login',
+                       'lastlog_openseek', 'lastlog_perform_login', 'pam_succeed_if', 'illegal user',
+                       'start: ', 'scanned from', 'last message repeated',
+                       'fatal: mm_request_send:', 'fatal: timeout before authentication',
+                       'fail: ', 'pam_timestamp: updated timestamp', 'root privileges on behalf']
+        kippo_labels = ['starting on', 'log opened', 'starting factory', 'reactor class', 'starting up',
+                        'new connection', 'disconnecting with error', 'connection lost', 'remote ssh version',
+                        'incoming', 'key alg', 'outgoing', 'new keys', 'starting service', 'trying auth password',
+                        'login attempt', 'failed auth password', 'unauthorized login', 'root authenticated',
+                        'remote error', 'request_env', 'trying auth none', 'cmd', 'command found', 'resolved into',
+                        'trying auth keyboard-interactive', 'failed auth keyboard-interactive', 'channel open',
+                        'got channel session request', 'got global', 'opening tty log', 'terminal size',
+                        'getting shell', 'pty request', 'path', 'chmod', 'curl', 'exec command', 'executing command',
+                        'wget', 'command not found', 'remote close', 'sending close', './i3306m',
+                        'got channel direct-tcpip request', './s443ls', './a21jj', './ys808e', './isu80', 'saving url',
+                        'stopping factory', 'updating realfile', './ys53a']
+
+        cluster_labels = []
+        if logtype == 'auth':
+            cluster_labels = auth_labels
+        elif logtype == 'kippo':
+            cluster_labels = kippo_labels
         max_cluster_id = len(cluster_labels) - 1
 
         for cluster_id, cluster in clusters.iteritems():
