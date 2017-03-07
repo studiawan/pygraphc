@@ -52,9 +52,9 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
     return files, evaluation_file
 
 
-def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict):
+def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict, log_type):
     # get prediction file
-    ExternalEvaluation.set_cluster_label_id(evaluated_graph, clusters, logs, properties['result_perline'])
+    ExternalEvaluation.set_cluster_label_id(evaluated_graph, clusters, logs, properties['result_perline'], log_type)
 
     # get sentiment analysis
     sentiment = SentimentAnalysis(evaluated_graph, clusters)
@@ -62,7 +62,7 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
     sentiment_score = sentiment.get_sentiment()
 
     # get anomaly score
-    anomaly = AnomalyScore(evaluated_graph, clusters, year, edges_dict, sentiment_score)
+    anomaly = AnomalyScore(evaluated_graph, clusters, year, edges_dict, sentiment_score, log_type)
     anomaly.get_anomaly_score()
     # please check this flag: False means without sentiment analysis included
     anomaly.get_anomaly_decision(False)
@@ -112,10 +112,10 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
     return ar, ami, nmi, h, c, v, silhoutte_index, anomaly_evaluation
 
 
-def get_evaluation_cluster(evaluated_graph, clusters, logs, properties):
+def get_evaluation_cluster(evaluated_graph, clusters, logs, properties, log_type):
     # this method is for IPLoM, LKE, and PySplunk
     # get prediction file
-    ExternalEvaluation.set_cluster_label_id(evaluated_graph, clusters, logs, properties['result_perline'])
+    ExternalEvaluation.set_cluster_label_id(evaluated_graph, clusters, logs, properties['result_perline'], log_type)
 
     # get evaluation of clustering performance
     ar = ExternalEvaluation.get_adjusted_rand(properties['labeled_path'], properties['result_perline'])
@@ -203,7 +203,8 @@ def main(dataset, year, method, log_type):
 
             # do evaluation performance and clear graph
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, mc_clusters, original_logs,
-                                                                                  properties, year, edges_dict)
+                                                                                  properties, year, edges_dict,
+                                                                                  log_type)
             true_false, precision, recall, accuracy = get_confusion(properties)
             graph.clear()
 
@@ -214,7 +215,8 @@ def main(dataset, year, method, log_type):
 
             # do evaluation performance and clear graph
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, imc_clusters, original_logs,
-                                                                                  properties, year, edges_dict)
+                                                                                  properties, year, edges_dict,
+                                                                                  log_type)
             true_false, precision, recall, accuracy = get_confusion(properties)
             graph.clear()
 
@@ -225,7 +227,8 @@ def main(dataset, year, method, log_type):
 
             # do evaluation performance and clear graph
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, imcwr_clusters, original_logs,
-                                                                                  properties, year, edges_dict)
+                                                                                  properties, year, edges_dict,
+                                                                                  log_type)
             true_false, precision, recall, accuracy = get_confusion(properties)
             graph.clear()
 
@@ -236,7 +239,8 @@ def main(dataset, year, method, log_type):
 
             # do evaluation performance and clear graph
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, ge_clusters, original_logs,
-                                                                                  properties, year, edges_dict)
+                                                                                  properties, year, edges_dict,
+                                                                                  log_type)
             graph.clear()
 
         elif method == 'max_clique':
@@ -246,7 +250,8 @@ def main(dataset, year, method, log_type):
 
             # do evaluation performance and clear graph
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, maxc_clusters, original_logs,
-                                                                                  properties, year, edges_dict)
+                                                                                  properties, year, edges_dict,
+                                                                                  log_type)
             graph.clear()
 
         elif method == 'IPLoM':
@@ -260,7 +265,7 @@ def main(dataset, year, method, log_type):
             original_logs = myparser.logs
 
             # do evaluation performance
-            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, iplom_clusters, original_logs, properties)
+            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, iplom_clusters, original_logs, properties, log_type)
 
         elif method == 'LKE':
             print properties['log_path']
@@ -276,7 +281,7 @@ def main(dataset, year, method, log_type):
             original_logs = myparser.logs
 
             # do evaluation performance
-            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, lke_clusters, original_logs, properties)
+            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, lke_clusters, original_logs, properties, log_type)
 
         # write evaluation result to file
         row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte,
