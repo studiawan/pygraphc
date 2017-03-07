@@ -250,7 +250,7 @@ class ImprovedMajorClust(MajorClust):
             all_events.append(event_lcs)
 
         # set tf-idf and document length for refined_nodes
-        preprocess = PreprocessLog()
+        preprocess = PreprocessLog('auth')
         for uc in unique_cluster:
             for node in refined_nodes:
                 if node[0] == uc:
