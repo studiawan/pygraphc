@@ -96,7 +96,7 @@ class LogGrammar(object):
 
         # service = activity, port, and ip address
         ip_address = Word(nums + '.')
-        activity = Word(alphas + nums + '-' + ' ') + Optional(Suppress(',') + ints + Suppress(',') + ip_address)
+        activity = Word(alphas + nums + '-' + '.' + ' ' + '(' + ')') + Optional(Suppress(',') + ints + Suppress(',') + ip_address)
         service = Suppress('[') + activity + Suppress(']')
 
         # message
