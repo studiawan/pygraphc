@@ -5,7 +5,7 @@ from pygraphc.clustering.ClusterUtility import ClusterUtility
 class AnomalyScore(object):
     """A class to calculate anomaly score in a cluster.
     """
-    def __init__(self, graph, clusters, year, edges_dict, sentiment_score):
+    def __init__(self, graph, clusters, year, edges_dict, sentiment_score, logtype):
         """The constructor of class AnomalyScore.
 
         Parameters
@@ -26,6 +26,7 @@ class AnomalyScore(object):
         self.year = year
         self.edges_dict = edges_dict
         self.sentiment_score = sentiment_score
+        self.logtype = logtype
 
         self.anomaly_score = {}
         self.quadratic_score = {}
@@ -34,7 +35,8 @@ class AnomalyScore(object):
 
         # get cluster abstraction and its properties
         self.abstraction = ClusterAbstraction.dp_lcs(self.graph, self.clusters)
-        self.property = ClusterUtility.get_cluster_property(self.graph, self.clusters, self.year, self.edges_dict)
+        self.property = ClusterUtility.get_cluster_property(self.graph, self.clusters, self.year,
+                                                            self.edges_dict, self.logtype)
 
     def get_anomaly_score(self):
         """Get anomaly score per cluster.
