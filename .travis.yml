@@ -9,6 +9,6 @@ addons:
       - liblapack-dev
       - libopenblas-base
       - libopenblas-dev
-before_install: "pip install numpy scipy"
+before_install: "pip install numpy scipy pyparsing"
 install: "pip install ."
 script: "pygraphc --help"
