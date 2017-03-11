@@ -136,7 +136,7 @@ def main(dataset, year, method, log_type):
     # list of methods
     graph_method = ['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
                     'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust',
-                    'graph_entropy']
+                    'graph_entropy', 'improved_majorclust_wo_refine']
     # nongraph_method = ['IPLoM', 'LKE']
 
     # get dataset files
@@ -175,6 +175,7 @@ def main(dataset, year, method, log_type):
 
     # main process
     for file_identifier, properties in files.iteritems():
+        print file_identifier
         # initialization
         ar, ami, nmi, h, c, v, silhoutte = 0., 0., 0., 0., 0., 0., 0.
         true_false, precision, recall, accuracy = [], 0., 0., 0.
@@ -183,8 +184,8 @@ def main(dataset, year, method, log_type):
         if method in graph_method:
             # preprocess log file
             preprocess = PreprocessLog(log_type, properties['log_path'])
-            # preprocess.do_preprocess()
-            preprocess.preprocess()
+            preprocess.do_preprocess()  # auth
+            # preprocess.preprocess()   # kippo
             events_unique = preprocess.events_unique
             original_logs = preprocess.logs
 
@@ -293,12 +294,13 @@ def main(dataset, year, method, log_type):
 if __name__ == '__main__':
     start = time()
     # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006, Kippo
-    data = 'Kippo'
+    data = 'SecRepo'
     # available log type: auth, kippo
-    logtype = 'kippo'
+    logtype = 'auth'
 
     # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM, LKE
-    clustering_method = 'improved_majorclust'
-    main(data, '2017', clustering_method, logtype)
+    #                    improved_majorclust_wo_refine
+    clustering_method = 'majorclust'
+    main(data, '2014', clustering_method, logtype)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
