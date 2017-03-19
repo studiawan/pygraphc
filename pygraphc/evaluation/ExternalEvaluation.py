@@ -379,7 +379,13 @@ class ExternalEvaluation(object):
             elif prediction_labels[key] == 'attack' and condition == 'attack':
                 true_negative += 1.0
 
-        # precision, recall, and accuracy
+        # specificity, precision, recall, and accuracy
+        try:
+            specificity = true_negative / (false_positive + true_negative)
+        except ZeroDivisionError:
+            specificity = 0
+            print standard_file, 'Specificity: division by zero'
+
         try:
             precision = true_positive / (true_positive + false_positive)
         except ZeroDivisionError:
@@ -387,7 +393,7 @@ class ExternalEvaluation(object):
             print standard_file, 'Precision: division by zero'
 
         try:
-            recall = true_positive / (true_positive + false_negative)
+            recall = true_positive / (true_positive + false_negative)   # sensitivity
         except ZeroDivisionError:
             recall = 0
             print standard_file, 'Recall: division by zero'
@@ -400,4 +406,4 @@ class ExternalEvaluation(object):
             print standard_file, 'Accuracy: division by zero'
 
         true_false = [true_positive, false_positive, false_negative, true_negative]
-        return true_false, precision, recall, accuracy
+        return true_false, specificity, precision, recall, accuracy
