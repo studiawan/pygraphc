@@ -206,7 +206,7 @@ def main(dataset, year, method, log_type):
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, mc_clusters, original_logs,
                                                                                   properties, year, edges_dict,
                                                                                   log_type)
-            true_false, precision, recall, accuracy = get_confusion(properties)
+            true_false, specificity, precision, recall, accuracy = get_confusion(properties)
             graph.clear()
 
         elif method == 'improved_majorclust':
@@ -218,7 +218,7 @@ def main(dataset, year, method, log_type):
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, imc_clusters, original_logs,
                                                                                   properties, year, edges_dict,
                                                                                   log_type)
-            true_false, precision, recall, accuracy = get_confusion(properties)
+            true_false, specificity, precision, recall, accuracy = get_confusion(properties)
             graph.clear()
 
         elif method == 'improved_majorclust_wo_refine':
@@ -230,7 +230,7 @@ def main(dataset, year, method, log_type):
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, imcwr_clusters, original_logs,
                                                                                   properties, year, edges_dict,
                                                                                   log_type)
-            true_false, precision, recall, accuracy = get_confusion(properties)
+            true_false, specificity, precision, recall, accuracy = get_confusion(properties)
             graph.clear()
 
         elif method == 'graph_entropy':
