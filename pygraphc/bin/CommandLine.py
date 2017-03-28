@@ -172,9 +172,9 @@ def run():
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
         elif options.method == 'kclique_percolation_weighted':
-            kcpw = KCliquePercolationWeighted(graph, edges_weight, nodes_id, geometric_mean_threshold)
+            kcpw = KCliquePercolationWeighted(graph, edges_weight, nodes_id)
             kcpw.init_kclique_percolation(k)
-            clusters = kcpw.get_kclique_percolation(k)
+            clusters = kcpw.get_kclique_percolation_weighted(k, geometric_mean_threshold)
             removed_edges = kcpw.removed_edges
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
@@ -190,9 +190,9 @@ def run():
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
         elif options.method == 'maxclique_percolation_weighted':
-            mcpw = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id, geometric_mean_threshold)
+            mcpw = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id)
             mcpw.init_maxclique_percolation()
-            clusters = mcpw.get_maxcliques_percolation_weighted(k)
+            clusters = mcpw.get_maxcliques_percolation_weighted(k, geometric_mean_threshold)
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
         elif options.method == 'majorclust':
