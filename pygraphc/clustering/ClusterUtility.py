@@ -49,7 +49,7 @@ class ClusterUtility(object):
 
         Returns
         -------
-        weighted_cliques    : list[list]
+        weighted_cliques    : list[frozenset]
             List of clique with significant weight.
         """
         weighted_kcliques = []
