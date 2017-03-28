@@ -20,6 +20,8 @@ class AnomalyScore(object):
             Dictionary of edges in the analyzed graph. Key: (node1, node2), value: index.
         sentiment_score : dict
             Dictionary of sentiment score per cluster.
+        logtype         : str
+            Type of event log, i.e., auth, kippo.
         """
         self.graph = graph
         self.clusters = clusters
