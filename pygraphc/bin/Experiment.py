@@ -246,8 +246,9 @@ def main(dataset, year, method, log_type):
 
         elif method == 'max_clique':
             k, threshold = 2, 0.1
-            maxc = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id, k, threshold)
-            maxc_clusters = maxc.get_maxcliques_percolation_weighted()
+            maxc = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id)
+            maxc.init_maxclique_percolation()
+            maxc_clusters = maxc.get_maxcliques_percolation_weighted(k, threshold)
 
             # do evaluation performance and clear graph
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, maxc_clusters, original_logs,
