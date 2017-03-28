@@ -166,13 +166,15 @@ def run():
 
         # run the selected method
         if options.method == 'kclique_percolation':
-            kcp = KCliquePercolation(graph, edges_weight, nodes_id, k)
-            clusters = kcp.get_kclique_percolation()
+            kcp = KCliquePercolation(graph, edges_weight, nodes_id)
+            kcp.init_kclique_percolation(k)
+            clusters = kcp.get_kclique_percolation(k)
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
         elif options.method == 'kclique_percolation_weighted':
-            kcpw = KCliquePercolationWeighted(graph, edges_weight, nodes_id, k, geometric_mean_threshold)
-            clusters = kcpw.get_kclique_percolation()
+            kcpw = KCliquePercolationWeighted(graph, edges_weight, nodes_id, geometric_mean_threshold)
+            kcpw.init_kclique_percolation(k)
+            clusters = kcpw.get_kclique_percolation(k)
             removed_edges = kcpw.removed_edges
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
@@ -182,13 +184,15 @@ def run():
             if options.s:
                 graph_streaming(graph, edges, None)
         elif options.method == 'maxclique_percolation':
-            mcp = MaxCliquesPercolation(graph, edges_weight, nodes_id, k)
-            clusters = mcp.get_maxcliques_percolation()
+            mcp = MaxCliquesPercolation(graph, edges_weight, nodes_id)
+            mcp.init_maxclique_percolation()
+            clusters = mcp.get_maxcliques_percolation(k)
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
         elif options.method == 'maxclique_percolation_weighted':
-            mcpw = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id, k, geometric_mean_threshold)
-            clusters = mcpw.get_maxcliques_percolation_weighted()
+            mcpw = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id, geometric_mean_threshold)
+            mcpw.init_maxclique_percolation()
+            clusters = mcpw.get_maxcliques_percolation_weighted(k)
             if options.s:
                 graph_streaming(graph, edges, removed_edges)
         elif options.method == 'majorclust':
@@ -211,7 +215,7 @@ def run():
         # check for evaluation
         if groundtruth_file and anomaly_file and anomaly_groundtruth:
             # get prediction file
-            ExternalEvaluation.set_cluster_label_id(graph, clusters, logs, prediction_file)
+            ExternalEvaluation.set_cluster_label_id(graph, clusters, logs, prediction_file, 'auth')
 
             # get sentiment analysis
             sentiment = SentimentAnalysis(graph, clusters)
@@ -219,7 +223,7 @@ def run():
             sentiment_score = sentiment.get_sentiment()
 
             # get anomaly score and the decision
-            anomaly = AnomalyScore(graph, clusters, year, edges_dict, sentiment_score)
+            anomaly = AnomalyScore(graph, clusters, year, edges_dict, sentiment_score, 'auth')
             anomaly.get_anomaly_score()
             anomaly.get_anomaly_decision()
 
