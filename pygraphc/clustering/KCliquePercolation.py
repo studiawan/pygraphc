@@ -231,7 +231,7 @@ class KCliquePercolation(object):
 class KCliquePercolationWeighted(KCliquePercolation):
     """This a class derived from KCliquePercolation for the case of weighted graph.
     """
-    def __init__(self, graph, edges_weight, nodes_id, threshold):
+    def __init__(self, graph, edges_weight, nodes_id):
         """This is the constructor for class KCliquePercolationWeighted.
 
         Parameters
@@ -242,25 +242,29 @@ class KCliquePercolationWeighted(KCliquePercolation):
             List of tuple containing (node1, node2, cosine similarity between these two).
         nodes_id        : list
             List of all node identifier.
-        threshold       : float
-            Threshold for the geometric mean.
         """
         print 'kclique_percolation_weighted: initialization ...'
         super(KCliquePercolationWeighted, self).__init__(graph, edges_weight, nodes_id)
-        self.threshold = threshold
 
-    def _find_kcliques(self, k):
-        """This method will find weighted k-clique.
+    def get_kclique_percolation_weighted(self, k, threshold):
+        """Main method of weighted k-clique percolation. The weight of k-clique is calculated based on
+           the geometric mean of its weights.
 
-        The weight of k-clique is calculated based on the geometric mean of its weights.
+        Parameters
+        ----------
+        k           : int
+            Number of percolation.
+        threshold   : float
+            Threshold for the geometric mean.
 
-        Returns
+        Notes
         -------
         weighted_kcliques   : list[frozenset]
-            List of frozenset containing nodes identifier for each k-clique found.
+            List of frozenset containing nodes identifier for each weighted k-clique found.
         """
-        print 'find_weighted_kclique ...'
-        kcliques = super(KCliquePercolationWeighted, self)._find_kcliques(k)
-        weighted_kcliques = ClusterUtility.get_weighted_cliques(self.graph, kcliques, self.threshold)
+        weighted_kcliques = ClusterUtility.get_weighted_cliques(self.graph, self.cliques, threshold)
+        self._get_percolation_graph(weighted_kcliques, k)
+        self._remove_outcluster()
+        clusters = self._get_clusters()
 
-        return weighted_kcliques
+        return clusters
