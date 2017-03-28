@@ -36,6 +36,11 @@ class MaxCliquesPercolation(KCliquePercolation):
         super(MaxCliquesPercolation, self).__init__(graph, edges_weight, nodes_id)
 
     def init_maxclique_percolation(self):
+        """Initialization of maxial clique percolation method.
+
+        The first step is to build temporary graph (percolation graph). Then the procedure finds
+        all maximal cliques in the graph.
+        """
         super(MaxCliquesPercolation, self)._build_temp_graph()
         maxcliques = self._find_maxcliques()
         self.cliques = maxcliques
@@ -43,18 +48,16 @@ class MaxCliquesPercolation(KCliquePercolation):
     def get_maxcliques_percolation(self, k):
         """The main method to find clusters based on maximal clique percolation.
 
-        The first step is to build temporary graph (percolation graph). Then the procedure finds
-        all maximal cliques in the graph. Next, it looks for percolation between cliques.
-        This method then remove any edges that connecting two vertices but has different clusters.
+        This method looks for percolation between cliques.
+        It then remove any edges that connecting two vertices but has different clusters.
 
         Returns
         -------
+        k           : int
+            Number of percolation or intersection between an individual clique.
         clusters    : dict[frozenset]
             List of frozenset containing node identifier (node id in integer).
         """
-        print 'get_maxcliques_percolation ...'
-        # super(MaxCliquesPercolation, self)._build_temp_graph()
-        # maxcliques = self._find_maxcliques()
         super(MaxCliquesPercolation, self)._get_percolation_graph(self.cliques, k)
         super(MaxCliquesPercolation, self)._remove_outcluster()
         clusters = super(MaxCliquesPercolation, self)._get_clusters()
@@ -111,12 +114,14 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
 
         Parameters
         ----------
+        k           : int
+            Number of percolation or intersection between an individual clique.
         threshold   : float
             Threshold for intensity of maximal clique.
 
         Returns
         -------
-        clusters    : dict[frozenset]
+        clusters    : dict[int, frozenset]
             List of frozenset containing node identifier (node id in integer).
 
         Notes
@@ -124,6 +129,7 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         weighted_maxcliques : list[frozenset]
             List of frozenset containing node identifier for each weighted maximal clique.
         """
+        # get weighted maximal cliques and get percolation
         weighted_maxcliques = ClusterUtility.get_weighted_cliques(self.graph, self.cliques, threshold)
         super(MaxCliquesPercolationWeighted, self)._get_percolation_graph(weighted_maxcliques, k)
         percolations = super(MaxCliquesPercolationWeighted, self).clique_percolation
