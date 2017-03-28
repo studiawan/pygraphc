@@ -31,7 +31,7 @@ class ExternalEvaluation(object):
         perline_file    : str
             Path to save the analysis result.
         logtype         : str
-            Type of event log.
+            Type of event log, i.e., auth, kippo.
 
         References
         ----------
