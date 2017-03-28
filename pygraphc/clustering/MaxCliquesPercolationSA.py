@@ -1,6 +1,5 @@
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
 from pygraphc.optimization.SimulatedAnnealing import SimulatedAnnealing
-from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
 from numpy import linspace
 from math import exp
 from random import uniform
@@ -17,37 +16,41 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
         self.max_iteration = 0
 
     def get_maxcliques_percolation_sa(self):
-        # run initialization of max_clique
-        self.init_maxclique_percolation()
+        # get random parameters from the given range
         parameters = self.__set_parameters()
 
-        sa = SimulatedAnnealing(self.Tmin, self.Tmax, self.alpha, parameters, self.energy_type, self.max_iteration)
+        # create simulated annealing utility instance
+        sa = SimulatedAnnealing(self.Tmin, self.Tmax, self.alpha, parameters, self.max_iteration)
         current_parameter = sa.get_parameter({})
 
-        # get maximal clique percolation
+        # get initial maximal clique percolation and its energy
         self.init_maxclique_percolation()
         mcpw_sa_cluster = self.get_maxcliques_percolation_weighted(current_parameter['k'], current_parameter['I'])
-        current_energy = InternalEvaluation.get_silhoutte_index(self.graph, mcpw_sa_cluster)
+        current_energy = sa.get_energy(self.graph, mcpw_sa_cluster, self.energy_type)
 
-        tcurrent = self.Tmax
-        tnew = self.alpha * tcurrent
+        # cooling the temperature
+        tnew = sa.get_temperature(self.Tmax)
+
+        # main loop of simulated annealing
         count_iteration = 0
         best_parameter = {}
         while tnew > self.Tmin or count_iteration <= self.max_iteration:
             # set perameter, find cluster, get energy
+            tcurrent = tnew
             new_parameter = sa.get_parameter(current_parameter)
             mcpw_sa_cluster = self.get_maxcliques_percolation_weighted(new_parameter['k'], new_parameter['I'])
-            new_energy = InternalEvaluation.get_silhoutte_index(self.graph, mcpw_sa_cluster)
+            new_energy = sa.get_energy(self.graph, mcpw_sa_cluster, self.energy_type)
 
             # get delta energy and check
             delta_energy = new_energy - current_energy
             if new_energy <= current_energy:
                 best_parameter = new_parameter
-            elif exp(-delta_energy / tnew) > uniform(0, 1):
+            elif exp(-delta_energy / tcurrent) > uniform(0, 1):
                 best_parameter = new_parameter
+            current_energy = new_energy
 
             # cooling the temperature
-            tnew = self.alpha * tnew
+            tnew = sa.get_temperature(tcurrent)
             count_iteration += 1
 
         return best_parameter
@@ -60,10 +63,12 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
             if max_node < current_len:
                 max_node = current_len
 
+        # set parameter k (number of percolation) and I (intensity threshold)
         parameters = {
             'k': list(xrange(2, max_node)),
             'I': linspace(0.1, 0.9, 9)
         }
 
+        # max iteration is total number of all combinations between parameter k and I
         self.max_iteration = len(list(product(parameters['k'], parameters['I'])))
         return parameters
