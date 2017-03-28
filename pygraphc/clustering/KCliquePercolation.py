@@ -19,7 +19,7 @@ class KCliquePercolation(object):
                         k-clique percolation, in Proceedings of the 10th International Conference on Information
                         Communication Technology and Systems, pp. 33-36, 2016.
     """
-    def __init__(self, graph, edges_weight, nodes_id, k):
+    def __init__(self, graph, edges_weight, nodes_id):
         """This is a constructor for class KCliquePercolation.
 
         Parameters
@@ -30,8 +30,6 @@ class KCliquePercolation(object):
             List of tuple containing (node1, node2, cosine similarity between these two).
         nodes_id        : list
             List of all node identifier.
-        k               : int
-            Number of percolation or intersection between an individual clique.
 
         Notes
         -----
@@ -46,14 +44,24 @@ class KCliquePercolation(object):
         self.graph = graph
         self.edges_weight = edges_weight
         self.nodes_id = nodes_id
-        self.k = k
         self.g = None
         self.percolated_nodes = []
         self.removed_edges = []
         self.clique_percolation = {}
+        self.cliques = []
 
-    def get_kclique_percolation(self):
+    def init_kclique_percolation(self, k):
+        self._build_temp_graph()
+        kcliques = self._find_kcliques(k)
+        self.cliques = kcliques
+
+    def get_kclique_percolation(self, k):
         """This is the main method to call all k-clique percolation clustering.
+
+        Parameters
+        ----------
+        k           : int
+            Number of percolation or intersection between an individual clique.
 
         Returns
         -------
@@ -61,15 +69,15 @@ class KCliquePercolation(object):
             List of list containing nodes identifier for each cluster.
         """
         print 'get_kclique_percolation ...'
-        self._build_temp_graph()
-        kcliques = self._find_kcliques()
-        self._get_percolation_graph(kcliques)
+        # self._build_temp_graph()
+        # kcliques = self._find_kcliques()
+        self._get_percolation_graph(self.cliques, k)
         self._remove_outcluster()
         clusters = self._get_clusters()
 
         return clusters
 
-    def _find_kcliques(self):
+    def _find_kcliques(self, k):
         """Find all k-cliques in a graph.
 
         Returns
@@ -78,7 +86,7 @@ class KCliquePercolation(object):
             List of k-cliques found but only return specified k. The frozenset contains nodes identifier.
         """
         k_cliques = list(self._enumerate_all_cliques())
-        kcliques = [frozenset(clique) for clique in k_cliques if len(clique) == self.k]
+        kcliques = [frozenset(clique) for clique in k_cliques if len(clique) == k]
 
         return kcliques
 
@@ -150,7 +158,7 @@ class KCliquePercolation(object):
                               filter(nbrs[u].__contains__,
                                      islice(cnbrs, i + 1, None))))
 
-    def _get_percolation_graph(self, kcliques):
+    def _get_percolation_graph(self, kcliques, k):
         """Get percolation graph.
 
         This temporary graph also well known as percolation graph in the literatures. A node represents a k-clique
@@ -160,6 +168,8 @@ class KCliquePercolation(object):
         ----------
         kcliques    : list[frozenset]
             List of all k-cliques found with user-specified k.
+        k           : int
+            Number of percolation.
         """
         percolation_graph = nx.Graph()
         percolation_graph.add_nodes_from(kcliques)
@@ -168,7 +178,7 @@ class KCliquePercolation(object):
         for clique1, clique2 in combinations(kcliques, 2):
             percolation = clique1.intersection(clique2)
             self.percolated_nodes.append(percolation)
-            if len(percolation) >= (self.k - 1):
+            if len(percolation) >= (k - 1):
                 percolation_graph.add_edge(clique1, clique2)
 
         # Get all connected component in percolation graph
@@ -221,7 +231,7 @@ class KCliquePercolation(object):
 class KCliquePercolationWeighted(KCliquePercolation):
     """This a class derived from KCliquePercolation for the case of weighted graph.
     """
-    def __init__(self, graph, edges_weight, nodes_id, k, threshold):
+    def __init__(self, graph, edges_weight, nodes_id, threshold):
         """This is the constructor for class KCliquePercolationWeighted.
 
         Parameters
@@ -232,16 +242,14 @@ class KCliquePercolationWeighted(KCliquePercolation):
             List of tuple containing (node1, node2, cosine similarity between these two).
         nodes_id        : list
             List of all node identifier.
-        k               : int
-            Number of percolation or intersection between an individual clique.
         threshold       : float
             Threshold for the geometric mean.
         """
         print 'kclique_percolation_weighted: initialization ...'
-        super(KCliquePercolationWeighted, self).__init__(graph, edges_weight, nodes_id, k)
+        super(KCliquePercolationWeighted, self).__init__(graph, edges_weight, nodes_id)
         self.threshold = threshold
 
-    def _find_kcliques(self):
+    def _find_kcliques(self, k):
         """This method will find weighted k-clique.
 
         The weight of k-clique is calculated based on the geometric mean of its weights.
@@ -252,7 +260,7 @@ class KCliquePercolationWeighted(KCliquePercolation):
             List of frozenset containing nodes identifier for each k-clique found.
         """
         print 'find_weighted_kclique ...'
-        kcliques = super(KCliquePercolationWeighted, self)._find_kcliques()
+        kcliques = super(KCliquePercolationWeighted, self)._find_kcliques(k)
         weighted_kcliques = ClusterUtility.get_weighted_cliques(self.graph, kcliques, self.threshold)
 
         return weighted_kcliques
