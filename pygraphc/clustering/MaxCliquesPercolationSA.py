@@ -7,7 +7,29 @@ from itertools import product
 
 
 class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
+    """Get clustering based on maximal clique percolation and the parameters are optimized
+       using simulated annealing.
+    """
     def __init__(self, graph, edges_weight, nodes_id, tmin, tmax, alpha, energy_type):
+        """The constructor of class MaxCliquesPercolationSA.
+
+        Parameters
+        ----------
+        graph           : graph
+            Graph to be clustered.
+        edges_weight    : list[tuple]
+            List of tuple containing (node1, node2, cosine similarity between these two).
+        nodes_id        : list
+            List of all node identifier.
+        tmin            : float
+            Minimum temperature.
+        tmax            : float
+            Maximum temperature.
+        alpha           : float
+            Cooling factor or temperature multiplier.
+        energy_type     : str
+            Type of energy or objective function such as Silhoutte index, Dunn index, etc.
+        """
         super(MaxCliquesPercolationSA, self).__init__(graph, edges_weight, nodes_id)
         self.Tmin = tmin
         self.Tmax = tmax
@@ -16,6 +38,13 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
         self.max_iteration = 0
 
     def get_maxcliques_percolation_sa(self):
+        """The main method to run maximal clique percolation using simulated annealing.
+
+        Returns
+        -------
+        best_parameter  : dict
+            The parameters that provide the best energy.
+        """
         # get random parameters from the given range
         parameters = self.__set_parameters()
 
@@ -56,6 +85,13 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
         return best_parameter
 
     def __set_parameters(self):
+        """Set initial parameter before running simulated annealing.
+
+        Returns
+        -------
+        parameters  : dict
+            Initial parameter to run. Key: variable name, value: list of possible values.
+        """
         # get maximal node for all maximal cliques to generate k
         max_node = 0
         for max_clique in self.cliques:
