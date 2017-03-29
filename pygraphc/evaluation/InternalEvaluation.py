@@ -83,7 +83,7 @@ class InternalEvaluation(object):
                         if temp_distance != 0:
                             distance[neighbor] = temp_distance
 
-                    intercluster_avg[node] = min(distance.values()) if len(distance.keys()) > 0 else 0
+                    intercluster_avg[node] = average(distance.values()) if len(distance.keys()) > 0 else 0
 
                 # get vertex silhoutte
                 for node in cluster:
