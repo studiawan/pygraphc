@@ -130,7 +130,7 @@ class InternalEvaluation(object):
         ----------
         graph       : graph
             A graph to be evaluated.
-        clusters    : dict[int, list]
+        clusters    : dict
             A dictionary containing node identifier per cluster. Key: cluster identifier,
             value: list of node identifier.
 
