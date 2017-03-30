@@ -40,7 +40,6 @@ class KCliquePercolation(object):
         clique_percolation  : dict[frozenset]
             Dictionary of nodes in each cluster in frozenset.
         """
-        print 'kclique_percolation: initialization ...'
         self.graph = graph
         self.edges_weight = edges_weight
         self.nodes_id = nodes_id
@@ -68,9 +67,6 @@ class KCliquePercolation(object):
         clusters    : dict[list]
             List of list containing nodes identifier for each cluster.
         """
-        print 'get_kclique_percolation ...'
-        # self._build_temp_graph()
-        # kcliques = self._find_kcliques()
         self._get_percolation_graph(self.cliques, k)
         self._remove_outcluster()
         clusters = self._get_clusters()
@@ -135,8 +131,6 @@ class KCliquePercolation(object):
         .. [Schult2016] Dan Schult, Source code for networkx.algorithms.clique.
                         https://networkx.github.io/documentation/development/_modules/networkx/algorithms/clique.html
         """
-
-        print 'enumerate_all_cliques ...'
         index = {}
         nbrs = {}
         for u in self.g:
@@ -243,7 +237,6 @@ class KCliquePercolationWeighted(KCliquePercolation):
         nodes_id        : list
             List of all node identifier.
         """
-        print 'kclique_percolation_weighted: initialization ...'
         super(KCliquePercolationWeighted, self).__init__(graph, edges_weight, nodes_id)
 
     def get_kclique_percolation_weighted(self, k, threshold):
