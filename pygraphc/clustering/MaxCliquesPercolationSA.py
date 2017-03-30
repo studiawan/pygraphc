@@ -112,5 +112,4 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
 
         # max iteration is total number of all combinations between parameter k and I
         self.max_iteration = len(list(product(parameters['k'], parameters['I'])))
-        print 'MAX_ITER', self.max_iteration
         return parameters
