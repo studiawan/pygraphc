@@ -57,6 +57,9 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
             self.init_maxclique_percolation()
             mcpw_sa_cluster = self.get_maxcliques_percolation_weighted(current_parameter['k'], current_parameter['I'])
             current_energy = sa.get_energy(self.graph, mcpw_sa_cluster, self.energy_type) * -1
+            best_energy = current_energy
+            best_parameter = current_parameter
+            best_cluster = mcpw_sa_cluster
 
             # cooling the temperature
             tnew = sa.get_temperature(self.Tmax)
@@ -73,12 +76,11 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                 # get delta energy and check
                 delta_energy = new_energy - current_energy
                 if new_energy <= current_energy:
-                    best_parameter = new_parameter
-                    best_cluster = mcpw_sa_cluster
+                    if new_energy <= best_energy:
+                        best_parameter = new_parameter
+                        best_cluster = mcpw_sa_cluster
                 elif exp(-delta_energy / tcurrent) > uniform(0, 1):
-                    best_parameter = new_parameter
-                    best_cluster = mcpw_sa_cluster
-                current_energy = new_energy
+                    current_energy = new_energy
 
                 # cooling the temperature
                 tnew = sa.get_temperature(tcurrent)
@@ -110,4 +112,5 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
 
         # max iteration is total number of all combinations between parameter k and I
         self.max_iteration = len(list(product(parameters['k'], parameters['I'])))
+        print 'MAX_ITER', self.max_iteration
         return parameters
