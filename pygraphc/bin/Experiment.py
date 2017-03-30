@@ -7,6 +7,7 @@ from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
 from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
+from pygraphc.clustering.MaxCliquesPercolationSA import MaxCliquesPercolationSA
 from pygraphc.misc.IPLoM import Para, IPLoM
 from pygraphc.misc.LKE import Para, LKE
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
@@ -134,7 +135,7 @@ def get_confusion(properties):
 
 def main(dataset, year, method, log_type):
     # list of methods
-    graph_method = ['connected_components', 'maxclique_percolation', 'maxclique_percolation_weighted',
+    graph_method = ['connected_components', 'max_clique', 'max_clique_weighted', 'max_clique_weighted_sa',
                     'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust',
                     'graph_entropy', 'improved_majorclust_wo_refine']
     # nongraph_method = ['IPLoM', 'LKE']
@@ -244,7 +245,7 @@ def main(dataset, year, method, log_type):
                                                                                   log_type)
             graph.clear()
 
-        elif method == 'max_clique':
+        elif method == 'max_clique_weighted':
             k, threshold = 2, 0.1
             maxc = MaxCliquesPercolationWeighted(graph, edges_weight, nodes_id)
             maxc.init_maxclique_percolation()
@@ -254,7 +255,31 @@ def main(dataset, year, method, log_type):
             ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, maxc_clusters, original_logs,
                                                                                   properties, year, edges_dict,
                                                                                   log_type)
+            true_false, specificity, precision, recall, accuracy = get_confusion(properties)
             graph.clear()
+
+        elif method == 'max_clique_weighted_sa':
+            file_exception = ['secure.2', 'secure.5']
+            if properties['log_path'].split('/')[-1] in file_exception and dataset == 'hnet-hon-2004':
+                continue
+
+            # Selim et al., 1991, Sun et al., 1996
+            tmin = 10 ** (-99)
+            tmax = 10
+            alpha = 0.9
+
+            energy_type = 'silhoutte'
+            maxc_sa = MaxCliquesPercolationSA(graph, edges_weight, nodes_id, tmin, tmax, alpha, energy_type)
+            maxc_sa.init_maxclique_percolation()
+            best_parameter, maxc_sa_cluster = maxc_sa.get_maxcliques_percolation_weighted_sa()
+
+            # do evaluation performance and clear graph
+            ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, maxc_sa_cluster, original_logs,
+                                                                                  properties, year, edges_dict,
+                                                                                  log_type)
+            true_false, specificity, precision, recall, accuracy = get_confusion(properties)
+            graph.clear()
+            print best_parameter['k'], best_parameter['I'], silhoutte
 
         elif method == 'IPLoM':
             # call IPLoM and get clusters
@@ -295,13 +320,13 @@ def main(dataset, year, method, log_type):
 if __name__ == '__main__':
     start = time()
     # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006, Kippo
-    data = 'SecRepo'
+    data = 'hnet-hon-2004'
     # available log type: auth, kippo
     logtype = 'auth'
 
-    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique, IPLoM, LKE
-    #                    improved_majorclust_wo_refine
-    clustering_method = 'majorclust'
-    main(data, '2014', clustering_method, logtype)
+    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique_weighted, IPLoM, LKE
+    #                    improved_majorclust_wo_refine, max_clique_weighted_sa
+    clustering_method = 'max_clique_weighted_sa'
+    main(data, '2004', clustering_method, logtype)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
