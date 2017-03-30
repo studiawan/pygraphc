@@ -26,7 +26,8 @@ class ClusterUtility(object):
         gmean = 0.0
         if multiplication > 0.0:
             k = float(len(weights))
-            gmean = multiplication ** (1 / k)
+            if k > 0.0:
+                gmean = multiplication ** (1 / k)
 
         gmean = round(gmean, 5)
         return gmean
