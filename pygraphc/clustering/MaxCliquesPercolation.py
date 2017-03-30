@@ -132,7 +132,7 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         # get weighted maximal cliques and get percolation
         weighted_maxcliques = ClusterUtility.get_weighted_cliques(self.graph, self.cliques, threshold)
         super(MaxCliquesPercolationWeighted, self)._get_percolation_graph(weighted_maxcliques, k)
-        percolations = super(MaxCliquesPercolationWeighted, self).clique_percolation
+        percolations = self.clique_percolation
         self.__set_percolation_dict(percolations)
 
         # remove overlapping nodes
