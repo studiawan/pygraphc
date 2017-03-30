@@ -77,6 +77,7 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                 delta_energy = new_energy - current_energy
                 if new_energy <= current_energy:
                     if new_energy <= best_energy:
+                        best_energy = new_energy
                         best_parameter = new_parameter
                         best_cluster = mcpw_sa_cluster
                 elif exp(-delta_energy / tcurrent) > uniform(0, 1):
