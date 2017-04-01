@@ -171,7 +171,7 @@ def main(dataset, year, method, log_type):
     # set header
     header = ('file_name', 'adjusted_rand', 'adjusted_mutual_info', 'normalized_mutual_info',
               'homogeneity', 'completeness', 'v-measure', 'silhoutte_index',
-              'tp', 'fp', 'fn', 'tn', 'precision', 'recall', 'accuracy')
+              'tp', 'fp', 'fn', 'tn', 'precision', 'recall', 'accuracy', 'k', 'I')
     writer.writerow(header)
 
     # main process
@@ -181,12 +181,15 @@ def main(dataset, year, method, log_type):
         ar, ami, nmi, h, c, v, silhoutte = 0., 0., 0., 0., 0., 0., 0.
         true_false, precision, recall, accuracy = [], 0., 0., 0.
         edges_weight, nodes_id = [], []
+        best_parameter = {}
 
         if method in graph_method:
             # preprocess log file
             preprocess = PreprocessLog(log_type, properties['log_path'])
-            preprocess.do_preprocess()  # auth
-            # preprocess.preprocess()   # kippo
+            if log_type == 'auth':
+                preprocess.do_preprocess()  # auth
+            elif log_type == 'kippo':
+                preprocess.preprocess()   # kippo
             events_unique = preprocess.events_unique
             original_logs = preprocess.logs
 
@@ -259,7 +262,7 @@ def main(dataset, year, method, log_type):
             graph.clear()
 
         elif method == 'max_clique_weighted_sa':
-            file_exception = ['secure.2', 'secure.5']
+            file_exception = ['secure.5']   # 'secure.2',
             if properties['log_path'].split('/')[-1] in file_exception and dataset == 'hnet-hon-2004':
                 continue
 
@@ -274,12 +277,16 @@ def main(dataset, year, method, log_type):
             best_parameter, maxc_sa_cluster = maxc_sa.get_maxcliques_percolation_weighted_sa()
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, maxc_sa_cluster, original_logs,
-                                                                                  properties, year, edges_dict,
-                                                                                  log_type)
-            true_false, specificity, precision, recall, accuracy = get_confusion(properties)
+            # ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, maxc_sa_cluster,
+            #                                                                       original_logs,
+            #                                                                       properties, year, edges_dict,
+            #                                                                       log_type)
+            # true_false, specificity, precision, recall, accuracy = get_confusion(properties)
+
+            ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = 0., 0., 0., 0., 0., 0., 0., ()
+            true_false, specificity, precision, recall, accuracy = [0., 0., 0., 0.], 0., 0., 0., 0.
+            silhoutte = InternalEvaluation.get_silhoutte_index(graph, maxc_sa_cluster)
             graph.clear()
-            print best_parameter['k'], best_parameter['I'], silhoutte
 
         elif method == 'IPLoM':
             # call IPLoM and get clusters
@@ -312,7 +319,8 @@ def main(dataset, year, method, log_type):
 
         # write evaluation result to file
         row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte,
-               true_false[0], true_false[1], true_false[2], true_false[3], precision, recall, accuracy)
+               true_false[0], true_false[1], true_false[2], true_false[3], precision, recall, accuracy,
+               best_parameter['k'], best_parameter['I'])
         writer.writerow(row)
 
     f.close()
@@ -320,13 +328,13 @@ def main(dataset, year, method, log_type):
 if __name__ == '__main__':
     start = time()
     # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006, Kippo
-    data = 'hnet-hon-2004'
+    data = 'Kippo'
     # available log type: auth, kippo
-    logtype = 'auth'
+    logtype = 'kippo'
 
     # available methods: majorclust, improved_majorclust, graph_entropy, max_clique_weighted, IPLoM, LKE
     #                    improved_majorclust_wo_refine, max_clique_weighted_sa
     clustering_method = 'max_clique_weighted_sa'
-    main(data, '2004', clustering_method, logtype)
+    main(data, '2017', clustering_method, logtype)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
