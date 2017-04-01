@@ -18,6 +18,7 @@ class LogGrammar(object):
         self.log_type = log_type
         self.authlog_grammar = self.__get_authlog_grammar()
         self.kippolog_grammar = self.__get_kippolog_grammar()
+        self.syslog_grammar = self.__get_syslog_grammar()
 
     @staticmethod
     def __get_authlog_grammar():
@@ -96,7 +97,8 @@ class LogGrammar(object):
 
         # service = activity, port, and ip address
         ip_address = Word(nums + '.')
-        activity = Word(alphas + nums + '-' + '.' + ' ' + '(' + ')') + Optional(Suppress(',') + ints + Suppress(',') + ip_address)
+        activity = Word(alphas + nums + '-' + '.' + ' ' + '(' + ')') + Optional(Suppress(',') + ints + Suppress(',') +
+                                                                                ip_address)
         service = Suppress('[') + activity + Suppress(']')
 
         # message
@@ -131,5 +133,34 @@ class LogGrammar(object):
             parsed['port'] = parsed_kippolog[3]
             parsed['ip_address'] = parsed_kippolog[4]
             parsed['message'] = parsed_kippolog[5]
+
+        return parsed
+
+    @staticmethod
+    def __get_syslog_grammar():
+        ints = Word(nums)
+
+        # timestamp
+        month = Word(string.uppercase, string.lowercase, exact=3)
+        day = ints
+        hour = Combine(ints + ":" + ints + ":" + ints)
+        timestamp = month + day + hour
+
+        # hostname, service name, message
+        hostname = Word(alphas + nums + "_" + "-" + ".")
+        appname = Word(alphas + "/" + "-" + "_" + ".") + Optional(Suppress("[") + ints + Suppress("]")) + Suppress(":")
+        message = Optional(Suppress(": [") + Word(nums + '.') + Suppress("]")) + Regex(".*")
+        
+        syslog_grammar = timestamp + hostname + appname + message
+        return syslog_grammar
+
+    def parse_syslog(self, log_line):
+        parsed_syslog = self.syslog_grammar.parseString(log_line)
+
+        parsed = dict()
+        parsed['timestamp'] = parsed_syslog[0] + ' ' + parsed_syslog[1] + ' ' + parsed_syslog[2]
+        parsed['hostname'] = parsed_syslog[3]
+        parsed['service'] = parsed_syslog[4]
+        parsed['message'] = parsed_syslog[5]
 
         return parsed
