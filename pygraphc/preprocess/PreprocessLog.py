@@ -37,8 +37,10 @@ class PreprocessLog(object):
                 parsed = grammar.parse_authlog(line)
             elif self.logtype == 'kippo':
                 parsed = grammar.parse_kipplog(line)
+                parsed['timestamp'] = parsed['timestamp'][:-5]
+            elif self.logtype == 'syslog':
+                parsed = grammar.parse_syslog(line)
             parsed['message'] = parsed['message'].lower()
-            parsed['timestamp'] = parsed['timestamp'][:-5]
             logs_lower.append(parsed['message'])
             parsed_log.append(parsed)
 
