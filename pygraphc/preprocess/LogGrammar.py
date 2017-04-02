@@ -138,6 +138,13 @@ class LogGrammar(object):
 
     @staticmethod
     def __get_syslog_grammar():
+        """The definition of syslog grammar.
+
+        Returns
+        -------
+        syslog_grammar    :
+            Grammar for syslog.
+        """
         ints = Word(nums)
 
         # timestamp
@@ -155,12 +162,29 @@ class LogGrammar(object):
         return syslog_grammar
 
     def parse_syslog(self, log_line):
+        """Parse syslog based on defined grammar.
+
+        Parameters
+        ----------
+        log_line    : str
+            A log line to be parsed.
+
+        Returns
+        -------
+        parsed      : dict[str, str]
+            A parsed syslog (or messages in RedHat-based Linux) containing these elements:
+            timestamp, hostname, service, message, time in second (optional), and pid (optional).
+        """
         parsed_syslog = self.syslog_grammar.parseString(log_line)
 
         parsed = dict()
         parsed['timestamp'] = parsed_syslog[0] + ' ' + parsed_syslog[1] + ' ' + parsed_syslog[2]
         parsed['hostname'] = parsed_syslog[3]
         parsed['service'] = parsed_syslog[4]
-        parsed['message'] = parsed_syslog[5]
+        if '.' in parsed_syslog[5]:
+            parsed['second'] = parsed_syslog[5]
+        else:
+            parsed['pid'] = parsed_syslog[5]
+        parsed['message'] = parsed_syslog[6]
 
         return parsed
