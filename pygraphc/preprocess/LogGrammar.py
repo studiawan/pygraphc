@@ -19,6 +19,7 @@ class LogGrammar(object):
         self.authlog_grammar = self.__get_authlog_grammar()
         self.kippolog_grammar = self.__get_kippolog_grammar()
         self.syslog_grammar = self.__get_syslog_grammar()
+        self.bluegene_grammar = self.__get_bluegene_grammar()
 
     @staticmethod
     def __get_authlog_grammar():
@@ -186,5 +187,41 @@ class LogGrammar(object):
         else:
             parsed['pid'] = parsed_syslog[5]
         parsed['message'] = parsed_syslog[6]
+
+        return parsed
+
+    @staticmethod
+    def __get_bluegene_grammar():
+        ints = Word(nums)
+
+        sock = Word(alphas + '-')
+        number = ints
+        date = Combine(ints + '.' + ints + '.' + ints)
+        core1 = Word(alphas + nums + "-" + ":")
+        datetime = Combine(ints + '-' + ints + '-' + ints + '-' + ints + '.' + ints + '.' + ints + '.' + ints)
+        core2 = Word(alphas + nums + "-" + ":")
+        source = Word(alphas)
+        service = Word(alphas)
+        info_type = Word(alphas)
+        message = Regex('.*')
+
+        # blue gene log grammar
+        bluegene_grammar = sock + number + date + core1 + datetime + core2 + source + service + info_type + message
+        return bluegene_grammar
+
+    def parse_bluegenelog(self, log_line):
+        parsed_bluegenelog = self.bluegene_grammar.parseString(log_line)
+
+        parsed = dict()
+        parsed['sock'] = parsed_bluegenelog[0]
+        parsed['number'] = parsed_bluegenelog[1]
+        parsed['date'] = parsed_bluegenelog[2]
+        parsed['core1'] = parsed_bluegenelog[3]
+        parsed['datetime'] = parsed_bluegenelog[4]
+        parsed['core2'] = parsed_bluegenelog[5]
+        parsed['source'] = parsed_bluegenelog[6]
+        parsed['service'] = parsed_bluegenelog[7]
+        parsed['info_type'] = parsed_bluegenelog[8]
+        parsed['message'] = parsed_bluegenelog[9]
 
         return parsed
