@@ -192,6 +192,19 @@ class LogGrammar(object):
 
     @staticmethod
     def __get_bluegene_grammar():
+        """The definition of syslog grammar.
+
+        The BlueGene/L logs can be downloaded from [Useninx2006a]_
+
+        Returns
+        -------
+        bluegene_grammar    :
+            Grammar for BlueGene/L supercomputer logs.
+
+        References
+        ----------
+        .. [Usenix2006a] The HPC4 data. URL: https://www.usenix.org/cfdr-data#hpc4
+        """
         ints = Word(nums)
 
         sock = Word(alphas + '-')
@@ -210,6 +223,18 @@ class LogGrammar(object):
         return bluegene_grammar
 
     def parse_bluegenelog(self, log_line):
+        """Parse the BlueGene/L logs based on defined grammar.
+
+        Parameters
+        ----------
+        log_line    : str
+            A log line to be parsed
+
+        Returns
+        -------
+        parsed      : dict[str, str]
+            A parsed BlueGene/L log.
+        """
         parsed_bluegenelog = self.bluegene_grammar.parseString(log_line)
 
         parsed = dict()
