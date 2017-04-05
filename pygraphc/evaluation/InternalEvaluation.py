@@ -194,6 +194,24 @@ class InternalEvaluation(object):
 
     @staticmethod
     def __get_separation(graph, clusters):
+        """Separation or minimum distance between clusters.
+
+        It is actually minimum distance between two nodes in calculated clusters.
+        Then, we find the most minimum one for all clusters.
+
+        Parameters
+        ----------
+        graph       : graph
+            A graph to be evaluated.
+        clusters    : dict
+            A dictionary containing node identifier per cluster. Key: cluster identifier,
+            value: list of node identifier.
+
+        Returns
+        -------
+        separation  : float
+            Minimum distance between all clusters.
+        """
         cid = set(clusters.keys())
         intercluster_distance = {}
         separation = 1.
@@ -227,6 +245,26 @@ class InternalEvaluation(object):
 
     @staticmethod
     def get_dunn_index(graph, clusters):
-        dunn_index = InternalEvaluation.__get_separation(graph, clusters) / \
-                     InternalEvaluation.__get_compactness(graph, clusters)
+        """Get Dunn index. The basic formula is separation / compactness [Liu2010]_.
+
+        Parameters
+        ----------
+        graph       : graph
+            A graph to be evaluated.
+        clusters    : dict
+            A dictionary containing node identifier per cluster. Key: cluster identifier,
+            value: list of node identifier.
+
+        Returns
+        -------
+        dunn_index  : float
+            Dunn index value.
+
+        References
+        ----------
+        .. [Liu2010] Liu, Y., Li, Z., Xiong, H., Gao, X., & Wu, J. Understanding of internal clustering
+                     validation measures. In 2010 IEEE 10th International Conference on Data Mining, pp. 911-916.
+        """
+        dunn_index = \
+            InternalEvaluation.__get_separation(graph, clusters) / InternalEvaluation.__get_compactness(graph, clusters)
         return dunn_index
