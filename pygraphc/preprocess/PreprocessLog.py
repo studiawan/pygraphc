@@ -25,6 +25,7 @@ class PreprocessLog(object):
         self.events_list = []
         self.events_unique = []
         self.word_count = {}
+        self.events_text = []
 
     def preprocess(self):
         self.__read_log()
@@ -92,6 +93,38 @@ class PreprocessLog(object):
 
         self.events_list = events_list
         self.events_unique = events_unique
+
+    def preprocess_text(self):
+        self.__read_log()
+        grammar = LogGrammar()
+
+        parsed_log = []
+        logs_lower = []
+        for line in self.logs:
+            if self.logtype == 'auth':
+                parsed = grammar.parse_authlog(line)
+            elif self.logtype == 'kippo':
+                parsed = grammar.parse_kipplog(line)
+                parsed['timestamp'] = parsed['timestamp'][:-5]
+            elif self.logtype == 'syslog':
+                parsed = grammar.parse_syslog(line)
+            elif self.logtype == 'bluegene-logs':
+                parsed = grammar.parse_bluegenelog(line)
+            parsed['message'] = parsed['message'].lower()
+            logs_lower.append(parsed['message'])
+            parsed_log.append(parsed)
+
+        # preprocess logs, add to ordinary list and unique list
+        events = {}
+        index = 0
+        for l in parsed_log:
+            preprocessed_event, tfidf = self.get_tfidf(l['message'], self.loglength, logs_lower)
+            length = self.get_doclength(tfidf)
+            events[index] = {'event': l['message'], 'tf-idf': tfidf, 'length': length, 'cluster': index,
+                             'preprocessed_event': preprocessed_event}
+            index += 1
+
+        self.events_text = events
 
     def do_preprocess(self):
         """Main method to execute preprocess log.
