@@ -5,8 +5,8 @@ class InternalEvaluation(object):
     """This a class for internal evaluation: validating cluster model without known ground truth.
     """
     @staticmethod
-    def __get_avg_distance(graph, node, neighbors):
-        """Get average distance from a node to its neighbor.
+    def __get_node_distance(graph, node, neighbors, mode=''):
+        """Get distance from a node to its neighbor.
 
         The neighbors can be located in intra-cluster or inter-cluster. The distance means
         edge weight in the graph case.
@@ -19,14 +19,17 @@ class InternalEvaluation(object):
             Node identifier in incremental integer.
         neighbors   : list
             List of neighbors' node identifier.
+        mode        : str
+            Mode of measurement, i.e., min, max, avg
 
         Returns
         -------
-        avg_distance    : float
+        final_distance    : float
             The average distance of node to its analyzed neighbors.
         """
         neigbors_weight = graph[node]
         distance = []
+        final_distance = 0.
         for node_id, weight in neigbors_weight.iteritems():
             if node_id in neighbors:
                 distance.append(1 - weight[0]['weight'])
@@ -37,8 +40,16 @@ class InternalEvaluation(object):
         if not distance:
             distance.append(0)
 
-        avg_distance = round(average(distance), 5)
-        return avg_distance
+        # check for mode
+        if mode == 'min':
+            final_distance = min(distance)
+        elif mode == 'max':
+            final_distance = max(distance)
+        elif mode == 'avg':
+            final_distance = average(distance)
+
+        final_distance = round(final_distance, 5)
+        return final_distance
 
     @staticmethod
     def __get_node_silhoutte(graph, clusters):
@@ -67,7 +78,7 @@ class InternalEvaluation(object):
             else:
                 # get average of intra-cluster distance
                 for node in cluster:
-                    intracluster_avg[node] = InternalEvaluation.__get_avg_distance(graph, node, cluster)
+                    intracluster_avg[node] = InternalEvaluation.__get_node_distance(graph, node, cluster, 'avg')
 
                 # all cluster - current cluster, get all nodes in inter cluster
                 neighbor_cluster = cid - {cluster_id}
@@ -75,15 +86,16 @@ class InternalEvaluation(object):
                 for neighbor in neighbor_cluster:
                     intercluster_nodes[neighbor] = clusters[neighbor]
 
-                # get average of inter-cluster distance
+                # get average of inter-cluster distance, and then get its minimal value (closest cluster)
                 for node in cluster:
                     distance = {}
                     for neighbor in neighbor_cluster:
-                        temp_distance = InternalEvaluation.__get_avg_distance(graph, node, intercluster_nodes[neighbor])
-                        if temp_distance != 0:
+                        temp_distance = InternalEvaluation.__get_node_distance(graph, node,
+                                                                               intercluster_nodes[neighbor], 'avg')
+                        if temp_distance != 0.:
                             distance[neighbor] = temp_distance
 
-                    intercluster_avg[node] = average(distance.values()) if len(distance.keys()) > 0 else 0
+                    intercluster_avg[node] = min(distance.values()) if len(distance.keys()) > 0 else 0.
 
                 # get vertex silhoutte
                 for node in cluster:
@@ -91,7 +103,7 @@ class InternalEvaluation(object):
                         node_silhouttes[node] = (intercluster_avg[node] - intracluster_avg[node]) / \
                                                 max(intercluster_avg[node], intracluster_avg[node])
                     except ZeroDivisionError:
-                        node_silhouttes[node] = 0
+                        node_silhouttes[node] = 0.
 
         return node_silhouttes
 
@@ -150,3 +162,71 @@ class InternalEvaluation(object):
         silhoutte_index = average(cluster_silhouttes.values())
 
         return silhoutte_index
+
+    @staticmethod
+    def __get_compactness(graph, clusters):
+        """Maximum node distance as diameter to show a compactness of a cluster.
+
+        Parameters
+        ----------
+        graph       : graph
+            A graph to be evaluated.
+        clusters    : dict
+            A dictionary containing node identifier per cluster. Key: cluster identifier,
+            value: list of node identifier.
+
+        Returns
+        -------
+        final_compactness   : float
+            Diameter or compactness of a cluster.
+        """
+        compactness = {}
+        for cluster_id, cluster in clusters.iteritems():
+            # handle cluster with only one node (singleton)
+            if len(cluster) == 1:
+                compactness[cluster[0]] = 0.
+            else:
+                for node in cluster:
+                    compactness[node] = InternalEvaluation.__get_node_distance(graph, node, cluster, 'max')
+
+        final_compactness = max(compactness)
+        return final_compactness
+
+    @staticmethod
+    def __get_separation(graph, clusters):
+        cid = set(clusters.keys())
+        intercluster_distance = {}
+        separation = 1.
+        for cluster_id, cluster in clusters.iteritems():
+            # handle cluster with only one node (singleton)
+            if len(cluster) == 1:
+                separation = 0.
+            else:
+                # all cluster - current cluster, get all nodes in inter cluster
+                neighbor_cluster = cid - {cluster_id}
+                intercluster_nodes = {}
+                for neighbor in neighbor_cluster:
+                    intercluster_nodes[neighbor] = clusters[neighbor]
+
+                # get average of inter-cluster distance, and then get its minimal value (closest cluster)
+                for node in cluster:
+                    distance = {}
+                    for neighbor in neighbor_cluster:
+                        temp_distance = InternalEvaluation.__get_node_distance(graph, node,
+                                                                               intercluster_nodes[neighbor], 'min')
+                        if temp_distance != 0.:
+                            distance[neighbor] = temp_distance
+
+                    intercluster_distance[node] = min(distance.values()) if len(distance.keys()) > 0 else 0.
+
+                    # get minimum intercluster distance
+                    if intercluster_distance[node] < separation:
+                        separation = intercluster_distance[node]
+
+        return separation
+
+    @staticmethod
+    def get_dunn_index(graph, clusters):
+        dunn_index = InternalEvaluation.__get_separation(graph, clusters) / \
+                     InternalEvaluation.__get_compactness(graph, clusters)
+        return dunn_index
