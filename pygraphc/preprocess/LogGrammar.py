@@ -242,7 +242,7 @@ class LogGrammar(object):
         parsed['number'] = parsed_bluegenelog[1]
         parsed['date'] = parsed_bluegenelog[2]
         parsed['core1'] = parsed_bluegenelog[3]
-        parsed['datetime'] = parsed_bluegenelog[4]
+        parsed['timestamp'] = parsed_bluegenelog[4]
         parsed['core2'] = parsed_bluegenelog[5]
         parsed['source'] = parsed_bluegenelog[6]
         parsed['service'] = parsed_bluegenelog[7]
