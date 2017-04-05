@@ -22,7 +22,7 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
     matches = []
     # Debian-based: /var/log/auth.log
     auth_dataset = ['Hofstede2014', 'SecRepo', 'forensic-challenge-2010', 'Kippo']
-    secure_dataset = ['hnet-hon-2004', 'hnet-hon-2006', 'forensic-challenge-2010-syslog']
+    secure_dataset = ['hnet-hon-2004', 'hnet-hon-2006', 'forensic-challenge-2010-syslog', 'BlueGene2006']
     if dataset in auth_dataset:
         for root, dirnames, filenames in os.walk(dataset_path):
             for filename in fnmatch.filter(filenames, file_extension):
@@ -150,7 +150,8 @@ def main(dataset, year, method, log_type):
         'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday',
         'Kippo': master_path + 'Kippo/per_day',
         'forensic-challenge-2010-syslog':
-            master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-2010-syslog/all'
+            master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-2010-syslog/all',
+        'BlueGene2006': master_path + 'BlueGene2006/per_day'
     }
 
     # anomaly dataset
@@ -161,7 +162,8 @@ def main(dataset, year, method, log_type):
         'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-attack/',
         'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-attack/',
         'Kippo': master_path + 'Kippo/attack/',
-        'forensic-challenge-2010-syslog': ''
+        'forensic-challenge-2010-syslog': '',
+        'BlueGene2006': ''
     }
 
     # note that in RedHat-based authentication log, parameter '*.log' is not used
@@ -191,7 +193,7 @@ def main(dataset, year, method, log_type):
             preprocess = PreprocessLog(log_type, properties['log_path'])
             if log_type == 'auth':
                 preprocess.do_preprocess()  # auth
-            elif log_type == 'kippo' or log_type == 'syslog':
+            elif log_type == 'kippo' or log_type == 'syslog' or log_type == 'bluegene-logs':
                 preprocess.preprocess()   # kippo
             events_unique = preprocess.events_unique
             original_logs = preprocess.logs
@@ -331,14 +333,14 @@ def main(dataset, year, method, log_type):
 if __name__ == '__main__':
     start = time()
     # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006, Kippo
-    #                     forensic-challenge-2010-syslog
-    data = 'forensic-challenge-2010-syslog'
-    # available log type: auth, kippo, syslog
-    logtype = 'syslog'
+    #                     forensic-challenge-2010-syslog, bluegene
+    data = 'BlueGene2006'
+    # available log type: auth, kippo, syslog, bluegene-logs
+    logtype = 'bluegene-logs'
 
     # available methods: majorclust, improved_majorclust, graph_entropy, max_clique_weighted, IPLoM, LKE
     #                    improved_majorclust_wo_refine, max_clique_weighted_sa
     clustering_method = 'max_clique_weighted_sa'
-    main(data, '2010', clustering_method, logtype)
+    main(data, '2006', clustering_method, logtype)
     duration = time() - start
     print 'Runtime:', duration, 'seconds'
