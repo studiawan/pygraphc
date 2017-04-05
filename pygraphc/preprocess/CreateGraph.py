@@ -1,6 +1,7 @@
-import networkx as nx
 from itertools import combinations
-from pygraphc.clustering.StringSimilarity import StringSimilarity
+
+import networkx as nx
+from pygraphc.similarity.StringSimilarity import StringSimilarity
 
 
 class CreateGraph(object):
