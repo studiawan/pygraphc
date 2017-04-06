@@ -5,63 +5,82 @@ class InternalEvaluation(object):
     """This a class for internal evaluation: validating cluster model without known ground truth.
     """
     @staticmethod
-    def __get_node_distance(graph, node, neighbors, mode=''):
+    def __get_node_distance(node, neighbors, measurement, mode, graph=None, cosine_similarity=None):
         """Get distance from a node to its neighbor.
 
         The neighbors can be located in intra-cluster or inter-cluster. The distance means
-        edge weight in the graph case.
+        edge weight in the graph case. In non-graph clustering method, node is equal with log line id.
 
         Parameters
         ----------
-        graph       : graph
-            A graph to be evaluated.
-        node        : int
-            Node identifier in incremental integer.
-        neighbors   : list
+        node                : int
+            Node identifier or log line identifier in incremental integer.
+        neighbors           : list
             List of neighbors' node identifier.
-        mode        : str
-            Mode of measurement, i.e., min, max, avg
+        measurement         : str
+            Mode of measurement, i.e., min, max, avg.
+        mode                : str
+            Mode of clustering method, i.e., graph or text.
+        graph               : graph
+            A graph to be evaluated.
+        cosine_similarity   : dict
+            Dictionary of cosine similarity in non-graph clustering. Key: (log_id1, log_id2),
+            value: cosine similarity distance.
 
         Returns
         -------
-        final_distance    : float
+        final_distance  : float
             The average distance of node to its analyzed neighbors.
         """
-        neigbors_weight = graph[node]
-        distance = []
+        distances = []
         final_distance = 0.
-        for node_id, weight in neigbors_weight.iteritems():
-            if node_id in neighbors:
-                distance.append(1 - weight[0]['weight'])
-            else:
-                continue
+        if mode == 'graph':
+            neigbors_weight = graph[node]
+            for node_id, weight in neigbors_weight.iteritems():
+                if node_id in neighbors:
+                    distances.append(1 - weight[0]['weight'])
 
-        # if list is empty
-        if not distance:
-            distance.append(0)
+            # if list is empty
+            if not distances:
+                distances.append(0)
+
+        elif mode == 'text':
+            for neighbor in neighbors:
+                if node != neighbor:
+                    try:
+                        distance = cosine_similarity[(node, neighbor)]
+                    except KeyError:
+                        distance = cosine_similarity[(neighbor, node)]
+
+                    distances.append(1 - distance)
 
         # check for mode
-        if mode == 'min':
-            final_distance = min(distance)
-        elif mode == 'max':
-            final_distance = max(distance)
-        elif mode == 'avg':
-            final_distance = average(distance)
+        if measurement == 'min':
+            final_distance = min(distances)
+        elif measurement == 'max':
+            final_distance = max(distances)
+        elif measurement == 'avg':
+            final_distance = average(distances)
 
         final_distance = round(final_distance, 5)
         return final_distance
 
     @staticmethod
-    def __get_node_silhoutte(graph, clusters):
+    def __get_node_silhoutte(clusters, mode, graph=None, cosine_similarity=None):
         """Get node silhoutte.
 
         Parameters
         ----------
-        graph       : graph
-            A graph to be evaluated.
-        clusters    : dict[int, list]
+        clusters            : dict[int, list]
             A dictionary containing node identifier per cluster. Key: cluster identifier,
             value: list of node identifier.
+        mode                : str
+            Mode of clustering method, i.e., graph or text.
+        graph               : graph
+            A graph to be evaluated.
+        cosine_similarity   : dict
+            Dictionary of cosine similarity in non-graph clustering. Key: (log_id1, log_id2),
+            value: cosine similarity distance.
 
         Returns
         -------
@@ -78,7 +97,12 @@ class InternalEvaluation(object):
             else:
                 # get average of intra-cluster distance
                 for node in cluster:
-                    intracluster_avg[node] = InternalEvaluation.__get_node_distance(graph, node, cluster, 'avg')
+                    if mode == 'graph':
+                        intracluster_avg[node] = InternalEvaluation.__get_node_distance(node, cluster, 'avg', mode,
+                                                                                        graph)
+                    elif mode == 'text':
+                        intracluster_avg[node] = InternalEvaluation.__get_node_distance(node, cluster, 'avg', mode,
+                                                                                        cosine_similarity)
 
                 # all cluster - current cluster, get all nodes in inter cluster
                 neighbor_cluster = cid - {cluster_id}
@@ -90,8 +114,13 @@ class InternalEvaluation(object):
                 for node in cluster:
                     distance = {}
                     for neighbor in neighbor_cluster:
-                        temp_distance = InternalEvaluation.__get_node_distance(graph, node,
-                                                                               intercluster_nodes[neighbor], 'avg')
+                        if mode == 'graph':
+                            temp_distance = InternalEvaluation.__get_node_distance(node, intercluster_nodes[neighbor],
+                                                                                   'avg', mode, graph)
+                        elif mode == 'text':
+                            temp_distance = InternalEvaluation.__get_node_distance(node, intercluster_nodes[neighbor],
+                                                                                   'avg', mode, None, cosine_similarity)
+
                         if temp_distance != 0.:
                             distance[neighbor] = temp_distance
 
@@ -108,24 +137,33 @@ class InternalEvaluation(object):
         return node_silhouttes
 
     @staticmethod
-    def __get_cluster_silhoutte(graph, clusters):
+    def __get_cluster_silhoutte(clusters, mode, graph=None, cosine_similarity=None):
         """Get cluster silhoutte.
 
         Parameters
         ----------
-        graph       : graph
-            A graph to be evaluated.
-        clusters    : dict[int, list]
+        clusters            : dict[int, list]
             A dictionary containing node identifier per cluster. Key: cluster identifier,
             value: list of node identifier.
+        mode                : str
+            Mode of clustering method, i.e., graph or text.
+        graph               : graph
+            A graph to be evaluated.
+        cosine_similarity   : dict
+            Dictionary of cosine similarity in non-graph clustering. Key: (log_id1, log_id2),
+            value: cosine similarity distance.
 
         Returns
         -------
         cluster_silhouttes  : dict[int, float]
             A dictionary containing silhoutte per cluster. Key: cluster identifier, value: silhoutte.
         """
-        node_silhouttes = InternalEvaluation.__get_node_silhoutte(graph, clusters)
-        cluster_silhouttes = {}
+        node_silhouttes, cluster_silhouttes = {}, {}
+        if mode == 'graph':
+            node_silhouttes = InternalEvaluation.__get_node_silhoutte(clusters, mode, graph)
+        elif mode == 'text':
+            node_silhouttes = InternalEvaluation.__get_node_silhoutte(clusters, mode, None, cosine_similarity)
+
         for cluster_id, cluster in clusters.iteritems():
             silhoutte = []
             for node in cluster:
@@ -135,16 +173,21 @@ class InternalEvaluation(object):
         return cluster_silhouttes
 
     @staticmethod
-    def get_silhoutte_index(graph, clusters):
+    def get_silhoutte_index(clusters, mode, graph=None, cosine_similarity=None):
         """Get silhoutte index for a graph [Almeida2011]_.
 
         Parameters
         ----------
-        graph       : graph
-            A graph to be evaluated.
-        clusters    : dict
+        clusters            : dict[int, list]
             A dictionary containing node identifier per cluster. Key: cluster identifier,
             value: list of node identifier.
+        mode                : str
+            Mode of clustering method, i.e., graph or text.
+        graph               : graph
+            A graph to be evaluated.
+        cosine_similarity   : dict
+            Dictionary of cosine similarity in non-graph clustering. Key: (log_id1, log_id2),
+            value: cosine similarity distance.
 
         Returns
         -------
@@ -158,22 +201,31 @@ class InternalEvaluation(object):
                          In Joint European Conference on Machine Learning and Knowledge Discovery in Databases,
                          pp. 44-59. Springer Berlin Heidelberg, 2011.
         """
-        cluster_silhouttes = InternalEvaluation.__get_cluster_silhoutte(graph, clusters)
-        silhoutte_index = average(cluster_silhouttes.values())
+        cluster_silhouttes = 0.
+        if mode == 'graph':
+            cluster_silhouttes = InternalEvaluation.__get_cluster_silhoutte(clusters, mode, graph)
+        elif mode == 'text':
+            cluster_silhouttes = InternalEvaluation.__get_cluster_silhoutte(clusters, mode, None, cosine_similarity)
 
+        silhoutte_index = average(cluster_silhouttes.values())
         return silhoutte_index
 
     @staticmethod
-    def __get_compactness(graph, clusters):
+    def __get_compactness(clusters, mode, graph=None, cosine_similarity=None):
         """Maximum node distance as diameter to show a compactness of a cluster.
 
         Parameters
         ----------
-        graph       : graph
-            A graph to be evaluated.
-        clusters    : dict
+        clusters            : dict
             A dictionary containing node identifier per cluster. Key: cluster identifier,
             value: list of node identifier.
+        mode                : str
+            Mode of clustering method, i.e., graph or text.
+        graph               : graph
+            A graph to be evaluated.
+        cosine_similarity   : dict
+            Dictionary of cosine similarity in non-graph clustering. Key: (log_id1, log_id2),
+            value: cosine similarity distance.
 
         Returns
         -------
@@ -187,13 +239,17 @@ class InternalEvaluation(object):
                 compactness[cluster[0]] = 0.
             else:
                 for node in cluster:
-                    compactness[node] = InternalEvaluation.__get_node_distance(graph, node, cluster, 'max')
+                    if mode == 'graph':
+                        compactness[node] = InternalEvaluation.__get_node_distance(node, cluster, 'max', mode, graph)
+                    elif mode == 'text':
+                        compactness[node] = InternalEvaluation.__get_node_distance(node, cluster, 'max', mode, None,
+                                                                                   cosine_similarity)
 
         final_compactness = max(compactness)
         return final_compactness
 
     @staticmethod
-    def __get_separation(graph, clusters):
+    def __get_separation(clusters, mode, graph=None, cosine_similarity=None):
         """Separation or minimum distance between clusters.
 
         It is actually minimum distance between two nodes in calculated clusters.
@@ -201,11 +257,16 @@ class InternalEvaluation(object):
 
         Parameters
         ----------
-        graph       : graph
-            A graph to be evaluated.
-        clusters    : dict
+        clusters            : dict
             A dictionary containing node identifier per cluster. Key: cluster identifier,
             value: list of node identifier.
+        mode                : str
+            Mode of clustering method, i.e., graph or text.
+        graph               : graph
+            A graph to be evaluated.
+        cosine_similarity   : dict
+            Dictionary of cosine similarity in non-graph clustering. Key: (log_id1, log_id2),
+            value: cosine similarity distance.
 
         Returns
         -------
@@ -230,8 +291,12 @@ class InternalEvaluation(object):
                 for node in cluster:
                     distance = {}
                     for neighbor in neighbor_cluster:
-                        temp_distance = InternalEvaluation.__get_node_distance(graph, node,
-                                                                               intercluster_nodes[neighbor], 'min')
+                        if mode == 'graph':
+                            temp_distance = InternalEvaluation.__get_node_distance(node, intercluster_nodes[neighbor],
+                                                                                   'min', mode, graph)
+                        elif mode == 'text':
+                            temp_distance = InternalEvaluation.__get_node_distance(node, intercluster_nodes[neighbor],
+                                                                                   'min', mode, None, cosine_similarity)
                         if temp_distance != 0.:
                             distance[neighbor] = temp_distance
 
@@ -244,16 +309,21 @@ class InternalEvaluation(object):
         return separation
 
     @staticmethod
-    def get_dunn_index(graph, clusters):
+    def get_dunn_index(clusters, mode, graph=None, cosine_similarity=None):
         """Get Dunn index. The basic formula is separation / compactness [Liu2010]_.
 
         Parameters
         ----------
-        graph       : graph
-            A graph to be evaluated.
-        clusters    : dict
+        clusters            : dict
             A dictionary containing node identifier per cluster. Key: cluster identifier,
             value: list of node identifier.
+        mode                : str
+            Mode of clustering method, i.e., graph or text.
+        graph               : graph
+            A graph to be evaluated.
+        cosine_similarity   : dict
+            Dictionary of cosine similarity in non-graph clustering. Key: (log_id1, log_id2),
+            value: cosine similarity distance.
 
         Returns
         -------
@@ -265,6 +335,12 @@ class InternalEvaluation(object):
         .. [Liu2010] Liu, Y., Li, Z., Xiong, H., Gao, X., & Wu, J. Understanding of internal clustering
                      validation measures. In 2010 IEEE 10th International Conference on Data Mining, pp. 911-916.
         """
-        dunn_index = \
-            InternalEvaluation.__get_separation(graph, clusters) / InternalEvaluation.__get_compactness(graph, clusters)
+        dunn_index = 0.
+        if mode == 'graph':
+            dunn_index = InternalEvaluation.__get_separation(clusters, mode, graph) / \
+                         InternalEvaluation.__get_compactness(clusters, mode, graph)
+        elif mode == 'text':
+            dunn_index = InternalEvaluation.__get_separation(clusters, mode, None, cosine_similarity) / \
+                         InternalEvaluation.__get_compactness(clusters, mode, None, cosine_similarity)
+
         return dunn_index
