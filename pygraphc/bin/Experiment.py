@@ -129,11 +129,22 @@ def get_evaluation_cluster(evaluated_graph, clusters, logs, properties, log_type
     return ar, ami, nmi, h, c, v
 
 
+def get_internal_evaluation(evaluated_graph, clusters, logs, properties, mode):
+    silhoutte_index, dunn_index = 0., 0.
+    if mode == 'graph':
+        silhoutte_index = InternalEvaluation.get_silhoutte_index(clusters, 'graph', evaluated_graph)
+        dunn_index = InternalEvaluation.get_dunn_index(clusters, 'graph', evaluated_graph)
+
+    OutputText.txt_percluster(properties['result_percluster'], clusters, evaluated_graph, logs)
+
+    return silhoutte_index, dunn_index
+
+
 def get_confusion(properties):
     return ExternalEvaluation.get_confusion(properties['anomaly_groundtruth'], properties['anomaly_perline'])
 
 
-def main(dataset, year, method, log_type):
+def main(dataset, year, method, log_type, evaluation):
     # list of methods
     graph_method = ['connected_components', 'max_clique', 'max_clique_weighted', 'max_clique_weighted_sa',
                     'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust',
@@ -175,15 +186,16 @@ def main(dataset, year, method, log_type):
 
     # set header
     header = ('file_name', 'adjusted_rand', 'adjusted_mutual_info', 'normalized_mutual_info',
-              'homogeneity', 'completeness', 'v-measure', 'silhoutte_index',
-              'tp', 'fp', 'fn', 'tn', 'precision', 'recall', 'accuracy', 'k', 'I')
+              'homogeneity', 'completeness', 'v-measure', 'tp', 'fp', 'fn', 'tn',
+              'precision', 'recall', 'accuracy', 'silhoutte_index', 'dunn_index', 'k', 'I')
     writer.writerow(header)
 
     # main process
     for file_identifier, properties in files.iteritems():
         print file_identifier
         # initialization
-        ar, ami, nmi, h, c, v, silhoutte = 0., 0., 0., 0., 0., 0., 0.
+        ar, ami, nmi, h, c, v = 0., 0., 0., 0., 0., 0.
+        silhoutte, dunn = 0., 0.
         true_false, precision, recall, accuracy = [], 0., 0., 0.
         edges_weight, nodes_id = [], []
         best_parameter = {}
@@ -267,30 +279,30 @@ def main(dataset, year, method, log_type):
             graph.clear()
 
         elif method == 'max_clique_weighted_sa':
-            file_exception = ['secure.5']   # 'secure.2',
-            if properties['log_path'].split('/')[-1] in file_exception and dataset == 'hnet-hon-2004':
-                continue
-
             # Selim et al., 1991, Sun et al., 1996
             tmin = 10 ** (-99)
             tmax = 10
             alpha = 0.9
 
+            # sa_run = 0.8    # only 80% of total trial with brute-force
             energy_type = 'silhoutte'
             maxc_sa = MaxCliquesPercolationSA(graph, edges_weight, nodes_id, tmin, tmax, alpha, energy_type)
             maxc_sa.init_maxclique_percolation()
             best_parameter, maxc_sa_cluster = maxc_sa.get_maxcliques_percolation_weighted_sa()
 
             # do evaluation performance and clear graph
-            # ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, maxc_sa_cluster,
-            #                                                                       original_logs,
-            #                                                                       properties, year, edges_dict,
-            #                                                                       log_type)
-            # true_false, specificity, precision, recall, accuracy = get_confusion(properties)
+            if evaluation['external']:
+                ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, maxc_sa_cluster,
+                                                                                      original_logs,
+                                                                                      properties, year, edges_dict,
+                                                                                      log_type)
+                true_false, specificity, precision, recall, accuracy = get_confusion(properties)
 
-            ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = 0., 0., 0., 0., 0., 0., 0., ()
-            true_false, specificity, precision, recall, accuracy = [0., 0., 0., 0.], 0., 0., 0., 0.
-            silhoutte = InternalEvaluation.get_silhoutte_index(graph, maxc_sa_cluster)
+            elif evaluation['internal']:
+                ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = 0., 0., 0., 0., 0., 0., 0., ()
+                true_false, specificity, precision, recall, accuracy = [0., 0., 0., 0.], 0., 0., 0., 0.
+                silhoutte, dunn = get_internal_evaluation(graph, maxc_sa_cluster, original_logs, properties, 'graph')
+
             graph.clear()
 
         elif method == 'IPLoM':
@@ -323,24 +335,40 @@ def main(dataset, year, method, log_type):
             ar, ami, nmi, h, c, v = get_evaluation_cluster(None, lke_clusters, original_logs, properties, log_type)
 
         # write evaluation result to file
-        row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v, silhoutte,
+        row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v,
                true_false[0], true_false[1], true_false[2], true_false[3], precision, recall, accuracy,
-               best_parameter['k'], best_parameter['I'])
+               silhoutte, dunn, best_parameter['k'], best_parameter['I'])
         writer.writerow(row)
 
     f.close()
 
 if __name__ == '__main__':
-    start = time()
     # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006, Kippo
     #                     forensic-challenge-2010-syslog, bluegene
-    data = 'BlueGene2006'
     # available log type: auth, kippo, syslog, bluegene-logs
-    logtype = 'bluegene-logs'
+    # available methods : majorclust, improved_majorclust, graph_entropy, max_clique_weighted, IPLoM, LKE
+    #                     improved_majorclust_wo_refine, max_clique_weighted_sa
+    start = time()
+    config = {
+        'data': 'forensic-challenge-2010-syslog',
+        'logtype': 'syslog',
+        'year': 2009,
+        'method': 'max_clique_weighted_sa',
+        'evaluation': {
+            'external': False,
+            'internal': True
+        },
+        'anomaly': {
+            'statistics': False,
+            'sentiment': False
+        }
+    }
 
-    # available methods: majorclust, improved_majorclust, graph_entropy, max_clique_weighted, IPLoM, LKE
-    #                    improved_majorclust_wo_refine, max_clique_weighted_sa
-    clustering_method = 'max_clique_weighted_sa'
-    main(data, '2006', clustering_method, logtype)
+    # run experiment
+    main(config['data'], config['year'], config['method'], config['logtype'], config['evaluation'])
+
+    # print runtime
     duration = time() - start
-    print 'Runtime:', duration, 'seconds'
+    minute, second = divmod(duration, 60)
+    hour, minute = divmod(minute, 60)
+    print "Runtime: %d:%02d:%02d" % (hour, minute, second)
