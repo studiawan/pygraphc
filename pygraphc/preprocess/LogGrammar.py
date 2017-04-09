@@ -198,9 +198,10 @@ class LogGrammar(object):
 
     @staticmethod
     def __get_bluegene_grammar():
-        """The definition of syslog grammar.
+        """The definition of BlueGene/L grammar.
 
-        The BlueGene/L logs can be downloaded from [Useninx2006a]_
+        The BlueGene/L logs can be downloaded from [Useninx2006a]_ and
+        this data was used in [Stearley2008]_.
 
         Returns
         -------
@@ -209,7 +210,9 @@ class LogGrammar(object):
 
         References
         ----------
-        .. [Usenix2006a] The HPC4 data. URL: https://www.usenix.org/cfdr-data#hpc4
+        .. [Usenix2006a]  The HPC4 data. URL: https://www.usenix.org/cfdr-data#hpc4
+        .. [Stearley2008] Stearley, J., & Oliner, A. J. Bad words: Finding faults in Spirit's syslogs.
+                          In 8th IEEE International Symposium on Cluster Computing and the Grid, pp. 765-770.
         """
         ints = Word(nums)
 
@@ -259,6 +262,23 @@ class LogGrammar(object):
 
     @staticmethod
     def __get_raslog_grammar():
+        """The definition of RAS log grammar.
+
+        The BlueGene/P RAS logs can be downloaded from [Useninx2009a]_
+        this data was used in [Zheng2011]_.
+
+        Returns
+        -------
+        bluegene_grammar    :
+            Grammar for BlueGene/P RAS supercomputer logs.
+
+        References
+        ----------
+        .. [Usenix2009a] Blue Gene/P data from Intrepid. URL: https://www.usenix.org/cfdr-data
+        .. [Zheng2011]   Z. Zheng, L. Yu, W. Tang, Z. Lan, R. Gupta, N. Desai, S. Coghlan, and D. Buettner,
+                         Co-Analysis of RAS Log and Job Log on Blue Gene/P, in Proc. of IEEE International Parallel &
+                         Distributed Processing Symposium, 2011.
+        """
         ints = Word(nums)
 
         recid = ints
@@ -282,6 +302,18 @@ class LogGrammar(object):
         return raslog_grammar
 
     def parse_raslog(self, log_line):
+        """Parse the RAS logs based on defined grammar.
+
+        Parameters
+        ----------
+        log_line    : str
+            A log line to be parsed
+
+        Returns
+        -------
+        parsed      : dict[str, str]
+            A parsed RAS log.
+        """
         parsed_raslog = self.raslog_grammar.parseString(log_line)
 
         parsed = dict()
