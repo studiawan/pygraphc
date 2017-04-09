@@ -42,7 +42,7 @@ class InternalEvaluation(object):
 
             # if list is empty
             if not distances:
-                distances.append(0)
+                distances.append(0.)
 
         elif mode == 'text':
             for neighbor in neighbors:
@@ -55,12 +55,13 @@ class InternalEvaluation(object):
                     distances.append(1 - distance)
 
         # check for mode
-        if measurement == 'min':
-            final_distance = min(distances)
-        elif measurement == 'max':
-            final_distance = max(distances)
-        elif measurement == 'avg':
-            final_distance = average(distances)
+        if distances:
+            if measurement == 'min':
+                final_distance = min(distances)
+            elif measurement == 'max':
+                final_distance = max(distances)
+            elif measurement == 'avg':
+                final_distance = average(distances)
 
         final_distance = round(final_distance, 5)
         return final_distance
@@ -168,7 +169,7 @@ class InternalEvaluation(object):
             silhoutte = []
             for node in cluster:
                 silhoutte.append(node_silhouttes[node])
-            cluster_silhouttes[cluster_id] = average(silhoutte)
+            cluster_silhouttes[cluster_id] = average(silhoutte) if silhoutte else -1.
 
         return cluster_silhouttes
 
@@ -201,13 +202,13 @@ class InternalEvaluation(object):
                          In Joint European Conference on Machine Learning and Knowledge Discovery in Databases,
                          pp. 44-59. Springer Berlin Heidelberg, 2011.
         """
-        cluster_silhouttes = 0.
+        cluster_silhouttes = {}
         if mode == 'graph':
             cluster_silhouttes = InternalEvaluation.__get_cluster_silhoutte(clusters, mode, graph)
         elif mode == 'text':
             cluster_silhouttes = InternalEvaluation.__get_cluster_silhoutte(clusters, mode, None, cosine_similarity)
 
-        silhoutte_index = average(cluster_silhouttes.values())
+        silhoutte_index = average(cluster_silhouttes.values()) if cluster_silhouttes else -1.
         return silhoutte_index
 
     @staticmethod
@@ -245,7 +246,7 @@ class InternalEvaluation(object):
                         compactness[node] = InternalEvaluation.__get_node_distance(node, cluster, 'max', mode, None,
                                                                                    cosine_similarity)
 
-        final_compactness = max(compactness)
+        final_compactness = max(compactness.values())
         return final_compactness
 
     @staticmethod
@@ -279,7 +280,8 @@ class InternalEvaluation(object):
         for cluster_id, cluster in clusters.iteritems():
             # handle cluster with only one node (singleton)
             if len(cluster) == 1:
-                separation = 0.
+                if separation <= 1.:
+                    pass
             else:
                 # all cluster - current cluster, get all nodes in inter cluster
                 neighbor_cluster = cid - {cluster_id}
@@ -300,7 +302,7 @@ class InternalEvaluation(object):
                         if temp_distance != 0.:
                             distance[neighbor] = temp_distance
 
-                    intercluster_distance[node] = min(distance.values()) if len(distance.keys()) > 0 else 0.
+                    intercluster_distance[node] = min(distance.values()) if len(distance.keys()) > 0 else 1.
 
                     # get minimum intercluster distance
                     if intercluster_distance[node] < separation:
