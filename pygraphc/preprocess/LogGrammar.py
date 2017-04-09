@@ -16,10 +16,16 @@ class LogGrammar(object):
         """The constructor of LogGrammar.
         """
         self.log_type = log_type
-        self.authlog_grammar = self.__get_authlog_grammar()
-        self.kippolog_grammar = self.__get_kippolog_grammar()
-        self.syslog_grammar = self.__get_syslog_grammar()
-        self.bluegene_grammar = self.__get_bluegene_grammar()
+        if self.log_type == 'auth':
+            self.authlog_grammar = self.__get_authlog_grammar()
+        elif self.log_type == 'kippo':
+            self.kippolog_grammar = self.__get_kippolog_grammar()
+        elif self.log_type == 'syslog':
+            self.syslog_grammar = self.__get_syslog_grammar()
+        elif self.log_type == 'bluegene':
+            self.bluegene_grammar = self.__get_bluegene_grammar()
+        elif self.log_type == 'raslog':
+            self.raslog_grammar = self.__get_raslog_grammar()
 
     @staticmethod
     def __get_authlog_grammar():
@@ -248,5 +254,51 @@ class LogGrammar(object):
         parsed['service'] = parsed_bluegenelog[7]
         parsed['info_type'] = parsed_bluegenelog[8]
         parsed['message'] = parsed_bluegenelog[9]
+
+        return parsed
+
+    @staticmethod
+    def __get_raslog_grammar():
+        ints = Word(nums)
+
+        recid = ints
+        msg_id = Word(alphas + nums + '_')
+        component = Word(alphas)
+        subcomponent = Word(alphas + '_')
+        errcode = Word(alphas + '_')
+        severity = Word(alphas)
+        timestamp = Combine(ints + '-' + ints + '-' + ints + '-' + ints + '.' + ints + '.' + ints + '.' + ints)
+        flags = Word(nums + '-')
+        processor = Word(nums + '-')
+        node = Word(nums + '-')
+        block = Word(alphas + nums + '-')
+        location = Word(alphas + nums + '-')
+        serialnumber = Word(alphas + nums)
+        ecid = Word(alphas + nums + "'")
+        message = Regex('.*')
+
+        raslog_grammar = recid + msg_id + component + subcomponent + errcode + severity + timestamp + flags + \
+            processor + node + block + location + serialnumber + ecid + message
+        return raslog_grammar
+
+    def parse_raslog(self, log_line):
+        parsed_raslog = self.raslog_grammar.parseString(log_line)
+
+        parsed = dict()
+        parsed['recid'] = parsed_raslog[0]
+        parsed['msg_id'] = parsed_raslog[1]
+        parsed['component'] = parsed_raslog[2]
+        parsed['subcomponent'] = parsed_raslog[3]
+        parsed['errcode'] = parsed_raslog[4]
+        parsed['severity'] = parsed_raslog[5]
+        parsed['timestamp'] = parsed_raslog[6]
+        parsed['flags'] = parsed_raslog[7]
+        parsed['processor'] = parsed_raslog[8]
+        parsed['node'] = parsed_raslog[9]
+        parsed['block'] = parsed_raslog[10]
+        parsed['location'] = parsed_raslog[11]
+        parsed['serialnumber'] = parsed_raslog[12]
+        parsed['ecid'] = parsed_raslog[13]
+        parsed['message'] = parsed_raslog[14]
 
         return parsed
