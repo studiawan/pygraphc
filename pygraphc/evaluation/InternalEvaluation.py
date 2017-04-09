@@ -246,7 +246,7 @@ class InternalEvaluation(object):
                         compactness[node] = InternalEvaluation.__get_node_distance(node, cluster, 'max', mode, None,
                                                                                    cosine_similarity)
 
-        final_compactness = max(compactness.values())
+        final_compactness = max(compactness.values()) if compactness else 0.
         return final_compactness
 
     @staticmethod
@@ -339,10 +339,16 @@ class InternalEvaluation(object):
         """
         dunn_index = 0.
         if mode == 'graph':
-            dunn_index = InternalEvaluation.__get_separation(clusters, mode, graph) / \
-                         InternalEvaluation.__get_compactness(clusters, mode, graph)
+            try:
+                dunn_index = InternalEvaluation.__get_separation(clusters, mode, graph) / \
+                             InternalEvaluation.__get_compactness(clusters, mode, graph)
+            except ZeroDivisionError:
+                dunn_index = 0.
         elif mode == 'text':
-            dunn_index = InternalEvaluation.__get_separation(clusters, mode, None, cosine_similarity) / \
-                         InternalEvaluation.__get_compactness(clusters, mode, None, cosine_similarity)
+            try:
+                dunn_index = InternalEvaluation.__get_separation(clusters, mode, None, cosine_similarity) / \
+                             InternalEvaluation.__get_compactness(clusters, mode, None, cosine_similarity)
+            except ZeroDivisionError:
+                dunn_index = 0.
 
         return dunn_index
