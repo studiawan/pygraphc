@@ -25,8 +25,17 @@ class SimulatedAnnealing(object):
         self.parameters = parameters
         self.max_iteration = max_iteration
 
-    def get_parameter(self, previous_parameter):
+    def get_parameter(self, previous_parameter, all_combinations, bruteforce=False):
         """Get random parameter based on given range.
+
+        Parameters
+        ----------
+        previous_parameter  : list
+            List of tuple containing all previous k and I: (k, I)
+        all_combinations    : list
+            List of all possible combinations of the parameter.
+        bruteforce          : bool
+            Flag for using brute force or not.
 
         Returns
         -------
@@ -34,13 +43,19 @@ class SimulatedAnnealing(object):
             Dictionary of random parameters.
         """
         random_parameter = {}
-        while True:
-            for param, value in self.parameters.iteritems():
-                random_parameter[param] = choice(value)
+        if not bruteforce:
+            while True:
+                for param, value in self.parameters.iteritems():
+                    random_parameter[param] = choice(value)
 
-            # make sure generated parameter is not the same as previous parameter
-            if random_parameter != previous_parameter:
-                break
+                # make sure generated parameter is not the same as previous parameter
+                if (random_parameter['k'], random_parameter['I']) not in previous_parameter:
+                    break
+        else:
+            for param in all_combinations:
+                if param not in previous_parameter:
+                    random_parameter['k'] = param[0]
+                    random_parameter['I'] = param[1]
 
         return random_parameter
 
@@ -81,6 +96,6 @@ class SimulatedAnnealing(object):
         """
         energy = 0.
         if energy_type == 'silhoutte':
-            energy = InternalEvaluation.get_silhoutte_index(graph, clusters)
+            energy = InternalEvaluation.get_silhoutte_index(clusters, 'graph', graph)
 
         return energy
