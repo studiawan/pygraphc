@@ -29,7 +29,7 @@ class PreprocessLog(object):
 
     def preprocess(self):
         self.__read_log()
-        grammar = LogGrammar()
+        grammar = LogGrammar(self.logtype)
 
         parsed_log = []
         logs_lower = []
@@ -258,6 +258,14 @@ class PreprocessLog(object):
         for a in additional_stopwords:
             doc = doc.replace(a, '')
         doc.replace('_', ' ')
+
+        # remove word with length only 1 character
+        doc_split = doc.split()
+        for word in doc_split:
+            if len(word) == 1:
+                doc.replace(word, '')
+
+        # remove more than one space
         doc = ' '.join(doc.split())
 
         stopwords = corpus.stopwords.words('english')
