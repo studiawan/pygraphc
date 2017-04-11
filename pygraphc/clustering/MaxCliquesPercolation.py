@@ -131,27 +131,29 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
         """
         # get weighted maximal cliques and get percolation
         weighted_maxcliques = ClusterUtility.get_weighted_cliques(self.graph, self.cliques, threshold)
-        super(MaxCliquesPercolationWeighted, self)._get_percolation_graph(weighted_maxcliques, k)
-        percolations = self.clique_percolation
-        self.__set_percolation_dict(percolations)
+        clusters = {}
+        if weighted_maxcliques:
+            super(MaxCliquesPercolationWeighted, self)._get_percolation_graph(weighted_maxcliques, k)
+            self.__set_percolation_dict(self.clique_percolation)
 
-        # remove overlapping nodes
-        percolations = percolations.values()
-        for p1, p2 in combinations(percolations, 2):
-            intersections = p1.intersection(p2)
-            if intersections:
-                for node in intersections:
-                    node_neighbors = self.graph.neighbors(node)
-                    p1_neighbors, p2_neighbors = p1.intersection(node_neighbors), p2.intersection(node_neighbors)
-                    p1_neighbors_weight = self.__get_neighbors_weight(node, p1_neighbors)
-                    p2_neighbors_weight = self.__get_neighbors_weight(node, p2_neighbors)
+            # remove overlapping nodes
+            percolations = self.clique_percolation.values()
+            for p1, p2 in combinations(percolations, 2):
+                intersections = p1.intersection(p2)
+                if intersections:
+                    for node in intersections:
+                        node_neighbors = self.graph.neighbors(node)
+                        p1_neighbors, p2_neighbors = p1.intersection(node_neighbors), p2.intersection(node_neighbors)
+                        p1_neighbors_weight = self.__get_neighbors_weight(node, p1_neighbors)
+                        p2_neighbors_weight = self.__get_neighbors_weight(node, p2_neighbors)
 
-                    # follow the neighboring cluster which has bigger sum of edge-weight
-                    self.percolation_dict[node] = self.percolation_dict[list(p1_neighbors)[0]] \
-                        if p1_neighbors_weight > p2_neighbors_weight else self.percolation_dict[list(p2_neighbors)[0]]
+                        # follow the neighboring cluster which has bigger sum of edge-weight
+                        self.percolation_dict[node] = self.percolation_dict[list(p1_neighbors)[0]] \
+                            if p1_neighbors_weight > p2_neighbors_weight else \
+                            self.percolation_dict[list(p2_neighbors)[0]]
 
-        self.__set_graph_cluster()
-        clusters = self.__get_clusters()
+            self.__set_graph_cluster()
+            clusters = self.__get_clusters()
         return clusters
 
     def __set_percolation_dict(self, percolations):
