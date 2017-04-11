@@ -178,8 +178,9 @@ class KCliquePercolation(object):
         # Get all connected component in percolation graph
         cluster_id = 0
         for component in nx.connected_components(percolation_graph):
-            self.clique_percolation[cluster_id] = frozenset.union(*component)
-            cluster_id += 1
+            for c in component:
+                self.clique_percolation[cluster_id] = c
+                cluster_id += 1
 
         # set cluster id
         ClusterUtility.set_cluster_id(self.graph, self.clique_percolation)
