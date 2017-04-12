@@ -257,17 +257,20 @@ class PreprocessLog(object):
         additional_stopwords = ['preauth', 'from', 'xxxxx', 'for', 'port', 'sshd', 'ssh', 'root']
         for a in additional_stopwords:
             doc = doc.replace(a, '')
-        doc.replace('_', ' ')
+        doc = doc.replace('_', ' ')
 
         # remove word with length only 1 character
         doc_split = doc.split()
-        for word in doc_split:
+        # print doc, doc_split
+        for index, word in enumerate(doc_split):
             if len(word) == 1:
-                doc.replace(word, '')
+                doc_split[index] = ''
 
         # remove more than one space
+        doc = ' '.join(doc_split)
         doc = ' '.join(doc.split())
 
+        # remove stopwords
         stopwords = corpus.stopwords.words('english')
         stopwords_result = [w.lower() for w in doc.split() if w.lower() not in stopwords]
 
