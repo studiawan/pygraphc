@@ -10,25 +10,28 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
     """Get clustering based on maximal clique percolation and the parameters are optimized
        using simulated annealing.
     """
-    def __init__(self, graph, edges_weight, nodes_id, tmin, tmax, alpha, energy_type):
+    def __init__(self, graph, edges_weight, nodes_id, tmin, tmax, alpha, energy_type, iteration_threshold):
         """The constructor of class MaxCliquesPercolationSA.
 
         Parameters
         ----------
-        graph           : graph
+        graph               : graph
             Graph to be clustered.
-        edges_weight    : list[tuple]
+        edges_weight        : list[tuple]
             List of tuple containing (node1, node2, cosine similarity between these two).
-        nodes_id        : list
+        nodes_id            : list
             List of all node identifier.
-        tmin            : float
+        tmin                : float
             Minimum temperature.
-        tmax            : float
+        tmax                : float
             Maximum temperature.
-        alpha           : float
+        alpha               : float
             Cooling factor or temperature multiplier.
-        energy_type     : str
+        energy_type         : str
             Type of energy or objective function such as Silhoutte index, Dunn index, etc.
+        iteration_threshold : float
+            Threshold for maximum iteration. For example the value 0.8 means that it only need to have
+            80% of maximum iteration. We use maximum iteration when activating brute force mode.
         """
         super(MaxCliquesPercolationSA, self).__init__(graph, edges_weight, nodes_id)
         self.Tmin = tmin
@@ -36,6 +39,7 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
         self.alpha = alpha
         self.energy_type = energy_type
         self.max_iteration = 0
+        self.iteration_threshold = iteration_threshold
 
     def get_maxcliques_percolation_weighted_sa(self):
         """The main method to run maximal clique percolation using simulated annealing.
@@ -102,14 +106,8 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
 
         return best_parameter, best_cluster, best_energy
 
-    def __set_parameters(self, iteration_threshold):
+    def __set_parameters(self):
         """Set initial parameter before running simulated annealing.
-
-        Parameters
-        ----------
-        iteration_threshold : float
-            Threshold for maximum iteration. For example the value 0.8 means that it only need to have
-            80% of maximum iteration. We use maximum iteration when activating brute force mode.
 
         Returns
         -------
@@ -140,5 +138,5 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
 
         # all_combinations is reduced by 2:
         # 1 for initial process that does not include loop and 1 for zero-based index
-        self.max_iteration = ceil(iteration_threshold * (len(all_combinations) - 2))
+        self.max_iteration = ceil(self.iteration_threshold * (len(all_combinations) - 2))
         return parameters, all_combinations
