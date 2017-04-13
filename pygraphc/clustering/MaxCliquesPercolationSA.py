@@ -41,27 +41,49 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
         self.max_iteration = 0
         self.iteration_threshold = iteration_threshold
 
-    def get_maxcliques_percolation_weighted_sa(self):
+    def __get_maxcliques_percolation_weighted_sa(self, percolation_only=False):
         """The main method to run maximal clique percolation using simulated annealing.
+
+        Parameters
+        ----------
+        percolation_only    : bool
+            Flag for percolation. False means simulated annealing will run for two parameters:
+            percolation (k) and intensity (I).
 
         Returns
         -------
-        best_parameter  : dict
+        best_parameter      : dict
             The parameters that provide the best energy.
+        best_cluster        : dict
+            The best cluster generated using the best parameter.
+        best_energy         : float
+            The best energy based on specific type, i.e., Silhouette index or Dunn index.
         """
-        # get random parameters from the given range
-        parameters, all_combinations = self.__set_parameters()
-        best_parameter, best_cluster = {'k': [], 'I': []}, {}
+        best_parameter, best_cluster = {}, {}
         processed_parameter = []
         current_energy, best_energy = 0., 0.
+
+        # get random parameters from the given range
+        if not percolation_only:
+            parameters, all_combinations = self.__set_parameters()
+        else:
+            parameters, all_combinations = self.__set_parameters(True)
+
         if parameters['k']:
             # create instance of simulated annealing utility
             sa = SimulatedAnnealing(self.Tmin, self.Tmax, self.alpha, parameters, self.max_iteration)
-            current_parameter = sa.get_parameter(processed_parameter, all_combinations, True)
-            processed_parameter.append((current_parameter['k'], current_parameter['I']))
 
-            # get initial maximal clique percolation and its energy
-            mcpw_sa_cluster = self.get_maxcliques_percolation_weighted(current_parameter['k'], current_parameter['I'])
+            if not percolation_only:
+                # get initial maximal clique percolation and its energy
+                current_parameter = sa.get_parameter(processed_parameter, all_combinations)
+                processed_parameter.append((current_parameter['k'], current_parameter['I']))
+                mcpw_sa_cluster = self.get_maxcliques_percolation_weighted(current_parameter['k'],
+                                                                           current_parameter['I'])
+            else:
+                current_parameter = sa.get_parameter(processed_parameter, all_combinations, True)
+                processed_parameter.append(current_parameter['k'])
+                mcpw_sa_cluster = self.get_maxcliques_percolation(current_parameter['k'])
+
             if mcpw_sa_cluster:
                 current_energy = sa.get_energy(self.graph, mcpw_sa_cluster, self.energy_type) * -1
                 best_energy = current_energy
@@ -77,12 +99,17 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                 # reset clique percolation. this is the bug I am looking for a week. I forget to reset this variable.
                 self.clique_percolation.clear()
 
-                # set perameter, find cluster, get energy
+                # set perameter, find cluster, and get energy
                 tcurrent = tnew
-                new_parameter = sa.get_parameter(processed_parameter, all_combinations, True)
-                processed_parameter.append((new_parameter['k'], new_parameter['I']))
+                if not percolation_only:
+                    new_parameter = sa.get_parameter(processed_parameter, all_combinations)
+                    processed_parameter.append((new_parameter['k'], new_parameter['I']))
+                    mcpw_sa_cluster = self.get_maxcliques_percolation_weighted(new_parameter['k'], new_parameter['I'])
+                else:
+                    new_parameter = sa.get_parameter(processed_parameter, all_combinations, True)
+                    processed_parameter.append(new_parameter['k'])
+                    mcpw_sa_cluster = self.get_maxcliques_percolation(new_parameter['k'])
 
-                mcpw_sa_cluster = self.get_maxcliques_percolation_weighted(new_parameter['k'], new_parameter['I'])
                 if mcpw_sa_cluster:
                     new_energy = sa.get_energy(self.graph, mcpw_sa_cluster, self.energy_type) * -1
                 else:
@@ -106,8 +133,14 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
 
         return best_parameter, best_cluster, best_energy
 
-    def __set_parameters(self):
+    def __set_parameters(self, percolation_only=False):
         """Set initial parameter before running simulated annealing.
+
+        Parameters
+        ----------
+        percolation_only    : bool
+            Flag for percolation. False means simulated annealing will run for two parameters:
+            percolation (k) and intensity (I).
 
         Returns
         -------
@@ -123,20 +156,44 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
 
         # set parameter k (number of percolation) and I (intensity threshold)
         k = list(xrange(2, max_node)) if max_node > 0 else []
-        intensity = linspace(0.1, 0.9, 9)
-        new_intensity = []
-        for intens in intensity:
-            new_intensity.append(round(intens, 1))
+        if not percolation_only:
+            intensity = linspace(0.1, 0.9, 9)
+            new_intensity = [round(intens, 1) for intens in intensity]
 
-        parameters = {
-            'k': k,
-            'I': new_intensity
-        }
+            parameters = {
+                'k': k,
+                'I': new_intensity
+            }
 
-        # max iteration is total number of all combinations between parameter k and I
-        all_combinations = list(product(parameters['k'], parameters['I']))
+            # max iteration is total number of all combinations between parameter k and I
+            all_combinations = list(product(parameters['k'], parameters['I']))
+
+        else:
+            parameters = {'k': k}
+            all_combinations = parameters['k']
 
         # all_combinations is reduced by 2:
         # 1 for initial process that does not include loop and 1 for zero-based index
         self.max_iteration = ceil(self.iteration_threshold * (len(all_combinations) - 2))
         return parameters, all_combinations
+
+    def get_maxcliques_sa(self):
+        """Main method to run maximal clique percolation and find its optimal parameter by simulated annealing.
+
+        If there are no clusters found using parameter percolation (k) and intensity (I),
+        we run the method only using k.
+
+        Returns
+        -------
+        best_parameter      : dict
+            The parameters that provide the best energy.
+        best_cluster        : dict
+            The best cluster generated using the best parameter.
+        best_energy         : float
+            The best energy based on specific type, i.e., Silhouette index or Dunn index.
+        """
+        best_parameter, best_cluster, best_energy = self.__get_maxcliques_percolation_weighted_sa()
+        if not best_cluster:
+            best_parameter, best_cluster, best_energy = self.__get_maxcliques_percolation_weighted_sa(True)
+
+        return best_parameter, best_cluster, best_energy
