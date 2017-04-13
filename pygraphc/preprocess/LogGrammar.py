@@ -284,8 +284,8 @@ class LogGrammar(object):
         recid = ints
         msg_id = Word(alphas + nums + '_')
         component = Word(alphas)
-        subcomponent = Word(alphas + '_')
-        errcode = Word(alphas + '_')
+        subcomponent = Word(alphas + nums + '_')
+        errcode = Word(alphas + nums + '_')
         severity = Word(alphas)
         timestamp = Combine(ints + '-' + ints + '-' + ints + '-' + ints + '.' + ints + '.' + ints + '.' + ints)
         flags = Word(nums + '-')
