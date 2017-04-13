@@ -25,15 +25,18 @@ class SimulatedAnnealing(object):
         self.parameters = parameters
         self.max_iteration = max_iteration
 
-    def get_parameter(self, previous_parameter, all_combinations, bruteforce=False):
+    def get_parameter(self, previous_parameter, all_combinations, percolation_only=False, bruteforce=False):
         """Get random parameter based on given range.
 
         Parameters
         ----------
         previous_parameter  : list
-            List of tuple containing all previous k and I: (k, I)
+            List of tuple containing all previous parameters, e.g., k and I: (k, I)
         all_combinations    : list
             List of all possible combinations of the parameter.
+        percolation_only    : bool
+            Flag for percolation. False means simulated annealing will run for two parameters:
+            percolation (k) and intensity (I).
         bruteforce          : bool
             Flag for using brute force or not.
 
@@ -49,13 +52,20 @@ class SimulatedAnnealing(object):
                     random_parameter[param] = choice(value)
 
                 # make sure generated parameter is not the same as previous parameter
-                if (random_parameter['k'], random_parameter['I']) not in previous_parameter:
-                    break
+                if not percolation_only:
+                    if (random_parameter['k'], random_parameter['I']) not in previous_parameter:
+                        break
+                else:
+                    if random_parameter['k'] not in previous_parameter:
+                        break
         else:
             for param in all_combinations:
                 if param not in previous_parameter:
-                    random_parameter['k'] = param[0]
-                    random_parameter['I'] = param[1]
+                    if not percolation_only:
+                        random_parameter['k'] = param[0]
+                        random_parameter['I'] = param[1]
+                    else:
+                        random_parameter['k'] = param
 
         return random_parameter
 
