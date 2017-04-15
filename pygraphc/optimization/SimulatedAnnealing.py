@@ -50,7 +50,8 @@ class SimulatedAnnealing(object):
             while True:
                 for param, value in self.parameters.iteritems():
                     random_parameter[param] = choice(value)
-
+                if len(self.parameters['k']) == 1:
+                    break
                 # make sure generated parameter is not the same as previous parameter
                 if not percolation_only:
                     if (random_parameter['k'], random_parameter['I']) not in previous_parameter:
