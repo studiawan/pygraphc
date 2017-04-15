@@ -291,7 +291,7 @@ class LogGrammar(object):
         flags = Word(nums + '-')
         processor = Word(nums + '-')
         node = Word(nums + '-')
-        block = Word(alphas + nums + '-')
+        block = Word(alphas + nums + '-' + '_')
         location = Word(alphas + nums + '-')
         serialnumber = Word(alphas + nums)
         ecid = Word(alphas + nums + "'")
