@@ -15,6 +15,7 @@ from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
 from pygraphc.anomaly.SentimentAnalysis import SentimentAnalysis
 from pygraphc.output.OutputText import OutputText
+from pygraphc.similarity.LogTextSimilarity import LogTextSimilarity
 
 
 def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
@@ -22,7 +23,7 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
     matches = []
     # Debian-based: /var/log/auth.log
     auth_dataset = ['Hofstede2014', 'SecRepo', 'forensic-challenge-2010', 'Kippo']
-    secure_dataset = ['hnet-hon-2004', 'hnet-hon-2006', 'forensic-challenge-2010-syslog', 'BlueGene2006']
+    secure_dataset = ['hnet-hon-2004', 'hnet-hon-2006', 'forensic-challenge-2010-syslog', 'BlueGene2006', 'ras']
     if dataset in auth_dataset:
         for root, dirnames, filenames in os.walk(dataset_path):
             for filename in fnmatch.filter(filenames, file_extension):
@@ -113,7 +114,7 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
     return ar, ami, nmi, h, c, v, silhoutte_index, anomaly_evaluation
 
 
-def get_evaluation_cluster(evaluated_graph, clusters, logs, properties, log_type):
+def get_external_evaluation(evaluated_graph, clusters, logs, properties, log_type):
     # this method is for IPLoM, LKE, and PySplunk
     # get prediction file
     ExternalEvaluation.set_cluster_label_id(evaluated_graph, clusters, logs, properties['result_perline'], log_type)
@@ -129,14 +130,18 @@ def get_evaluation_cluster(evaluated_graph, clusters, logs, properties, log_type
     return ar, ami, nmi, h, c, v
 
 
-def get_internal_evaluation(evaluated_graph, clusters, logs, properties, mode):
+def get_internal_evaluation(evaluated_graph, clusters, logs, properties, mode, logtype):
     silhoutte_index, dunn_index = 0., 0.
     if mode == 'graph':
         silhoutte_index = InternalEvaluation.get_silhoutte_index(clusters, 'graph', evaluated_graph)
         dunn_index = InternalEvaluation.get_dunn_index(clusters, 'graph', evaluated_graph)
+    elif mode == 'text':
+        lts = LogTextSimilarity(logtype, logs)
+        cosine_similarity = lts.get_cosine_similarity()
+        silhoutte_index = InternalEvaluation.get_silhoutte_index(clusters, 'text', None, cosine_similarity)
+        dunn_index = InternalEvaluation.get_dunn_index(clusters, 'text', None, cosine_similarity)
 
     OutputText.txt_percluster(properties['result_percluster'], clusters, evaluated_graph, logs)
-
     return silhoutte_index, dunn_index
 
 
@@ -162,7 +167,8 @@ def main(dataset, year, method, log_type, evaluation):
         'Kippo': master_path + 'Kippo/per_day',
         'forensic-challenge-2010-syslog':
             master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-2010-syslog/all',
-        'BlueGene2006': master_path + 'BlueGene2006/per_day'
+        'BlueGene2006': master_path + 'BlueGene2006/per_day',
+        'ras': master_path + 'ras/per_day'
     }
 
     # anomaly dataset
@@ -174,7 +180,8 @@ def main(dataset, year, method, log_type, evaluation):
         'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-attack/',
         'Kippo': master_path + 'Kippo/attack/',
         'forensic-challenge-2010-syslog': '',
-        'BlueGene2006': ''
+        'BlueGene2006': '',
+        'ras': ''
     }
 
     # note that in RedHat-based authentication log, parameter '*.log' is not used
@@ -205,8 +212,8 @@ def main(dataset, year, method, log_type, evaluation):
             preprocess = PreprocessLog(log_type, properties['log_path'])
             if log_type == 'auth':
                 preprocess.do_preprocess()  # auth
-            elif log_type == 'kippo' or log_type == 'syslog' or log_type == 'bluegene-logs':
-                preprocess.preprocess()   # kippo
+            elif log_type == 'kippo' or log_type == 'syslog' or log_type == 'bluegene-logs' or log_type == 'raslog':
+                preprocess.preprocess()
             events_unique = preprocess.events_unique
             original_logs = preprocess.logs
 
@@ -281,14 +288,15 @@ def main(dataset, year, method, log_type, evaluation):
         elif method == 'max_clique_weighted_sa':
             # Selim et al., 1991, Sun et al., 1996
             tmin = 10 ** (-99)
-            tmax = 10
+            tmax = 10.
             alpha = 0.9
 
-            # sa_run = 0.8    # only 80% of total trial with brute-force
             energy_type = 'silhoutte'
-            maxc_sa = MaxCliquesPercolationSA(graph, edges_weight, nodes_id, tmin, tmax, alpha, energy_type)
+            iteration_threshold = 0.3   # only xx% of total trial with brute-force
+            maxc_sa = MaxCliquesPercolationSA(graph, edges_weight, nodes_id, tmin, tmax, alpha,
+                                              energy_type, iteration_threshold)
             maxc_sa.init_maxclique_percolation()
-            best_parameter, maxc_sa_cluster = maxc_sa.get_maxcliques_percolation_weighted_sa()
+            best_parameter, maxc_sa_cluster, best_energy = maxc_sa.get_maxcliques_sa()
 
             # do evaluation performance and clear graph
             if evaluation['external']:
@@ -301,7 +309,8 @@ def main(dataset, year, method, log_type, evaluation):
             elif evaluation['internal']:
                 ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = 0., 0., 0., 0., 0., 0., 0., ()
                 true_false, specificity, precision, recall, accuracy = [0., 0., 0., 0.], 0., 0., 0., 0.
-                silhoutte, dunn = get_internal_evaluation(graph, maxc_sa_cluster, original_logs, properties, 'graph')
+                silhoutte, dunn = get_internal_evaluation(graph, maxc_sa_cluster, original_logs, properties, 'graph',
+                                                          log_type)
 
             graph.clear()
 
@@ -316,7 +325,7 @@ def main(dataset, year, method, log_type, evaluation):
             original_logs = myparser.logs
 
             # do evaluation performance
-            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, iplom_clusters, original_logs, properties, log_type)
+            ar, ami, nmi, h, c, v = get_external_evaluation(None, iplom_clusters, original_logs, properties, log_type)
 
         elif method == 'LKE':
             print properties['log_path']
@@ -332,7 +341,7 @@ def main(dataset, year, method, log_type, evaluation):
             original_logs = myparser.logs
 
             # do evaluation performance
-            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, lke_clusters, original_logs, properties, log_type)
+            ar, ami, nmi, h, c, v = get_external_evaluation(None, lke_clusters, original_logs, properties, log_type)
 
         # write evaluation result to file
         row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v,
@@ -343,16 +352,16 @@ def main(dataset, year, method, log_type, evaluation):
     f.close()
 
 if __name__ == '__main__':
-    # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006, Kippo
-    #                     forensic-challenge-2010-syslog, bluegene
-    # available log type: auth, kippo, syslog, bluegene-logs
+    # available datasets: Hofstede2014, SecRepo, forensic-challenge-2010, hnet-hon-2004, hnet-hon-2006, Kippo,
+    #                     forensic-challenge-2010-syslog, bluegene, ras
+    # available log type: auth, kippo, syslog, bluegene-logs, raslog
     # available methods : majorclust, improved_majorclust, graph_entropy, max_clique_weighted, IPLoM, LKE
     #                     improved_majorclust_wo_refine, max_clique_weighted_sa
     start = time()
     config = {
-        'data': 'forensic-challenge-2010-syslog',
-        'logtype': 'syslog',
-        'year': 2009,
+        'data': 'Kippo',
+        'logtype': 'kippo',
+        'year': 2017,
         'method': 'max_clique_weighted_sa',
         'evaluation': {
             'external': False,
