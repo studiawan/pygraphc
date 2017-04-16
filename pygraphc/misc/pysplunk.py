@@ -1,7 +1,7 @@
 import os
 import fnmatch
 import csv
-from pygraphc.bin.Experiment import get_dataset, get_evaluation_cluster
+from pygraphc.bin.Experiment import get_dataset, get_external_evaluation, get_internal_evaluation
 
 
 class PySplunk(object):
@@ -12,7 +12,8 @@ class PySplunk(object):
     .. [SplunkDev2016] Command line examples in the Splunk SDK for Python.
                        http://dev.splunk.com/view/python-sdk/SP-CAAAEFK
     """
-    def __init__(self, username, password, output_mode, dataset, tmp_file='/tmp/pysplunk_cluster.csv'):
+    def __init__(self, username, password, output_mode, dataset, log_type, source_type, evaluation,
+                 tmp_file='/tmp/pysplunk_cluster.csv'):
         """The constructor of class PySplunk.
 
         Parameters
@@ -22,7 +23,13 @@ class PySplunk(object):
         password        : str
             Password to access Splunk daemon.
         output_mode     : str
-            Output for clustering result. Recommended output is csv
+            Output for clustering result. Recommended output is csv.
+        log_type        : str
+            Type of the event log.
+        source_type     : str
+            Type of the event log for internal Splunk processing.
+        evaluation      : str
+            Type of clustering evaluation, i.e., internal and external.
         tmp_file        : str
             Path for temporary clustering result.
         """
@@ -30,6 +37,9 @@ class PySplunk(object):
         self.password = password
         self.output_mode = output_mode
         self.dataset = dataset
+        self.log_type = log_type
+        self.source_type = source_type
+        self.evaluation = evaluation
         self.tmp_file = tmp_file
         self.logs = []
 
@@ -53,8 +63,9 @@ class PySplunk(object):
                   '--host=192.168.1.106 --port=8089 ' + \
                   '--username=' + self.username + ' --password=' + self.password + \
                   ' "search source=' + self.dataset + '-' + source + \
-                  ' host=' + self.dataset + ' sourcetype=linux_secure | cluster labelfield=cluster_id labelonly=t |' \
-                                            ' table cluster_id _raw | sort 0 field _time | reverse" ' + \
+                  ' host=' + self.dataset + ' sourcetype=' + self.source_type + \
+                  ' | cluster labelfield=cluster_id labelonly=t |' \
+                  ' table cluster_id _raw | sort 0 field _time | reverse" ' + \
                   '--output_mode=' + self.output_mode + " > " + self.tmp_file
         os.system(command)
 
@@ -85,7 +96,9 @@ class PySplunk(object):
             'forensic-challenge-2010':
                 master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-perday',
             'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
-            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday'
+            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday',
+            'forensic-challenge-2010-syslog':
+                master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-2010-syslog/all'
         }
 
         # note that in RedHat-based authentication log, parameter '*.log' is not used
@@ -96,8 +109,12 @@ class PySplunk(object):
         writer = csv.writer(f)
 
         # set header
-        header = ('file_name', 'adjusted_rand', 'adjusted_mutual_info', 'normalized_mutual_info',
-                  'homogeneity', 'completeness', 'v-measure')
+        header = ()
+        if self.evaluation == 'external':
+            header = ('file_name', 'adjusted_rand', 'adjusted_mutual_info', 'normalized_mutual_info',
+                      'homogeneity', 'completeness', 'v-measure')
+        elif self.evaluation == 'internal':
+            header = ('file_name', 'silhouette', 'dunn')
         writer.writerow(header)
 
         # main process to cluster log file
@@ -105,10 +122,19 @@ class PySplunk(object):
             print file_identifier
             clusters = self.get_splunk_cluster(properties['log_path'])
             original_logs = self.logs
-            ar, ami, nmi, h, c, v = get_evaluation_cluster(None, clusters, original_logs, properties)
+            row = ()
+
+            # evaluate cluster based on its type
+            if self.evaluation == 'external':
+                ar, ami, nmi, h, c, v = get_external_evaluation(None, clusters, original_logs, properties,
+                                                                self.log_type)
+                row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v)
+            elif self.evaluation == 'internal':
+                silhouette, dunn = get_internal_evaluation(None, clusters, original_logs, properties, 'text',
+                                                           self.log_type)
+                row = ('/'.join(properties['log_path'].split('/')[-2:]), silhouette, dunn)
 
             # write evaluation result to file
-            row = ('/'.join(properties['log_path'].split('/')[-2:]), ar, ami, nmi, h, c, v)
             writer.writerow(row)
 
         f.close()
@@ -117,7 +143,7 @@ class PySplunk(object):
 class UploadToSplunk(object):
     """Upload log file to Splunk.
     """
-    def __init__(self, username, password, dataset, sourcetype='linux_secure'):
+    def __init__(self, username, password, dataset, sourcetype):
         """The constructor of class UploadToSplunk.
 
         Parameters
@@ -164,7 +190,9 @@ class UploadToSplunk(object):
             'forensic-challenge-2010':
                 master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-perday',
             'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
-            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday'
+            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday',
+            'forensic-challenge-2010-syslog':
+                master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-2010-syslog/all'
         }
 
         # get all log files under dataset directory
@@ -175,7 +203,8 @@ class UploadToSplunk(object):
                 for filename in fnmatch.filter(filenames, '*.log'):
                     matches.append(os.path.join(root, filename))
         # RedHat-based: /var/log/secure
-        elif self.dataset == 'hnet-hon-2004' or self.dataset == 'hnet-hon-2006':
+        elif self.dataset == 'hnet-hon-2004' or self.dataset == 'hnet-hon-2006' or \
+                self.dataset == 'forensic-challenge-2010-syslog':
             file_lists = os.listdir(dataset_path[self.dataset])
             matches = [dataset_path[self.dataset] + '/' + filename
                        for filename in file_lists if not filename.endswith('.labeled')]
@@ -234,7 +263,9 @@ class DeleteFromSplunk(object):
             'forensic-challenge-2010':
                 master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-5-2010-perday',
             'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
-            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday'
+            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday',
+            'forensic-challenge-2010-syslog':
+                master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-2010-syslog/all'
         }
 
         # note that in RedHat-based authentication log, parameter '*.log' is not used
@@ -249,10 +280,10 @@ class DeleteFromSplunk(object):
 if __name__ == '__main__':
     mode = 'upload'
     if mode == 'clustering':
-        clustering = PySplunk('admin', '123', 'csv', 'SecRepo')
+        clustering = PySplunk('admin', '123', 'csv', 'SecRepo', 'auth', 'linux_secure', 'internal')
         clustering.get_bulk_cluster()
     elif mode == 'upload':
-        upload = UploadToSplunk('admin', '123', 'SecRepo')
+        upload = UploadToSplunk('admin', '123', 'SecRepo', 'linux_secure')
         upload.bulk_upload()
     elif mode == 'delete':
         delete = DeleteFromSplunk('admin', '123', 'SecRepo')
