@@ -195,5 +195,6 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
         best_parameter, best_cluster, best_energy = self.__get_maxcliques_percolation_weighted_sa()
         if not best_cluster:
             best_parameter, best_cluster, best_energy = self.__get_maxcliques_percolation_weighted_sa(True)
+            best_parameter['I'] = 0.
 
         return best_parameter, best_cluster, best_energy
