@@ -7,6 +7,16 @@ from pygraphc.preprocess.LogGrammar import LogGrammar
 
 class PreprocessLog(object):
     """A class to preprocess event log before generating the graph model.
+
+    Notes
+    -----
+    There are two warning in this source code because of a bug from PyCharm about type hinting [PyCharm2017a]_.
+
+    References
+    ----------
+    .. [PyCharm2017a] Pycharm type hinting for list warning.
+                      https://intellij-support.jetbrains.com/hc/en-us/community/posts/205973504-Pycharm-type-hinting-for-list-warning
+                      https://youtrack.jetbrains.com/issue/PY-22291
     """
     def __init__(self, logtype, logfile=None):
         """Constructor of class PreprocessLog.
@@ -32,7 +42,8 @@ class PreprocessLog(object):
         grammar = LogGrammar(self.logtype)
 
         parsed_log = []
-        logs_lower = []
+        """:type: list[dict]"""
+        logs_lower = []     #
         for line in self.logs:
             if self.logtype == 'auth':
                 parsed = grammar.parse_authlog(line)
@@ -50,7 +61,8 @@ class PreprocessLog(object):
             parsed_log.append(parsed)
 
         # preprocess logs, add to ordinary list and unique list
-        events_list, events_unique = [], []
+        events_list = []
+        events_unique = []  # type: list[tuple[int, dict]]
         index, index_log = 0, 0
         for l in parsed_log:
             events_list.append(l['message'])
@@ -60,11 +72,11 @@ class PreprocessLog(object):
             # if not exist, add new element
             if preprocessed_event not in check_events_unique:
                 # if event not in check_events_unique:
-                print index, preprocessed_event
+                # print index, preprocessed_event
                 length = self.get_doclength(tfidf)
-                events_unique.append([index, {'event': l['message'], 'tf-idf': tfidf, 'length': length, 'status': '',
+                events_unique.append((index, {'event': l['message'], 'tf-idf': tfidf, 'length': length, 'status': '',
                                               'cluster': index, 'frequency': 1, 'member': [index_log],
-                                              'preprocessed_event': preprocessed_event}])
+                                              'preprocessed_event': preprocessed_event}))
                 index += 1
 
             # if exist, increment the frequency
@@ -96,13 +108,13 @@ class PreprocessLog(object):
         self.events_list = events_list
         self.events_unique = events_unique
 
-    def preprocess_text(self):
-        self.__read_log()
+    def preprocess_text(self, logs):
         grammar = LogGrammar()
 
         parsed_log = []
+        """:type: list[dict]"""
         logs_lower = []
-        for line in self.logs:
+        for line in logs:
             if self.logtype == 'auth':
                 parsed = grammar.parse_authlog(line)
             elif self.logtype == 'kippo':
@@ -112,6 +124,9 @@ class PreprocessLog(object):
                 parsed = grammar.parse_syslog(line)
             elif self.logtype == 'bluegene-logs':
                 parsed = grammar.parse_bluegenelog(line)
+            elif self.logtype == 'raslog':
+                parsed = grammar.parse_raslog(line)
+
             parsed['message'] = parsed['message'].lower()
             logs_lower.append(parsed['message'])
             parsed_log.append(parsed)
@@ -119,14 +134,16 @@ class PreprocessLog(object):
         # preprocess logs, add to ordinary list and unique list
         events = {}
         index = 0
+        log_length = len(logs)
         for l in parsed_log:
-            preprocessed_event, tfidf = self.get_tfidf(l['message'], self.loglength, logs_lower)
+            preprocessed_event, tfidf = self.get_tfidf(l['message'], log_length, logs_lower)
             length = self.get_doclength(tfidf)
             events[index] = {'event': l['message'], 'tf-idf': tfidf, 'length': length, 'cluster': index,
                              'preprocessed_event': preprocessed_event}
             index += 1
 
         self.events_text = events
+        self.loglength = log_length
 
     def do_preprocess(self):
         """Main method to execute preprocess log.
@@ -139,7 +156,8 @@ class PreprocessLog(object):
         logs_total = self.loglength
 
         # preprocess logs, add to ordinary list and unique list
-        events_list, events_unique = [], []
+        events_list = []
+        events_unique = []  # type: list[tuple[int, dict]]
         index, index_log = 0, 0
         for l in logs_lower:
             auth_split = l.split()
@@ -156,9 +174,9 @@ class PreprocessLog(object):
                 # if event not in check_events_unique:
                 # print index, preprocessed_event
                 length = self.get_doclength(tfidf)
-                events_unique.append([index, {'event': event, 'tf-idf': tfidf, 'length': length, 'status': '',
+                events_unique.append((index, {'event': event, 'tf-idf': tfidf, 'length': length, 'status': '',
                                               'cluster': index, 'frequency': 1, 'member': [index_log],
-                                              'preprocessed_event': preprocessed_event}])
+                                              'preprocessed_event': preprocessed_event}))
                 index += 1
 
             # if exist, increment the frequency
