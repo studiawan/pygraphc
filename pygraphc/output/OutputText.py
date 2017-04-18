@@ -28,7 +28,7 @@ class OutputText(object):
         fopen.close()
 
     @staticmethod
-    def txt_percluster(percluster_file, clusters, graph, original_logs):
+    def txt_percluster(percluster_file, clusters, mode, graph, original_logs):
         """Write clustering result to txt file.
 
         Parameters
@@ -37,6 +37,8 @@ class OutputText(object):
             Filename of output file per cluster.
         clusters                : dict
             Dictionary of a list containing node identifier per cluster.
+        mode                    : str
+            Mode of clustering method, i.e., graph or text.
         graph                   : graph
             The graph which its clustering result to be written to a file.
         original_logs           : iterable
@@ -46,9 +48,12 @@ class OutputText(object):
         for cluster_id, nodes in clusters.iteritems():
             f.write('Cluster #' + str(cluster_id) + '\n')
             for node in nodes:
-                members = graph.node[node]['member']
-                for member in members:
-                    f.write(original_logs[member])
+                if mode == 'graph':
+                    members = graph.node[node]['member']
+                    for member in members:
+                        f.write(original_logs[member])
+                elif mode == 'text':
+                    f.write(original_logs[node])
             f.write('\n')
 
         f.close()
