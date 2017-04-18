@@ -103,7 +103,7 @@ class InternalEvaluation(object):
                                                                                         graph)
                     elif mode == 'text':
                         intracluster_avg[node] = InternalEvaluation.__get_node_distance(node, cluster, 'avg', mode,
-                                                                                        cosine_similarity)
+                                                                                        None, cosine_similarity)
 
                 # all cluster - current cluster, get all nodes in inter cluster
                 neighbor_cluster = cid - {cluster_id}
