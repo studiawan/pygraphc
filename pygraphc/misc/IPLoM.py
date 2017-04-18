@@ -49,7 +49,7 @@ class Event:
         Event.eventId += 1
 
 
-class Para:
+class ParaIPLoM:
     def __init__(self, path='', logname='', save_path='',
                  save_file_name='template', max_event_len=120, step2support=0, pst=0.0,
                  ct=0.175, lower_bound=0.25, upper_bound=0.9, use_pst=False,
@@ -87,6 +87,7 @@ class Para:
         self.removeCol = remove_col
         self.regular = regular
         self.rex = rex
+        print 'max', self.maxEventLen
 
 
 class IPLoM:
