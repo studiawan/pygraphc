@@ -109,7 +109,7 @@ class PreprocessLog(object):
         self.events_unique = events_unique
 
     def preprocess_text(self, logs):
-        grammar = LogGrammar()
+        grammar = LogGrammar(self.logtype)
 
         parsed_log = []
         """:type: list[dict]"""
@@ -138,8 +138,7 @@ class PreprocessLog(object):
         for l in parsed_log:
             preprocessed_event, tfidf = self.get_tfidf(l['message'], log_length, logs_lower)
             length = self.get_doclength(tfidf)
-            events[index] = {'event': l['message'], 'tf-idf': tfidf, 'length': length, 'cluster': index,
-                             'preprocessed_event': preprocessed_event}
+            events[index] = {'tf-idf': tfidf, 'length': length, 'cluster': index}
             index += 1
 
         self.events_text = events
