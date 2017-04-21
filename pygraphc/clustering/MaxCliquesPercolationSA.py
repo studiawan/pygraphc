@@ -10,7 +10,7 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
     """Get clustering based on maximal clique percolation and the parameters are optimized
        using simulated annealing.
     """
-    def __init__(self, graph, edges_weight, nodes_id, tmin, tmax, alpha, energy_type, iteration_threshold):
+    def __init__(self, graph, edges_weight, nodes_id, tmin, tmax, alpha, energy_type, iteration_threshold, brute_force):
         """The constructor of class MaxCliquesPercolationSA.
 
         Parameters
@@ -40,6 +40,7 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
         self.energy_type = energy_type
         self.max_iteration = 0
         self.iteration_threshold = iteration_threshold
+        self.brute_force = brute_force
 
     def __get_maxcliques_percolation_weighted_sa(self, percolation_only=False):
         """The main method to run maximal clique percolation using simulated annealing.
@@ -75,12 +76,12 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
 
             if not percolation_only:
                 # get initial maximal clique percolation and its energy
-                current_parameter = sa.get_parameter(processed_parameter, all_combinations)
+                current_parameter = sa.get_parameter(processed_parameter, all_combinations, False, self.brute_force)
                 processed_parameter.append((current_parameter['k'], current_parameter['I']))
                 mcpw_sa_cluster = self.get_maxcliques_percolation_weighted(current_parameter['k'],
                                                                            current_parameter['I'])
             else:
-                current_parameter = sa.get_parameter(processed_parameter, all_combinations, True)
+                current_parameter = sa.get_parameter(processed_parameter, all_combinations, True, self.brute_force)
                 processed_parameter.append(current_parameter['k'])
                 mcpw_sa_cluster = self.get_maxcliques_percolation(current_parameter['k'])
 
@@ -90,23 +91,26 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                 best_parameter = current_parameter
                 best_cluster = mcpw_sa_cluster
 
+            # print current parameter
+            print current_parameter['k'], ',', current_parameter['I'], ',', current_energy * -1
+
             # cooling the temperature
             tnew = sa.get_temperature(self.Tmax)
 
             # main loop of simulated annealing
             count_iteration = 0
             while tnew > self.Tmin and count_iteration <= self.max_iteration:
-                # reset clique percolation. this is the bug I am looking for a week. I forget to reset this variable.
+                # reset current clique percolation before finding the new one
                 self.clique_percolation.clear()
 
                 # set perameter, find cluster, and get energy
                 tcurrent = tnew
                 if not percolation_only:
-                    new_parameter = sa.get_parameter(processed_parameter, all_combinations)
+                    new_parameter = sa.get_parameter(processed_parameter, all_combinations, False, self.brute_force)
                     processed_parameter.append((new_parameter['k'], new_parameter['I']))
                     mcpw_sa_cluster = self.get_maxcliques_percolation_weighted(new_parameter['k'], new_parameter['I'])
                 else:
-                    new_parameter = sa.get_parameter(processed_parameter, all_combinations, True)
+                    new_parameter = sa.get_parameter(processed_parameter, all_combinations, True, self.brute_force)
                     processed_parameter.append(new_parameter['k'])
                     mcpw_sa_cluster = self.get_maxcliques_percolation(new_parameter['k'])
 
@@ -114,6 +118,9 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                     new_energy = sa.get_energy(self.graph, mcpw_sa_cluster, self.energy_type) * -1
                 else:
                     new_energy = 0.
+
+                # print new parameter
+                print new_parameter['k'], ',', new_parameter['I'], ',', new_energy * -1
 
                 # get delta energy and check
                 delta_energy = new_energy - current_energy
