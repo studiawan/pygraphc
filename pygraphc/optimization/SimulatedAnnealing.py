@@ -108,5 +108,7 @@ class SimulatedAnnealing(object):
         energy = 0.
         if energy_type == 'silhoutte':
             energy = InternalEvaluation.get_silhoutte_index(clusters, 'graph', graph)
+        elif energy_type == 'dunn':
+            energy = InternalEvaluation.get_dunn_index(clusters, 'graph', graph)
 
         return energy
