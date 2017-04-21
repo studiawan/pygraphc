@@ -8,7 +8,7 @@ from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
 from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
 from pygraphc.clustering.MaxCliquesPercolationSA import MaxCliquesPercolationSA
-from pygraphc.misc.IPLoM import Para, IPLoM
+from pygraphc.misc.IPLoM import ParaIPLoM, IPLoM
 from pygraphc.misc.LKE import Para, LKE
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
 from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
@@ -66,6 +66,7 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
     # get anomaly score
     anomaly = AnomalyScore(evaluated_graph, clusters, year, edges_dict, sentiment_score, log_type)
     anomaly.get_anomaly_score()
+
     # please check this flag: False means without sentiment analysis included
     anomaly.get_anomaly_decision(False)
 
@@ -94,7 +95,7 @@ def get_evaluation(evaluated_graph, clusters, logs, properties, year, edges_dict
     }
 
     # get output per cluster, cluster property, and anomaly score
-    OutputText.txt_percluster(properties['result_percluster'], clusters, evaluated_graph, logs)
+    OutputText.txt_percluster(properties['result_percluster'], clusters, 'graph', evaluated_graph, logs)
     OutputText.csv_cluster_property(properties['anomaly_report'], cluster_property, cluster_abstraction, score,
                                     quadratic_score, normalized_score, sentiment_score, anomaly_decision,
                                     evaluation_metrics)
@@ -135,13 +136,14 @@ def get_internal_evaluation(evaluated_graph, clusters, logs, properties, mode, l
     if mode == 'graph':
         silhoutte_index = InternalEvaluation.get_silhoutte_index(clusters, 'graph', evaluated_graph)
         dunn_index = InternalEvaluation.get_dunn_index(clusters, 'graph', evaluated_graph)
+        OutputText.txt_percluster(properties['result_percluster'], clusters, 'graph', evaluated_graph, logs)
     elif mode == 'text':
         lts = LogTextSimilarity(logtype, logs)
         cosine_similarity = lts.get_cosine_similarity()
         silhoutte_index = InternalEvaluation.get_silhoutte_index(clusters, 'text', None, cosine_similarity)
         dunn_index = InternalEvaluation.get_dunn_index(clusters, 'text', None, cosine_similarity)
+        OutputText.txt_percluster(properties['result_percluster'], clusters, 'text', None, logs)
 
-    OutputText.txt_percluster(properties['result_percluster'], clusters, evaluated_graph, logs)
     return silhoutte_index, dunn_index
 
 
@@ -205,7 +207,7 @@ def main(dataset, year, method, log_type, evaluation):
         silhoutte, dunn = 0., 0.
         true_false, precision, recall, accuracy = [], 0., 0., 0.
         edges_weight, nodes_id = [], []
-        best_parameter = {}
+        best_parameter = {'k': 0., 'I': 0.}
 
         if method in graph_method:
             # preprocess log file
@@ -293,10 +295,12 @@ def main(dataset, year, method, log_type, evaluation):
 
             energy_type = 'silhoutte'
             iteration_threshold = 0.3   # only xx% of total trial with brute-force
+            brute_force = False
             maxc_sa = MaxCliquesPercolationSA(graph, edges_weight, nodes_id, tmin, tmax, alpha,
-                                              energy_type, iteration_threshold)
+                                              energy_type, iteration_threshold, brute_force)
             maxc_sa.init_maxclique_percolation()
             best_parameter, maxc_sa_cluster, best_energy = maxc_sa.get_maxcliques_sa()
+            print best_parameter['k'], best_parameter['I'], best_energy
 
             # do evaluation performance and clear graph
             if evaluation['external']:
@@ -307,7 +311,7 @@ def main(dataset, year, method, log_type, evaluation):
                 true_false, specificity, precision, recall, accuracy = get_confusion(properties)
 
             elif evaluation['internal']:
-                ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = 0., 0., 0., 0., 0., 0., 0., ()
+                ar, ami, nmi, h, c, v, anomaly_evaluation = 0., 0., 0., 0., 0., 0., ()
                 true_false, specificity, precision, recall, accuracy = [0., 0., 0., 0.], 0., 0., 0., 0.
                 silhoutte, dunn = get_internal_evaluation(graph, maxc_sa_cluster, original_logs, properties, 'graph',
                                                           log_type)
@@ -317,15 +321,22 @@ def main(dataset, year, method, log_type, evaluation):
         elif method == 'IPLoM':
             # call IPLoM and get clusters
             print properties['log_path']
-            para = Para(path=dataset_path[dataset] + '/', logname=properties['log_path'],
-                        save_path=properties['result_path'])
+            para = ParaIPLoM(path=dataset_path[dataset] + '/', logname=properties['log_path'],
+                             save_path=properties['result_path'])
             myparser = IPLoM(para)
             myparser.main_process()
             iplom_clusters = myparser.get_clusters()
             original_logs = myparser.logs
 
             # do evaluation performance
-            ar, ami, nmi, h, c, v = get_external_evaluation(None, iplom_clusters, original_logs, properties, log_type)
+            if evaluation['external']:
+                ar, ami, nmi, h, c, v = get_external_evaluation(None, iplom_clusters, original_logs, properties,
+                                                                log_type)
+            elif evaluation['internal']:
+                ar, ami, nmi, h, c, v, anomaly_evaluation = 0., 0., 0., 0., 0., 0., ()
+                true_false, specificity, precision, recall, accuracy = [0., 0., 0., 0.], 0., 0., 0., 0.
+                silhoutte, dunn = get_internal_evaluation(None, iplom_clusters, original_logs, properties, 'text',
+                                                          log_type)
 
         elif method == 'LKE':
             print properties['log_path']
@@ -358,7 +369,22 @@ if __name__ == '__main__':
     # available methods : majorclust, improved_majorclust, graph_entropy, max_clique_weighted, IPLoM, LKE
     #                     improved_majorclust_wo_refine, max_clique_weighted_sa
     start = time()
-    config = {
+    syslog_config = {
+        'data': 'forensic-challenge-2010-syslog',
+        'logtype': 'syslog',
+        'year': 2009,
+        'method': 'max_clique_weighted_sa',
+        'evaluation': {
+            'external': False,
+            'internal': True
+        },
+        'anomaly': {
+            'statistics': False,
+            'sentiment': False
+        }
+    }
+
+    kippo_config = {
         'data': 'Kippo',
         'logtype': 'kippo',
         'year': 2017,
@@ -372,6 +398,39 @@ if __name__ == '__main__':
             'sentiment': False
         }
     }
+
+    ras_config = {
+        'data': 'ras',
+        'logtype': 'raslog',
+        'year': 2009,
+        'method': 'max_clique_weighted_sa',
+        'evaluation': {
+            'external': False,
+            'internal': True
+        },
+        'anomaly': {
+            'statistics': False,
+            'sentiment': False
+        }
+    }
+
+    auth_config = {
+        'data': 'Hofstede2014',
+        'logtype': 'auth',
+        'year': 2014,
+        'method': 'max_clique_weighted_sa',
+        'evaluation': {
+            'external': False,
+            'internal': True
+        },
+        'anomaly': {
+            'statistics': False,
+            'sentiment': False
+        }
+    }
+
+    # change this line to switch to other datasets
+    config = auth_config
 
     # run experiment
     main(config['data'], config['year'], config['method'], config['logtype'], config['evaluation'])
