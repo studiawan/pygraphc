@@ -154,6 +154,9 @@ class MaxCliquesPercolationWeighted(MaxCliquesPercolation):
 
             self.__set_graph_cluster()
             clusters = self.__get_clusters()
+
+        # remove intracluster edges
+        super(MaxCliquesPercolationWeighted, self)._remove_outcluster()
         return clusters
 
     def __set_percolation_dict(self, percolations):
