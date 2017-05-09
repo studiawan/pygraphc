@@ -1,4 +1,5 @@
 from numpy import average
+from tables import *
 
 
 class InternalEvaluation(object):
@@ -51,6 +52,22 @@ class InternalEvaluation(object):
                         distance = cosine_similarity[(node, neighbor)]
                     except KeyError:
                         distance = cosine_similarity[(neighbor, node)]
+
+                    distances.append(1 - distance)
+
+        elif mode == 'text-hd5':
+            h5cosine_file = open_file('cosine.h5', mode='r')
+            h5table = h5cosine_file.root.cosine_group.cosine_table
+            for neighbor in neighbors:
+                if node != neighbor:
+                    try:
+                        dist = [x['similarity'] for x in h5table.where("""(source==%s) & (dest==%s)""" %
+                                                                       (node, neighbor))]
+                        distance = dist[0]
+                    except IndexError:
+                        dist = [x['similarity'] for x in h5table.where("""(source==%s) & (dest==%s)""" %
+                                                                       (neighbor, node))]
+                        distance = dist[0]
 
                     distances.append(1 - distance)
 
