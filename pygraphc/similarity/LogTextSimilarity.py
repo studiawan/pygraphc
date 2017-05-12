@@ -112,3 +112,10 @@ class LogTextSimilarity(object):
             h5table.cols.dest.create_csindex()
             h5table.flush()
             h5cosine_file.close()
+
+    def get_events(self):
+        preprocess = PreprocessLog(self.logtype)
+        preprocess.preprocess_text(self.logs)
+        events = preprocess.events_text
+
+        return events
