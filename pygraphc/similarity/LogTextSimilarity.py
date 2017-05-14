@@ -3,6 +3,7 @@ from pygraphc.similarity.StringSimilarity import StringSimilarity
 from itertools import combinations
 from tables import *
 import operator as op
+import networkx as nx
 
 
 class LogTextSimilarity(object):
@@ -119,3 +120,23 @@ class LogTextSimilarity(object):
         events = preprocess.events_text
 
         return events
+
+    def get_cosine_graph(self):
+        if self.mode == 'text-graph':
+            preprocess = PreprocessLog(self.logtype)
+            preprocess.preprocess_text(self.logs)
+            events = preprocess.events_text
+
+            # create cosine graph and the nodes
+            cosine_graph = nx.MultiGraph()
+            cosine_graph.add_nodes_from(xrange(preprocess.loglength))
+
+            # create edges
+            for source, dest in combinations(xrange(preprocess.loglength), 2):
+                cosines_similarity = StringSimilarity.get_cosine_similarity(events[source]['tf-idf'],
+                                                                            events[dest]['tf-idf'],
+                                                                            events[source]['length'],
+                                                                            events[dest]['length'])
+                cosine_graph.add_edge(source, dest, weight=cosines_similarity)
+
+            return cosine_graph
