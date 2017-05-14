@@ -1,5 +1,4 @@
 from itertools import combinations
-
 import networkx as nx
 from pygraphc.similarity.StringSimilarity import StringSimilarity
 
