@@ -138,7 +138,7 @@ class PreprocessLog(object):
         for l in parsed_log:
             preprocessed_event, tfidf = self.get_tfidf(l['message'], log_length, logs_lower)
             length = self.get_doclength(tfidf)
-            events[index] = {'tf-idf': tfidf, 'length': length, 'cluster': index}
+            events[index] = {'tf-idf': tfidf, 'length': length}
             index += 1
 
         self.events_text = events
