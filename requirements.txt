@@ -4,3 +4,4 @@ nltk
 Sphinx
 numpydoc
 textblob
+tables
