@@ -52,7 +52,7 @@ class OutputText(object):
                     members = graph.node[node]['member']
                     for member in members:
                         f.write(original_logs[member])
-                elif mode == 'text' or mode == 'text-h5':
+                elif mode == 'text' or mode == 'text-h5' or mode == 'text-cpu' or mode == 'text-graph':
                     f.write(original_logs[node] + '\n')
             f.write('\n')
 
