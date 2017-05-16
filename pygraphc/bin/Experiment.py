@@ -1,7 +1,7 @@
 import fnmatch
 import os
 import csv
-import networkx as nx
+# import networkx as nx
 from time import time
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.preprocess.CreateGraph import CreateGraph
@@ -13,6 +13,8 @@ from pygraphc.misc.IPLoM import ParaIPLoM, IPLoM
 from pygraphc.misc.LKE import Para, LKE
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
 from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
+from pygraphc.evaluation.SilhouetteIndex import SilhouetteIndex
+from pygraphc.evaluation.DunnIndex import DunnIndex
 from pygraphc.anomaly.AnomalyScore import AnomalyScore
 from pygraphc.anomaly.SentimentAnalysis import SentimentAnalysis
 from pygraphc.output.OutputText import OutputText
@@ -141,18 +143,18 @@ def get_internal_evaluation(evaluated_graph, clusters, logs, properties, mode, l
         dunn_index = InternalEvaluation.get_dunn_index(clusters, mode, evaluated_graph)
         OutputText.txt_percluster(properties['result_percluster'], clusters, mode, evaluated_graph, logs)
     elif mode == 'text':
-        lts = LogTextSimilarity(mode, logtype, logs)
+        lts = LogTextSimilarity(mode, logtype, logs, clusters)
         cosine_similarity = lts.get_cosine_similarity()
         silhoutte_index = InternalEvaluation.get_silhoutte_index(clusters, mode, None, cosine_similarity)
         dunn_index = InternalEvaluation.get_dunn_index(clusters, mode, None, cosine_similarity)
         OutputText.txt_percluster(properties['result_percluster'], clusters, mode, None, logs)
-    elif mode == 'text-h5':
-        lts = LogTextSimilarity(mode, logtype, logs, properties['h5file'])
-        cosine_similarity = lts.get_cosine_similarity()
-        silhoutte_index = InternalEvaluation.get_silhoutte_index(clusters, mode, None, cosine_similarity,
-                                                                 properties['h5file'])
-        dunn_index = InternalEvaluation.get_dunn_index(clusters, mode, None, cosine_similarity, properties['h5file'])
-        OutputText.txt_percluster(properties['result_percluster'], clusters, mode, None, logs)
+    elif mode == 'text-csv':
+        lts = LogTextSimilarity(mode, logtype, logs, clusters)
+        lts.get_cosine_similarity()
+        si = SilhouetteIndex(mode, clusters)
+        silhoutte_index = si.get_silhouette_index()
+        di = DunnIndex(mode, clusters)
+        dunn_index = di.get_dunn_index()
 
     return silhoutte_index, dunn_index
 
@@ -340,7 +342,7 @@ def main(dataset, year, method, log_type, evaluation):
             myparser.main_process()
             iplom_clusters = myparser.get_clusters()
             original_logs = myparser.logs
-            mode = 'text-h5'
+            mode = 'text-csv'
 
             # do evaluation performance
             if evaluation['external']:
@@ -398,7 +400,7 @@ if __name__ == '__main__':
         'data': 'Kippo',
         'logtype': 'kippo',
         'year': 2017,
-        'method': 'max_clique_weighted_sa',
+        'method': 'IPLoM',
         'evaluation': {
             'external': False,
             'internal': True
@@ -413,7 +415,7 @@ if __name__ == '__main__':
         'data': 'ras',
         'logtype': 'raslog',
         'year': 2009,
-        'method': 'max_clique_weighted_sa',
+        'method': 'IPLoM',
         'evaluation': {
             'external': False,
             'internal': True
@@ -428,7 +430,7 @@ if __name__ == '__main__':
         'data': 'Hofstede2014',
         'logtype': 'auth',
         'year': 2014,
-        'method': 'max_clique_weighted_sa',
+        'method': 'IPLoM',
         'evaluation': {
             'external': False,
             'internal': True
