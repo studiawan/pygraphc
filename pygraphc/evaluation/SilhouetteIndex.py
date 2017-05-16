@@ -8,7 +8,8 @@ class SilhouetteIndex(object):
 
         Parameters
         ----------
-        clusters        : dict
+        mode        : str
+        clusters    : dict
         """
         self.mode = mode
         self.clusters = clusters
@@ -19,20 +20,20 @@ class SilhouetteIndex(object):
             final_distance = 0.
 
             # open csv file
-            csv_file = 'cosine-' + str(source_cluster) + '-' + str(source_node) + '.csv'
+            csv_file = '/tmp/cosine-' + str(source_node) + '.csv'
             with open(csv_file, 'rb') as f:
                 reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
 
                 # intra cluster distance
                 if intra_cluster:
                     for row in reader:
-                        if row[0] == source_cluster:
+                        if row[-1] == source_cluster:
                             if measurement == 'min':
-                                final_distance = np.min(row[1:])
+                                final_distance = np.min(row[:-1])
                             elif measurement == 'max':
-                                final_distance = np.max(row[1:])
+                                final_distance = np.max(row[:-1])
                             elif measurement == 'avg':
-                                final_distance = np.average(row[1:])
+                                final_distance = np.average(row[:-1])
                             break
                 # inter cluster distance
                 else:
@@ -45,24 +46,24 @@ class SilhouetteIndex(object):
 
                     # get distance and check final distance
                     for row in reader:
-                        if row[0] != source_cluster:
+                        if row[-1] != source_cluster:
                             if measurement == 'min':
-                                distance = np.min(row[1:])
+                                distance = np.min(row[:-1])
                                 if distance < final_distance:
                                     final_distance = distance
                             elif measurement == 'max':
-                                distance = np.max(row[1:])
+                                distance = np.max(row[:-1])
                                 if distance > final_distance:
                                     final_distance = distance
                             elif measurement == 'avg':
-                                distance = np.average(row[1:])
+                                distance = np.average(row[:-1])
                                 if distance != 0:
                                     avg_distance.append(distance)
 
                     if measurement == 'avg':
                         final_distance = np.min(avg_distance) if avg_distance else 0.
 
-            return final_distance
+            return round(final_distance, 3)
 
     def __get_node_silhouette(self):
         node_silhouettes = {}
@@ -95,7 +96,7 @@ class SilhouetteIndex(object):
 
         return cluster_silhouettes
 
-    def __get_silhouette_index(self):
+    def get_silhouette_index(self):
         cluster_silhouettes = {}
         if self.mode == 'text-csv':
             cluster_silhouettes = self.__get_cluster_silhouette()
