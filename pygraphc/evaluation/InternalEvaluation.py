@@ -43,7 +43,7 @@ class InternalEvaluation(object):
         final_distance  : float
             The average distance of node to its analyzed neighbors.
         """
-        # h5distance_array = None
+        h5distance_array = None
         distances = []
         final_distance = 0.
         if mode == 'graph':
@@ -154,7 +154,18 @@ class InternalEvaluation(object):
                     final_distance = np.average(distances)
                 del distances[:]
 
-        final_distance = round(final_distance, 5)
+        elif mode == 'text-h5':
+            if h5distance_array:
+                if measurement == 'min':
+                    final_distance = np.min(h5distance_file.root.distance_array)
+                elif measurement == 'max':
+                    final_distance = np.max(h5distance_file.root.distance_array)
+                elif measurement == 'avg':
+                    final_distance = np.average(h5distance_file.root.distance_array)
+                # remove earray
+                h5distance_array.remove()
+
+        final_distance = round(final_distance, 3)
         return final_distance
 
     @staticmethod
@@ -378,7 +389,7 @@ class InternalEvaluation(object):
 
     @staticmethod
     def __get_compactness(clusters, mode, graph=None, cosine_similarity=None, h5file='', h5distance_file=None,
-                          events=None):
+                          events=None, cosine_graph=None):
         """Maximum node distance as diameter to show a compactness of a cluster.
 
         Parameters
@@ -397,6 +408,8 @@ class InternalEvaluation(object):
             File name for h5 file which saves cosine similarity result.
         events              : dict
             Dictionary of events with tf-idf and length value.
+        cosine_graph        : graph
+            Graph of cosine similarity.
 
         Returns
         -------
@@ -421,14 +434,16 @@ class InternalEvaluation(object):
                                                                                     h5distance_file)
                     elif mode == 'text-cpu':
                         compactness[nodex] = InternalEvaluation.__get_node_distance(nodex, cluster, 'max', mode, None,
-                                                                                    {}, None,
-                                                                                    None, events)
+                                                                                    {}, None, None, events)
+                    elif mode == 'text-graph':
+                        compactness[nodex] = InternalEvaluation.__get_node_distance(nodex, cluster, 'max', mode, None,
+                                                                                    {}, None, None, {}, cosine_graph)
         final_compactness = max(compactness.values()) if compactness else 0.
         return final_compactness
 
     @staticmethod
     def __get_separation(clusters, mode, graph=None, cosine_similarity=None, h5file='', h5distance_file=None,
-                         events=None):
+                         events=None, cosine_graph=None):
         """Separation or minimum distance between clusters.
 
         It is actually minimum distance between two nodes in calculated clusters.
@@ -450,6 +465,8 @@ class InternalEvaluation(object):
             File name for h5 file which saves cosine similarity result.
         events              : dict
             Dictionary of events with tf-idf and length value.
+        cosine_graph        : graph
+            Graph of cosine similarity.
 
         Returns
         -------
@@ -489,6 +506,10 @@ class InternalEvaluation(object):
                             temp_distance = InternalEvaluation.__get_node_distance(nodex, intercluster_nodes[neighbor],
                                                                                    'min', mode, None, {},
                                                                                    None, None, events)
+                        elif mode == 'text-graph':
+                            temp_distance = InternalEvaluation.__get_node_distance(nodex, intercluster_nodes[neighbor],
+                                                                                   'min', mode, None, {},
+                                                                                   None, None, {}, cosine_graph)
                         if temp_distance != 0.:
                             distance[neighbor] = temp_distance
 
@@ -501,7 +522,7 @@ class InternalEvaluation(object):
         return separation
 
     @staticmethod
-    def get_dunn_index(clusters, mode, graph=None, cosine_similarity=None, h5file='', events=None):
+    def get_dunn_index(clusters, mode, graph=None, cosine_similarity=None, h5file='', events=None, cosine_graph=None):
         """Get Dunn index. The basic formula is separation / compactness [Liu2010]_.
 
         Parameters
@@ -520,6 +541,8 @@ class InternalEvaluation(object):
             File name for h5 file which saves cosine similarity result.
         events              : dict
             Dictionary of events with tf-idf and length value.
+        cosine_graph        : graph
+            Graph of cosine similarity.
 
         Returns
         -------
@@ -567,6 +590,13 @@ class InternalEvaluation(object):
             try:
                 dunn_index = InternalEvaluation.__get_separation(clusters, mode, None, {}, '', None, events) / \
                              InternalEvaluation.__get_compactness(clusters, mode, None, {}, '', None, events)
+            except ZeroDivisionError:
+                dunn_index = 0.
+        elif mode == 'text-graph':
+            try:
+                dunn_index = \
+                    InternalEvaluation.__get_separation(clusters, mode, None, {}, '', None, {}, cosine_graph) / \
+                    InternalEvaluation.__get_compactness(clusters, mode, None, {}, '', None, {}, cosine_graph)
             except ZeroDivisionError:
                 dunn_index = 0.
 
