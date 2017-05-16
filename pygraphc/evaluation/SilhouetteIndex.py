@@ -72,14 +72,15 @@ class SilhouetteIndex(object):
                 node_silhouettes[cluster[0]] = 1
             else:
                 for node in cluster:
-                    try:
-                        source = {'source_node': node, 'source_cluster': cluster_id}
-                        intercluster_avg = self.__get_node_distance('avg', False, source)
-                        intracluster_avg = self.__get_node_distance('avg', True, source)
-                        node_silhouettes[node] = (intercluster_avg - intracluster_avg) / \
-                            max(intercluster_avg, intracluster_avg)
-                    except ZeroDivisionError:
-                        node_silhouettes[node] = 0.
+                    if self.mode == 'text-csv':
+                        try:
+                            source = {'source_node': node, 'source_cluster': cluster_id}
+                            intercluster_avg = self.__get_node_distance('avg', False, source)
+                            intracluster_avg = self.__get_node_distance('avg', True, source)
+                            node_silhouettes[node] = (intercluster_avg - intracluster_avg) / \
+                                max(intercluster_avg, intracluster_avg)
+                        except ZeroDivisionError:
+                            node_silhouettes[node] = 0.
 
         return node_silhouettes
 
