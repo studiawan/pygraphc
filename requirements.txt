@@ -4,4 +4,4 @@ nltk
 Sphinx
 numpydoc
 textblob
-tables
+pyparsing
