@@ -122,7 +122,7 @@ class PreprocessLog(object):
                 parsed['timestamp'] = parsed['timestamp'][:-5]
             elif self.logtype == 'syslog':
                 parsed = grammar.parse_syslog(line)
-            elif self.logtype == 'bluegene-logs':
+            elif self.logtype == 'bluegene':
                 parsed = grammar.parse_bluegenelog(line)
             elif self.logtype == 'raslog':
                 parsed = grammar.parse_raslog(line)
