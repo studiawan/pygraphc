@@ -1,4 +1,4 @@
-from pyparsing import Word, alphas, Suppress, Combine, nums, string, Optional, Regex
+from pyparsing import Word, alphas, Suppress, Combine, nums, string, Optional, Regex, ParseException
 
 
 class LogGrammar(object):
@@ -216,12 +216,12 @@ class LogGrammar(object):
         """
         ints = Word(nums)
 
-        sock = Word(alphas + '-')
+        sock = Word(alphas + '-' + '_')
         number = ints
         date = Combine(ints + '.' + ints + '.' + ints)
-        core1 = Word(alphas + nums + "-" + ":")
+        core1 = Word(alphas + nums + '-' + ':' + '_')
         datetime = Combine(ints + '-' + ints + '-' + ints + '-' + ints + '.' + ints + '.' + ints + '.' + ints)
-        core2 = Word(alphas + nums + "-" + ":")
+        core2 = Word(alphas + nums + '-' + ':' + '_')
         source = Word(alphas)
         service = Word(alphas)
         info_type = Word(alphas)
@@ -244,19 +244,22 @@ class LogGrammar(object):
         parsed      : dict[str, str]
             A parsed BlueGene/L log.
         """
-        parsed_bluegenelog = self.bluegene_grammar.parseString(log_line)
-
         parsed = dict()
-        parsed['sock'] = parsed_bluegenelog[0]
-        parsed['number'] = parsed_bluegenelog[1]
-        parsed['date'] = parsed_bluegenelog[2]
-        parsed['core1'] = parsed_bluegenelog[3]
-        parsed['timestamp'] = parsed_bluegenelog[4]
-        parsed['core2'] = parsed_bluegenelog[5]
-        parsed['source'] = parsed_bluegenelog[6]
-        parsed['service'] = parsed_bluegenelog[7]
-        parsed['info_type'] = parsed_bluegenelog[8]
-        parsed['message'] = parsed_bluegenelog[9]
+        try:
+            parsed_bluegenelog = self.bluegene_grammar.parseString(log_line)
+            parsed['sock'] = parsed_bluegenelog[0]
+            parsed['number'] = parsed_bluegenelog[1]
+            parsed['date'] = parsed_bluegenelog[2]
+            parsed['core1'] = parsed_bluegenelog[3]
+            parsed['timestamp'] = parsed_bluegenelog[4]
+            parsed['core2'] = parsed_bluegenelog[5]
+            parsed['source'] = parsed_bluegenelog[6]
+            parsed['service'] = parsed_bluegenelog[7]
+            parsed['info_type'] = parsed_bluegenelog[8]
+            parsed['message'] = parsed_bluegenelog[9]
+
+        except ParseException:
+            print log_line
 
         return parsed
 
