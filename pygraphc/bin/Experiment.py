@@ -1,7 +1,7 @@
 import fnmatch
 import os
 import csv
-# import networkx as nx
+import networkx as nx
 from time import time
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.preprocess.CreateGraph import CreateGraph
@@ -19,6 +19,7 @@ from pygraphc.anomaly.AnomalyScore import AnomalyScore
 from pygraphc.anomaly.SentimentAnalysis import SentimentAnalysis
 from pygraphc.output.OutputText import OutputText
 from pygraphc.similarity.LogTextSimilarity import LogTextSimilarity
+from pygraphc.similarity.CalculateMasterSimilarity import CalculateMasterSimilarity
 
 
 def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
@@ -40,6 +41,7 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
     # get file name to save all of the results
     files = {}
     result_path = '/home/hudan/Git/pygraphc/result/' + method + '/'
+    result_path2 = '/home/hudan/cosine/' + method + '/'
     for match in matches:
         identifier = match.split(dataset)
         index = dataset + identifier[1]
@@ -51,7 +53,8 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
                         'anomaly_perline': result_path + index + '.anomaly.perline.txt',
                         'anomaly_groundtruth': anomaly_path + match.split('/')[-1] + '.attack',
                         'result_path': result_path,
-                        'h5file': result_path + index + '.h5'}
+                        'cosine_path': result_path2 + index + '-',
+                        'cosine_master_path': result_path2 + index + '-master-'}
 
     # file to save evaluation performance per method
     evaluation_file = result_path + dataset + '.evaluation.csv'
@@ -149,11 +152,19 @@ def get_internal_evaluation(evaluated_graph, clusters, logs, properties, mode, l
         dunn_index = InternalEvaluation.get_dunn_index(clusters, mode, None, cosine_similarity)
         OutputText.txt_percluster(properties['result_percluster'], clusters, mode, None, logs)
     elif mode == 'text-csv':
-        lts = LogTextSimilarity(mode, logtype, logs, clusters)
+        # calculate master similarity
+        cms = CalculateMasterSimilarity(mode, logtype, logs, clusters, properties['cosine_master_path'])
+        cms.calculate_master()
+
+        # calculate similarity inter and intra cluster
+        lts = LogTextSimilarity(mode, logtype, logs, clusters, properties['cosine_path'],
+                                properties['cosine_master_path'])
         lts.get_cosine_similarity()
-        si = SilhouetteIndex(mode, clusters)
+
+        # get internal evaluation
+        si = SilhouetteIndex(mode, clusters, properties['cosine_path'])
         silhoutte_index = si.get_silhouette_index()
-        di = DunnIndex(mode, clusters)
+        di = DunnIndex(mode, clusters, properties['cosine_path'])
         dunn_index = di.get_dunn_index()
 
     return silhoutte_index, dunn_index
@@ -197,7 +208,7 @@ def main(dataset, year, method, log_type, evaluation):
         'forensic-challenge-2010-syslog': '',
         'BlueGene2006': '',
         'ras': '',
-        'illustration': ''
+        'illustration': master_path + 'illustration/attack/'
     }
 
     # note that in RedHat-based authentication log, parameter '*.log' is not used
@@ -263,6 +274,7 @@ def main(dataset, year, method, log_type, evaluation):
                                                                                   properties, year, edges_dict,
                                                                                   log_type)
             true_false, specificity, precision, recall, accuracy = get_confusion(properties)
+            nx.write_dot(graph, 'illustration.dot')
             graph.clear()
 
         elif method == 'improved_majorclust_wo_refine':
@@ -444,8 +456,23 @@ if __name__ == '__main__':
     illustration_config = {
         'data': 'illustration',
         'logtype': 'auth',
-        'year': 2014,
-        'method': 'max_clique_weighted_sa',
+        'year': '2014',
+        'method': 'improved_majorclust',
+        'evaluation': {
+            'external': False,
+            'internal': True
+        },
+        'anomaly': {
+            'statistics': False,
+            'sentiment': False
+        }
+    }
+
+    bluegene_config = {
+        'data': 'BlueGene2006',
+        'logtype': 'bluegene',
+        'year': 2005,
+        'method': 'IPLoM',
         'evaluation': {
             'external': False,
             'internal': True
