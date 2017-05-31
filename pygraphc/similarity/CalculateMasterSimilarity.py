@@ -34,7 +34,7 @@ class CalculateMasterSimilarity(object):
                     writer.writerow(row)
         f.close()
 
-    def calculate(self):
+    def calculate_master(self):
         # preprocess event log
         preprocess = PreprocessLog(self.logtype)
         preprocess.preprocess_text(self.logs)
