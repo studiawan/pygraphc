@@ -3,16 +3,18 @@ import numpy as np
 
 
 class SilhouetteIndex(object):
-    def __init__(self, mode, clusters):
+    def __init__(self, mode, clusters, cosine_file):
         """Calculate Silhouette index for cluster internal evaluation.
 
         Parameters
         ----------
         mode        : str
         clusters    : dict
+        cosine_file : str
         """
         self.mode = mode
         self.clusters = clusters
+        self.cosine_file = cosine_file
 
     def __get_node_distance(self, measurement, intra_cluster, source):
         if self.mode == 'text-csv':
@@ -20,7 +22,7 @@ class SilhouetteIndex(object):
             final_distance = 0.
 
             # open csv file
-            csv_file = '/tmp/cosine-' + str(source_node) + '.csv'
+            csv_file = self.cosine_file + str(source_node) + '.csv'
             with open(csv_file, 'rb') as f:
                 reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
 
