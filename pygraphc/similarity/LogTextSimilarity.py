@@ -9,7 +9,7 @@ class LogTextSimilarity(object):
     """A class for calculating cosine similarity between a log pair. This class is intended for
        non-graph based clustering method.
     """
-    def __init__(self, mode, logtype, logs, clusters, cosine_file='', cosine_master_file=''):
+    def __init__(self, mode, logtype, logs, clusters, cosine_file=''):
         """The constructor of class LogTextSimilarity.
 
         Parameters
@@ -29,10 +29,9 @@ class LogTextSimilarity(object):
         self.clusters = clusters
         self.events = {}
         self.cosine_file = cosine_file
-        self.cosine_master_file = cosine_master_file
 
     def __call__(self, node):
-        return self.__write_cosine_csv2(node)
+        return self.__write_cosine_csv(node)
 
     def __write_cosine_csv(self, node):
         csv_file = self.cosine_file + str(node) + '.csv'
@@ -52,36 +51,6 @@ class LogTextSimilarity(object):
                 row.append(cluster_id)
                 writer.writerow(row)
         f.close()
-
-    def __write_cosine_csv2(self, node):
-        # write cosine similarity
-        csv_file = self.cosine_file + str(node) + '.csv'
-        f = open(csv_file, 'wb')
-        writer = csv.writer(f)
-
-        # read cosine similarity master
-        master_csv_file = self.cosine_master_file + str(node) + '.csv'
-        f2 = open(master_csv_file, 'rb')
-        reader = csv.reader(f2, quoting=csv.QUOTE_NONNUMERIC)
-        for cluster_id, cluster in self.clusters.iteritems():
-            row = []
-            for c in cluster:
-                if node != c:
-                    flag = False
-                    similarity = 0
-                    for row2 in reader:
-                        if row2[0] == c:
-                            similarity = row2[1]
-                            flag = True
-                            break
-                    if flag:
-                        row.append(similarity)
-            if row:
-                row.append(cluster_id)
-                writer.writerow(row)
-
-        f.close()
-        f2.close()
 
     def get_cosine_similarity(self):
         """Get cosine similarity from a pair of log lines in a file.
