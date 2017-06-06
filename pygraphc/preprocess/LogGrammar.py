@@ -26,6 +26,8 @@ class LogGrammar(object):
             self.bluegene_grammar = self.__get_bluegene_grammar()
         elif self.log_type == 'raslog':
             self.raslog_grammar = self.__get_raslog_grammar()
+        elif self.log_type == 'vpnlog':
+            self.vpnlog_grammar = self.__get_vpnlog_grammar()
 
     @staticmethod
     def __get_authlog_grammar():
@@ -335,5 +337,38 @@ class LogGrammar(object):
         parsed['serialnumber'] = parsed_raslog[12]
         parsed['ecid'] = parsed_raslog[13]
         parsed['message'] = parsed_raslog[14]
+
+        return parsed
+
+    @staticmethod
+    def __get_vpnlog_grammar():
+        ints = Word(nums)
+
+        day_str = Word(string.uppercase, string.lowercase, exact=3)
+        month = Word(string.uppercase, string.lowercase, exact=3)
+        day_num = ints
+        hour = Combine(ints + ":" + ints + ":" + ints)
+        year = ints
+        timestamp = day_str + month + day_num + hour + year
+
+        source_address = Word(alphas + nums + '.' + '_' + '/')
+        message = Optional(source_address + Suppress(':') + ints) + Regex(".*")
+
+        vpnlog_grammar = timestamp + message
+        return vpnlog_grammar
+
+    def parse_vpnlog(self, log_line):
+        parsed_vpnlog = self.vpnlog_grammar.parseString(log_line)
+
+        parsed = dict()
+        if len(parsed_vpnlog) == 6:
+            parsed['timestamp'] = parsed_vpnlog[0] + ' ' + parsed_vpnlog[1] + ' ' + parsed_vpnlog[2] + ' ' + \
+                             parsed_vpnlog[3] + ' ' + parsed_vpnlog[4]
+            parsed['message'] = parsed_vpnlog[5]
+        elif len(parsed_vpnlog) == 8:
+            parsed['timestamp'] = parsed_vpnlog[0] + ' ' + parsed_vpnlog[1] + ' ' + parsed_vpnlog[2] + ' ' + \
+                             parsed_vpnlog[3] + ' ' + parsed_vpnlog[4]
+            parsed['source_address'] = parsed_vpnlog[5] + ':' + parsed_vpnlog[6]
+            parsed['message'] = parsed_vpnlog[7]
 
         return parsed
