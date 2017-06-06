@@ -56,6 +56,8 @@ class PreprocessLog(object):
                 parsed = grammar.parse_bluegenelog(line)
             elif self.logtype == 'raslog':
                 parsed = grammar.parse_raslog(line)
+            elif self.logtype == 'vpnlog':
+                parsed = grammar.parse_vpnlog(line)
             parsed['message'] = parsed['message'].lower()
             logs_lower.append(parsed['message'])
             parsed_log.append(parsed)
@@ -126,6 +128,8 @@ class PreprocessLog(object):
                 parsed = grammar.parse_bluegenelog(line)
             elif self.logtype == 'raslog':
                 parsed = grammar.parse_raslog(line)
+            elif self.logtype == 'vpnlog':
+                parsed = grammar.parse_vpnlog(line)
 
             parsed['message'] = parsed['message'].lower()
             logs_lower.append(parsed['message'])
