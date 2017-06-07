@@ -1,7 +1,11 @@
 import os
 import fnmatch
 import csv
+import pickle
 from pygraphc.bin.Experiment import get_dataset, get_external_evaluation, get_internal_evaluation
+from pygraphc.similarity.LogTextSimilarity import LogTextSimilarity
+from pygraphc.evaluation.SilhouetteIndex import SilhouetteIndex
+from pygraphc.evaluation.DunnIndex import DunnIndex
 
 
 class PySplunk(object):
@@ -138,6 +142,38 @@ class PySplunk(object):
             writer.writerow(row)
 
         f.close()
+
+    def get_bulk_cluster2(self):
+        # get dataset files
+        master_path = '/home/hudan/Git/labeled-authlog/dataset/'
+        dataset_path = {
+            'Hofstede2014': master_path + 'Hofstede2014/dataset1_perday',
+            'SecRepo': master_path + 'SecRepo/auth-perday',
+            'forensic-challenge-2010':
+                master_path + 'Honeynet/forensic-challenge-5-2010/forensic-challenge-5-2010-perday',
+            'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
+            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday',
+            'Kippo': master_path + 'Kippo/per_day',
+            'forensic-challenge-2010-syslog':
+                master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-2010-syslog/all',
+            'BlueGene2006': master_path + 'BlueGene2006/per_day',
+            'ras': master_path + 'ras/per_day',
+            'illustration': master_path + 'illustration/per_day',
+            'vpn': master_path + 'vpn/per_day'
+        }
+
+        # note that in RedHat-based authentication log, parameter '*.log' is not used
+        files, evaluation_file = get_dataset(self.dataset, dataset_path[self.dataset], '', '*.log', 'PySplunk')
+
+        for file_identifier, properties in files.iteritems():
+            print file_identifier
+
+            # main process to cluster log file
+            clusters = self.get_splunk_cluster(properties['log_path'])
+
+            # write clustering result in dictionary to file
+            with open(properties['cluster_pickle'], 'wb') as f:
+                pickle.dump(clusters, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 class UploadToSplunk(object):
@@ -277,10 +313,113 @@ class DeleteFromSplunk(object):
             self.delete_log(properties['log_path'])
 
 
+class Evaluation(object):
+    def __init__(self, username, password, output_mode, dataset, log_type):
+        self.username = username
+        self.password = password
+        self.output_mode = output_mode
+        self.dataset = dataset
+        self.log_type = log_type
+
+    def get_evaluation(self):
+        # get dataset files
+        master_path = '/home/hudan/Git/labeled-authlog/dataset/'
+        dataset_path = {
+            'Hofstede2014': master_path + 'Hofstede2014/dataset1_perday',
+            'SecRepo': master_path + 'SecRepo/auth-perday',
+            'forensic-challenge-2010':
+                master_path + 'Honeynet/forensic-challenge-5-2010/forensic-challenge-5-2010-perday',
+            'hnet-hon-2004': master_path + 'Honeynet/honeypot/hnet-hon-2004/hnet-hon-10122004-var-perday',
+            'hnet-hon-2006': master_path + 'Honeynet/honeypot/hnet-hon-2006/hnet-hon-var-log-02282006-perday',
+            'Kippo': master_path + 'Kippo/per_day',
+            'forensic-challenge-2010-syslog':
+                master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-2010-syslog/all',
+            'BlueGene2006': master_path + 'BlueGene2006/per_day',
+            'ras': master_path + 'ras/per_day',
+            'illustration': master_path + 'illustration/per_day',
+            'vpn': master_path + 'vpn/per_day'
+        }
+
+        # note that in RedHat-based authentication log, parameter '*.log' is not used
+        files, evaluation_file = get_dataset(self.dataset, dataset_path[self.dataset], '', '*.log', 'PySplunk')
+
+        # open and write result to evaluation file
+        fi = open(evaluation_file, 'wt')
+        writer = csv.writer(fi)
+        writer.writerow(('file_name', 'silhouette', 'dunn'))
+        for file_identifier, properties in files.iteritems():
+            print file_identifier
+
+            # open pickled clusters
+            with open(properties['cluster_pickle'], 'rb') as f:
+                clusters = pickle.load(f)
+
+            # open original logs
+            with open(properties['log_path'], 'r') as f:
+                original_logs = f.readlines()
+
+            # evaluation, get cosine similarity first
+            mode_csv = 'text-csv'
+            lts = LogTextSimilarity(mode_csv, self.log_type, original_logs, clusters)
+            lts.get_cosine_similarity()
+
+            # get internal evaluation
+            si = SilhouetteIndex(mode_csv, clusters, properties['cosine_path'])
+            silhoutte_index = si.get_silhouette_index()
+            di = DunnIndex(mode_csv, clusters, properties['cosine_path'])
+            dunn_index = di.get_dunn_index()
+
+            # write to csv file
+            writer.writerow((properties['log_path'].split('/')[-1], silhoutte_index, dunn_index))
+
+        fi.close()
+
+
 if __name__ == '__main__':
-    mode = 'upload'
+    credentials = {
+        'username': 'admin',
+        'password': '123',
+        'output': 'csv'
+    }
+
+    syslog_config = {
+        'source': 'messages',
+        'host': 'app-1',
+        'log_type': 'syslog',
+        'source_type': 'syslog',
+        'evaluation': 'internal'
+    }
+
+    kippo_config = {
+        'source': '2017-02-14.log',
+        'host': 'Kippo-single',
+        'log_type': 'kippo',
+        'source_type': 'Kippo',
+        'evaluation': 'internal'
+    }
+
+    ras_config = {
+        'source': 'interprid.log',
+        'host': 'Interprid',
+        'log_type': 'raslog',
+        'source_type': 'RAS',
+        'evaluation': 'internal'
+    }
+
+    auth_config = {
+        'dataset': 'Hofstede2014',
+        'source': 'hofstede.log',
+        'host': 'Hofstede-single',
+        'log_type': 'auth',
+        'source_type': 'linux_secure',
+        'evaluation': 'internal'
+    }
+
+    config = auth_config
+    mode = 'clustering'
     if mode == 'clustering':
-        clustering = PySplunk('admin', '123', 'csv', 'SecRepo', 'auth', 'linux_secure', 'internal')
+        clustering = PySplunk(credentials['username'], credentials['password'], credentials['output'],
+                              config['dataset'], config['log_type'], config['linux_secure'], config['evaluation'])
         clustering.get_bulk_cluster()
     elif mode == 'upload':
         upload = UploadToSplunk('admin', '123', 'SecRepo', 'linux_secure')
