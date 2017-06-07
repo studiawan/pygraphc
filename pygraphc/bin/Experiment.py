@@ -19,7 +19,6 @@ from pygraphc.anomaly.AnomalyScore import AnomalyScore
 from pygraphc.anomaly.SentimentAnalysis import SentimentAnalysis
 from pygraphc.output.OutputText import OutputText
 from pygraphc.similarity.LogTextSimilarity import LogTextSimilarity
-from pygraphc.similarity.CalculateMasterSimilarity import CalculateMasterSimilarity
 
 
 def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
@@ -28,7 +27,7 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
     # Debian-based: /var/log/auth.log
     auth_dataset = ['Hofstede2014', 'SecRepo', 'forensic-challenge-2010', 'Kippo']
     secure_dataset = ['hnet-hon-2004', 'hnet-hon-2006', 'forensic-challenge-2010-syslog', 'BlueGene2006', 'ras',
-                      'illustration']
+                      'illustration', 'vpn']
     if dataset in auth_dataset:
         for root, dirnames, filenames in os.walk(dataset_path):
             for filename in fnmatch.filter(filenames, file_extension):
@@ -54,7 +53,8 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
                         'anomaly_groundtruth': anomaly_path + match.split('/')[-1] + '.attack',
                         'result_path': result_path,
                         'cosine_path': result_path2 + index + '-',
-                        'cosine_master_path': result_path2 + index + '-master-'}
+                        'cosine_master_path': result_path2 + index + '-master-',
+                        'cluster_pickle': result_path + index + '-cluster.pickle'}
 
     # file to save evaluation performance per method
     evaluation_file = result_path + dataset + '.evaluation.csv'
@@ -152,13 +152,8 @@ def get_internal_evaluation(evaluated_graph, clusters, logs, properties, mode, l
         dunn_index = InternalEvaluation.get_dunn_index(clusters, mode, None, cosine_similarity)
         OutputText.txt_percluster(properties['result_percluster'], clusters, mode, None, logs)
     elif mode == 'text-csv':
-        # calculate master similarity
-        cms = CalculateMasterSimilarity(mode, logtype, logs, clusters, properties['cosine_master_path'])
-        cms.calculate_master()
-
         # calculate similarity inter and intra cluster
-        lts = LogTextSimilarity(mode, logtype, logs, clusters, properties['cosine_path'],
-                                properties['cosine_master_path'])
+        lts = LogTextSimilarity(mode, logtype, logs, clusters, properties['cosine_path'])
         lts.get_cosine_similarity()
 
         # get internal evaluation
@@ -166,6 +161,9 @@ def get_internal_evaluation(evaluated_graph, clusters, logs, properties, mode, l
         silhoutte_index = si.get_silhouette_index()
         di = DunnIndex(mode, clusters, properties['cosine_path'])
         dunn_index = di.get_dunn_index()
+
+        # write to file
+        OutputText.txt_percluster(properties['result_percluster'], clusters, mode, None, logs)
 
     return silhoutte_index, dunn_index
 
@@ -194,7 +192,8 @@ def main(dataset, year, method, log_type, evaluation):
             master_path + 'Honeynet/forensic-challenge-2010/forensic-challenge-2010-syslog/all',
         'BlueGene2006': master_path + 'BlueGene2006/per_day',
         'ras': master_path + 'ras/per_day',
-        'illustration': master_path + 'illustration/per_day'
+        'illustration': master_path + 'illustration/per_day',
+        'vpn': master_path + 'vpn/per_day'
     }
 
     # anomaly dataset
@@ -208,7 +207,8 @@ def main(dataset, year, method, log_type, evaluation):
         'forensic-challenge-2010-syslog': '',
         'BlueGene2006': '',
         'ras': '',
-        'illustration': master_path + 'illustration/attack/'
+        'illustration': master_path + 'illustration/attack/',
+        'vpn': ''
     }
 
     # note that in RedHat-based authentication log, parameter '*.log' is not used
@@ -239,7 +239,8 @@ def main(dataset, year, method, log_type, evaluation):
             preprocess = PreprocessLog(log_type, properties['log_path'])
             if log_type == 'auth':
                 preprocess.do_preprocess()  # auth
-            elif log_type == 'kippo' or log_type == 'syslog' or log_type == 'bluegene-logs' or log_type == 'raslog':
+            elif log_type == 'kippo' or log_type == 'syslog' or log_type == 'bluegene-logs' or log_type == 'raslog' \
+                    or log_type == 'vpnlog':
                 preprocess.preprocess()
             events_unique = preprocess.events_unique
             original_logs = preprocess.logs
@@ -326,7 +327,6 @@ def main(dataset, year, method, log_type, evaluation):
                                               energy_type, iteration_threshold, brute_force)
             maxc_sa.init_maxclique_percolation()
             best_parameter, maxc_sa_cluster, best_energy = maxc_sa.get_maxcliques_sa()
-            print best_parameter['k'], best_parameter['I'], best_energy
 
             # do evaluation performance and clear graph
             if evaluation['external']:
@@ -397,7 +397,7 @@ if __name__ == '__main__':
         'data': 'forensic-challenge-2010-syslog',
         'logtype': 'syslog',
         'year': 2009,
-        'method': 'IPLoM',
+        'method': 'max_clique_weighted_sa',
         'evaluation': {
             'external': False,
             'internal': True
@@ -412,7 +412,7 @@ if __name__ == '__main__':
         'data': 'Kippo',
         'logtype': 'kippo',
         'year': 2017,
-        'method': 'IPLoM',
+        'method': 'max_clique_weighted_sa',
         'evaluation': {
             'external': False,
             'internal': True
@@ -442,7 +442,7 @@ if __name__ == '__main__':
         'data': 'Hofstede2014',
         'logtype': 'auth',
         'year': 2014,
-        'method': 'IPLoM',
+        'method': 'max_clique_weighted_sa',
         'evaluation': {
             'external': False,
             'internal': True
@@ -483,8 +483,23 @@ if __name__ == '__main__':
         }
     }
 
+    vpn_config = {
+        'data': 'vpn',
+        'logtype': 'vpnlog',
+        'year': 2012,
+        'method': 'max_clique_weighted_sa',
+        'evaluation': {
+            'external': False,
+            'internal': True
+        },
+        'anomaly': {
+            'statistics': False,
+            'sentiment': False
+        }
+    }
+
     # change this line to switch to other datasets
-    config = syslog_config
+    config = vpn_config
 
     # run experiment
     main(config['data'], config['year'], config['method'], config['logtype'], config['evaluation'])
