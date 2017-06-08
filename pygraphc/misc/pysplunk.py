@@ -64,7 +64,7 @@ class PySplunk(object):
         source = source.replace(' ', '\ ')
         source = source.split('/')[-1]
         command = 'python /home/hudan/Downloads/splunk-sdk-python-1.6.1/examples/search.py ' + \
-                  '--host=192.168.1.106 --port=8089 ' + \
+                  '--host=127.0.0.1 --port=8089 ' + \
                   '--username=' + self.username + ' --password=' + self.password + \
                   ' "search source=' + self.dataset + '-' + source + \
                   ' host=' + self.dataset + ' sourcetype=' + self.source_type + \
@@ -383,6 +383,7 @@ if __name__ == '__main__':
     }
 
     syslog_config = {
+        'dataset': '',
         'source': 'messages',
         'host': 'app-1',
         'log_type': 'syslog',
@@ -391,6 +392,7 @@ if __name__ == '__main__':
     }
 
     kippo_config = {
+        'dataset': 'Kippo',
         'source': '2017-02-14.log',
         'host': 'Kippo-single',
         'log_type': 'kippo',
@@ -399,6 +401,7 @@ if __name__ == '__main__':
     }
 
     ras_config = {
+        'dataset': 'ras',
         'source': 'interprid.log',
         'host': 'Interprid',
         'log_type': 'raslog',
@@ -419,11 +422,12 @@ if __name__ == '__main__':
     mode = 'clustering'
     if mode == 'clustering':
         clustering = PySplunk(credentials['username'], credentials['password'], credentials['output'],
-                              config['dataset'], config['log_type'], config['linux_secure'], config['evaluation'])
+                              config['dataset'], config['log_type'], config['source_type'], config['evaluation'])
         clustering.get_bulk_cluster()
     elif mode == 'upload':
-        upload = UploadToSplunk('admin', '123', 'SecRepo', 'linux_secure')
+        upload = UploadToSplunk(credentials['username'], credentials['password'], config['dataset'],
+                                config['source_type'])
         upload.bulk_upload()
     elif mode == 'delete':
-        delete = DeleteFromSplunk('admin', '123', 'SecRepo')
+        delete = DeleteFromSplunk(credentials['username'], credentials['password'], config['dataset'])
         delete.bulk_delete()
