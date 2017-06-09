@@ -393,10 +393,8 @@ if __name__ == '__main__':
 
     kippo_config = {
         'dataset': 'Kippo',
-        'source': '2017-02-14.log',
-        'host': 'Kippo-single',
         'log_type': 'kippo',
-        'source_type': 'Kippo',
+        'source_type': 'kippo_log',
         'evaluation': 'internal'
     }
 
@@ -411,19 +409,24 @@ if __name__ == '__main__':
 
     auth_config = {
         'dataset': 'Hofstede2014',
-        'source': 'hofstede.log',
-        'host': 'Hofstede-single',
         'log_type': 'auth',
         'source_type': 'linux_secure',
         'evaluation': 'internal'
     }
 
-    config = auth_config
+    vpn_config = {
+        'dataset': 'vpn',
+        'log_type': 'vpnlog',
+        'source_type': 'vpn_log',
+        'evaluation': 'internal'
+    }
+
+    config = vpn_config
     mode = 'clustering'
     if mode == 'clustering':
         clustering = PySplunk(credentials['username'], credentials['password'], credentials['output'],
                               config['dataset'], config['log_type'], config['source_type'], config['evaluation'])
-        clustering.get_bulk_cluster()
+        clustering.get_bulk_cluster2()
     elif mode == 'upload':
         upload = UploadToSplunk(credentials['username'], credentials['password'], config['dataset'],
                                 config['source_type'])
