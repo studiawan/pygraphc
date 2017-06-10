@@ -53,7 +53,7 @@ class OutputText(object):
                     for member in members:
                         f.write(original_logs[member])
                 elif mode == 'text' or mode == 'text-csv':
-                    f.write(original_logs[node] + '\n')
+                    f.write(original_logs[node])
             f.write('\n')
 
         f.close()
