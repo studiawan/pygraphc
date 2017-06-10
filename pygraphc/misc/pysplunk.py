@@ -2,10 +2,12 @@ import os
 import fnmatch
 import csv
 import pickle
+from time import time
 from pygraphc.bin.Experiment import get_dataset, get_external_evaluation, get_internal_evaluation
 from pygraphc.similarity.LogTextSimilarity import LogTextSimilarity
 from pygraphc.evaluation.SilhouetteIndex import SilhouetteIndex
 from pygraphc.evaluation.DunnIndex import DunnIndex
+from pygraphc.output.OutputText import OutputText
 
 
 class PySplunk(object):
@@ -314,10 +316,7 @@ class DeleteFromSplunk(object):
 
 
 class Evaluation(object):
-    def __init__(self, username, password, output_mode, dataset, log_type):
-        self.username = username
-        self.password = password
-        self.output_mode = output_mode
+    def __init__(self, dataset, log_type):
         self.dataset = dataset
         self.log_type = log_type
 
@@ -358,9 +357,10 @@ class Evaluation(object):
             with open(properties['log_path'], 'r') as f:
                 original_logs = f.readlines()
 
-            # evaluation, get cosine similarity first
             mode_csv = 'text-csv'
-            lts = LogTextSimilarity(mode_csv, self.log_type, original_logs, clusters)
+
+            # evaluation, get cosine similarity first
+            lts = LogTextSimilarity(mode_csv, self.log_type, original_logs, clusters, properties['cosine_path'])
             lts.get_cosine_similarity()
 
             # get internal evaluation
@@ -372,10 +372,14 @@ class Evaluation(object):
             # write to csv file
             writer.writerow((properties['log_path'].split('/')[-1], silhoutte_index, dunn_index))
 
+            # write to file
+            OutputText.txt_percluster(properties['result_percluster'], clusters, mode_csv, None, original_logs)
+
         fi.close()
 
 
 if __name__ == '__main__':
+    start = time()
     credentials = {
         'username': 'admin',
         'password': '123',
@@ -383,9 +387,7 @@ if __name__ == '__main__':
     }
 
     syslog_config = {
-        'dataset': '',
-        'source': 'messages',
-        'host': 'app-1',
+        'dataset': 'forensic-challenge-2010-syslog',
         'log_type': 'syslog',
         'source_type': 'syslog',
         'evaluation': 'internal'
@@ -400,8 +402,6 @@ if __name__ == '__main__':
 
     ras_config = {
         'dataset': 'ras',
-        'source': 'interprid.log',
-        'host': 'Interprid',
         'log_type': 'raslog',
         'source_type': 'RAS',
         'evaluation': 'internal'
@@ -421,16 +421,25 @@ if __name__ == '__main__':
         'evaluation': 'internal'
     }
 
-    config = vpn_config
-    mode = 'clustering'
-    if mode == 'clustering':
+    config = kippo_config
+    operation_mode = 'evaluation'
+    if operation_mode == 'clustering':
         clustering = PySplunk(credentials['username'], credentials['password'], credentials['output'],
                               config['dataset'], config['log_type'], config['source_type'], config['evaluation'])
         clustering.get_bulk_cluster2()
-    elif mode == 'upload':
+    elif operation_mode == 'upload':
         upload = UploadToSplunk(credentials['username'], credentials['password'], config['dataset'],
                                 config['source_type'])
         upload.bulk_upload()
-    elif mode == 'delete':
+    elif operation_mode == 'delete':
         delete = DeleteFromSplunk(credentials['username'], credentials['password'], config['dataset'])
         delete.bulk_delete()
+    elif operation_mode == 'evaluation':
+        evaluate = Evaluation(config['dataset'], config['log_type'])
+        evaluate.get_evaluation()
+
+    # print runtime
+    duration = time() - start
+    minute, second = divmod(duration, 60)
+    hour, minute = divmod(minute, 60)
+    print "Runtime: %d:%02d:%02d" % (hour, minute, second)
