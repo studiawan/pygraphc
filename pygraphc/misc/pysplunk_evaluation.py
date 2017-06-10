@@ -11,7 +11,7 @@ class PySplunkEvaluation(object):
         self.logtype = logtype
 
     def get_pysplunk_internal_evaluation(self):
-        lts = LogTextSimilarity(self.logtype, self.logs)
+        lts = LogTextSimilarity('text', self.logtype, self.logs, self.clusters)
         cosine_similarity = lts.get_cosine_similarity()
         silhoutte_index = InternalEvaluation.get_silhoutte_index(self.clusters, 'text', None, cosine_similarity)
         dunn_index = InternalEvaluation.get_dunn_index(self.clusters, 'text', None, cosine_similarity)
@@ -21,7 +21,8 @@ class PySplunkEvaluation(object):
 
 if __name__ == '__main__':
     syslog_config = {
-        'clusters_file': '/home/hudan/Git/pygraphc/messages.pickle',
+        'clusters_file':
+            '/home/hudan/Git/pygraphc/result/PySplunk/forensic-challenge-2010-syslog/all/messages-cluster.pickle',
         'logtype': 'syslog',
         'logfile': '/home/hudan/Git/labeled-authlog/dataset/Honeynet/forensic-challenge-2010/'
                    'forensic-challenge-2010-syslog/all/messages',
@@ -50,7 +51,7 @@ if __name__ == '__main__':
     }
 
     # change this line to work with other datasets
-    config = auth_config
+    config = syslog_config
 
     # open pickled clusters
     with open(config['clusters_file'], 'rb') as f:
