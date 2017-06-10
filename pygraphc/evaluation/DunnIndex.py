@@ -70,7 +70,11 @@ class DunnIndex(object):
                         source = {'source_node': node, 'source_cluster': cluster_id}
                         compactness[node] = self.__get_node_distance('max', True, source)
 
-        final_compactness = np.max(compactness.values()) if compactness else 0.
+        max_compactness = np.max(compactness.values())
+        if max_compactness == 0. or not compactness:
+            final_compactness = 1.
+        else:
+            final_compactness = max_compactness
         return final_compactness
 
     def __get_separation(self):
@@ -94,6 +98,9 @@ class DunnIndex(object):
     def get_dunn_index(self):
         dunn_index = 0.
         if self.mode == 'text-csv':
-            dunn_index = self.__get_separation() / self.__get_compactness()
+            try:
+                dunn_index = self.__get_separation() / self.__get_compactness()
+            except ZeroDivisionError:
+                dunn_index = 0.
 
         return dunn_index
