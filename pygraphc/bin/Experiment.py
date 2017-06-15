@@ -54,7 +54,9 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
                         'result_path': result_path,
                         'cosine_path': result_path2 + index + '-',
                         'cosine_master_path': result_path2 + index + '-master-',
-                        'cluster_pickle': result_path + index + '-cluster.pickle'}
+                        'cluster_pickle': result_path + index + '-cluster.pickle',
+                        'illustration_csv': result_path + index + 'illustration.csv',
+                        'illustration_csv_opt': result_path + index + '.illustration_opt.csv'}
 
     # file to save evaluation performance per method
     evaluation_file = result_path + dataset + '.evaluation.csv'
@@ -172,7 +174,7 @@ def get_confusion(properties):
     return ExternalEvaluation.get_confusion(properties['anomaly_groundtruth'], properties['anomaly_perline'])
 
 
-def main(dataset, year, method, log_type, evaluation):
+def main(dataset, year, method, log_type, evaluation, illustration):
     # list of methods
     graph_method = ['connected_components', 'max_clique', 'max_clique_weighted', 'max_clique_weighted_sa',
                     'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust',
@@ -320,7 +322,7 @@ def main(dataset, year, method, log_type, evaluation):
             tmax = 10.
             alpha = 0.9
 
-            energy_type = 'silhoutte'
+            energy_type = 'dunn'
             iteration_threshold = 0.3   # only xx% of total trial with brute-force
             brute_force = False
             maxc_sa = MaxCliquesPercolationSA(graph, edges_weight, nodes_id, tmin, tmax, alpha,
@@ -341,6 +343,11 @@ def main(dataset, year, method, log_type, evaluation):
                 true_false, specificity, precision, recall, accuracy = [0., 0., 0., 0.], 0., 0., 0., 0.
                 silhoutte, dunn = get_internal_evaluation(graph, maxc_sa_cluster, original_logs, properties, 'graph',
                                                           log_type)
+
+            if illustration:
+                with open(properties['illustration_csv_opt'], 'wb') as fi:
+                    writer2 = csv.writer(fi)
+                    writer2.writerow((best_parameter['k'], best_parameter['I'], -1 * best_energy))
 
             # nx.write_dot(graph, 'dec.dot')
             graph.clear()
@@ -405,7 +412,8 @@ if __name__ == '__main__':
         'anomaly': {
             'statistics': False,
             'sentiment': False
-        }
+        },
+        'illustration': False
     }
 
     kippo_config = {
@@ -420,7 +428,8 @@ if __name__ == '__main__':
         'anomaly': {
             'statistics': False,
             'sentiment': False
-        }
+        },
+        'illustration': False
     }
 
     ras_config = {
@@ -435,7 +444,8 @@ if __name__ == '__main__':
         'anomaly': {
             'statistics': False,
             'sentiment': False
-        }
+        },
+        'illustration': False
     }
 
     auth_config = {
@@ -450,14 +460,15 @@ if __name__ == '__main__':
         'anomaly': {
             'statistics': False,
             'sentiment': False
-        }
+        },
+        'illustration': False
     }
 
     illustration_config = {
         'data': 'illustration',
-        'logtype': 'auth',
-        'year': '2014',
-        'method': 'improved_majorclust',
+        'logtype': 'kippo',
+        'year': '2017',
+        'method': 'max_clique_weighted_sa',
         'evaluation': {
             'external': False,
             'internal': True
@@ -465,7 +476,8 @@ if __name__ == '__main__':
         'anomaly': {
             'statistics': False,
             'sentiment': False
-        }
+        },
+        'illustration': True
     }
 
     bluegene_config = {
@@ -480,7 +492,8 @@ if __name__ == '__main__':
         'anomaly': {
             'statistics': False,
             'sentiment': False
-        }
+        },
+        'illustration': False
     }
 
     vpn_config = {
@@ -495,14 +508,16 @@ if __name__ == '__main__':
         'anomaly': {
             'statistics': False,
             'sentiment': False
-        }
+        },
+        'illustration': False
     }
 
     # change this line to switch to other datasets
-    config = vpn_config
+    config = illustration_config
 
     # run experiment
-    main(config['data'], config['year'], config['method'], config['logtype'], config['evaluation'])
+    main(config['data'], config['year'], config['method'], config['logtype'], config['evaluation'],
+         config['illustration'])
 
     # print runtime
     duration = time() - start
