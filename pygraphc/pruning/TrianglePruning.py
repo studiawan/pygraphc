@@ -1,12 +1,27 @@
-import networkx as nx
 from operator import itemgetter
 
 
 class TrianglePruning(object):
+    """Class for edge pruning based weakest edge weight in each triangle found in the graph.
+    """
     def __init__(self, graph):
+        """Initialization of class TrianglePruning.
+
+        Parameters
+        ----------
+        graph   : graph
+            Analyzed graph.
+        """
         self.graph = graph
 
     def __remove_edge(self, triangle):
+        """Remove the weakest edge in a triangle.
+
+        Parameters
+        ----------
+        triangle    :
+            Tuple of triangle nodes.
+        """
         # get weight in triangle
         weight = dict()
         weight[(triangle[0], triangle[1])] = self.graph.get_edge_data(triangle[0], triangle[1])
@@ -25,6 +40,18 @@ class TrianglePruning(object):
             self.graph.remove_edge(min_weight[0], min_weight[1])
 
     def get_triangle(self):
+        """Find all triangles in a graph [Schank2005]_. The implementation is a modification
+           of [triangleinequality2013]_.
+
+        References
+        ----------
+        .. [Schank2005] Schank, T., & Wagner, D. Finding, counting and listing all triangles in large graphs,
+                        an experimental study. In International Workshop on Experimental and Efficient Algorithms,
+                        pp. 606-609, 2005, Springer Berlin Heidelberg.
+        .. [triangleinequality2013] Finding Triangles in a Graph.
+                                    https://triangleinequality.wordpress.com/2013/09/11/finding-triangles-in-a-graph/
+
+        """
         sorted_degree = sorted(self.graph.degree_iter(), key=itemgetter(1), reverse=True)
         a = {}
 
@@ -38,19 +65,3 @@ class TrianglePruning(object):
                         self.__remove_edge((first_vertex, second_vertex, third_vertex))
                         yield (first_vertex, second_vertex, third_vertex)
                     a[second_vertex]['set'].add(first_vertex)
-
-
-G = nx.Graph()
-
-G.add_edge(1, 2, weight=7)
-G.add_edge(1, 3, weight=2)
-G.add_edge(1, 4, weight=2)
-G.add_edge(1, 5, weight=6)
-G.add_edge(2, 3, weight=3)
-G.add_edge(4, 5, weight=3)
-
-print G.edges(data=True)
-tp = TrianglePruning(G)
-for tri in tp.get_triangle():
-    print tri
-print G.edges(data=True)
