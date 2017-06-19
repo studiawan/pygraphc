@@ -37,4 +37,4 @@ class StringSimilarity(object):
             cosine_similarity = 0
 
         cosine_similarity = round(cosine_similarity, 3)
-        yield cosine_similarity
+        return cosine_similarity
