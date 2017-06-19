@@ -34,27 +34,6 @@ class LogTextSimilarity(object):
     def __call__(self, node):
         return self.__write_cosine_csv(node)
 
-    @staticmethod
-    def __get_cosine_similarity(tfidf1, tfidf2, length1, length2):
-        vector_products = 0.
-        term1, term2 = [], []
-        for ti1 in tfidf1:
-            for ti2 in tfidf2:
-                if ti1[0] == ti2[0]:
-                    term1.append(ti1[1])
-                    term2.append(ti2[1])
-
-        multiply_result = np.multiply(np.array(term1), np.array(term2))
-        if multiply_result.size != 0:
-            vector_products = np.sum(multiply_result)
-        try:
-            cosine_similarity = vector_products / (length1 * length2)
-        except ZeroDivisionError:
-            cosine_similarity = 0
-
-        cosine_similarity = round(cosine_similarity, 3)
-        return cosine_similarity
-
     def __write_cosine_csv(self, node):
         csv_file = self.cosine_file + str(node) + '.csv'
         f = open(csv_file, 'wb')
@@ -67,10 +46,6 @@ class LogTextSimilarity(object):
                                                                         self.events[c]['tf-idf'],
                                                                         self.events[node]['length'],
                                                                         self.events[c]['length'])
-                    # similarity = self.__get_cosine_similarity(self.events[node]['tf-idf'],
-                    #                                           self.events[c]['tf-idf'],
-                    #                                           self.events[node]['length'],
-                    #                                           self.events[c]['length'])
                     if similarity > 0:
                         row.append(1 - similarity)
             if row:
