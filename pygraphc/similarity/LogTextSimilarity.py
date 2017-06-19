@@ -3,7 +3,6 @@ from pygraphc.similarity.StringSimilarity import StringSimilarity
 from itertools import combinations
 import csv
 import multiprocessing
-import numpy as np
 
 
 class LogTextSimilarity(object):
