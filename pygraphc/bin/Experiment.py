@@ -56,7 +56,9 @@ def get_dataset(dataset, dataset_path, anomaly_path, file_extension, method):
                         'cosine_master_path': result_path2 + index + '-master-',
                         'cluster_pickle': result_path + index + '-cluster.pickle',
                         'illustration_csv': result_path + index + 'illustration.csv',
-                        'illustration_csv_opt': result_path + index + '.illustration_opt.csv'}
+                        'illustration_csv_opt': result_path + index + '.illustration_opt.csv',
+                        'logcluster_output': result_path + index + '.logcluster_output.txt',
+                        'logcluster_outlier': result_path + index + '.logcluster_outlier.txt'}
 
     # file to save evaluation performance per method
     evaluation_file = result_path + dataset + '.evaluation.csv'
@@ -404,7 +406,7 @@ if __name__ == '__main__':
         'data': 'forensic-challenge-2010-syslog',
         'logtype': 'syslog',
         'year': 2009,
-        'method': 'max_clique_weighted_sa',
+        'method': 'IPLoM',
         'evaluation': {
             'external': False,
             'internal': True
@@ -513,7 +515,7 @@ if __name__ == '__main__':
     }
 
     # change this line to switch to other datasets
-    config = illustration_config
+    config = syslog_config
 
     # run experiment
     main(config['data'], config['year'], config['method'], config['logtype'], config['evaluation'],
