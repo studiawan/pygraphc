@@ -3,12 +3,45 @@ import numpy as np
 
 
 class DunnIndex(object):
+    """Class for calculating Dunn Index.
+    """
     def __init__(self, mode, clusters, cosine_file):
+        """Constructor of class DunnIndex.
+
+        Parameters
+        ----------
+        clusters    : dict
+            A dictionary containing node identifier per cluster. Key: cluster identifier,
+            value: list of node identifier.
+        mode        : str
+            Mode of clustering method, i.e., graph, text, text-csv.
+        cosine_file : str
+            Filename that contains cosine similarity of a node to other nodes per cluster.
+        """
         self.mode = mode
         self.clusters = clusters
         self.cosine_file = cosine_file
 
     def __get_node_distance(self, measurement, intra_cluster, source):
+        """Get distance from a node to its neighbor.
+
+        The neighbors can be located in intra-cluster or inter-cluster. The distance means
+        edge weight in the graph case. In non-graph clustering method, node is equal with log line id.
+
+        Parameters
+        ----------
+        measurement     : str
+            Mode of measurement, i.e., min, max, avg.
+        intra_cluster   : bool
+            True: intra-cluster, False: inter-cluster.
+        source          : dict
+            Source node and source cluster.
+
+        Returns
+        -------
+        final_distance  : float
+            Final distance for a node to intra or inter-cluster.
+        """
         if self.mode == 'text-csv':
             source_node, source_cluster = source['source_node'], source['source_cluster']
             final_distance = 0.
@@ -57,9 +90,17 @@ class DunnIndex(object):
                     if measurement == 'avg':
                         final_distance = np.min(avg_distance) if avg_distance else 0.
 
-            return round(final_distance, 3)
+            final_distance = round(final_distance, 3)
+            return final_distance
 
     def __get_compactness(self):
+        """Maximum node distance as diameter to show a compactness of a cluster.
+
+        Returns
+        -------
+        final_compactness   : float
+            Diameter or compactness of a cluster.
+        """
         compactness = {}
         for cluster_id, cluster in self.clusters.iteritems():
             if len(cluster) == 1:
@@ -78,6 +119,16 @@ class DunnIndex(object):
         return final_compactness
 
     def __get_separation(self):
+        """Separation or minimum distance between clusters.
+
+        It is actually minimum distance between two nodes in calculated clusters.
+        Then, we find the most minimum one for all clusters.
+
+        Returns
+        -------
+        final_separation    : float
+            Minimum distance between all clusters.
+        """
         # separation is the most minimum intra cluster distance
         separation = {}
         final_separation = 1.
@@ -96,6 +147,18 @@ class DunnIndex(object):
         return final_separation
 
     def get_dunn_index(self):
+        """Get Dunn index. The basic formula is separation / compactness [Liu2010]_.
+
+        Returns
+        -------
+        dunn_index  : float
+            Dunn index value.
+
+        References
+        ----------
+        .. [Liu2010] Liu, Y., Li, Z., Xiong, H., Gao, X., & Wu, J. Understanding of internal clustering
+                     validation measures. In 2010 IEEE 10th International Conference on Data Mining, pp. 911-916.
+        """
         dunn_index = 0.
         if self.mode == 'text-csv':
             try:
