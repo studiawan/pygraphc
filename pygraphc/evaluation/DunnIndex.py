@@ -10,11 +10,11 @@ class DunnIndex(object):
 
         Parameters
         ----------
+        mode        : str
+            Mode of clustering method, i.e., graph, text, text-csv.
         clusters    : dict
             A dictionary containing node identifier per cluster. Key: cluster identifier,
             value: list of node identifier.
-        mode        : str
-            Mode of clustering method, i.e., graph, text, text-csv.
         cosine_file : str
             Filename that contains cosine similarity of a node to other nodes per cluster.
         """
