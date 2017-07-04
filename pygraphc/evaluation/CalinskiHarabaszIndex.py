@@ -3,17 +3,48 @@ from random import choice
 
 
 class CalinskiHarabaszIndex(object):
-    def __init__(self, graph, clusters, total_nodes):
+    """A class to calculate Calinski-Harabasz Index [Calinski1974]_. We use the terms for this index from [Maulik2002]_.
+
+    References
+    ----------
+    .. [Calinski1974] Calinski, T., & Harabasz, J. A dendrite method for cluster analysis.
+                      Communications in Statistics-theory and Methods, 3(1), 1-27, 1974.
+    .. [Maulik2002]   Maulik, U., & Bandyopadhyay, S. Performance evaluation of some clustering algorithms
+                      and validity indices. IEEE Transactions on Pattern Analysis and Machine Intelligence, 24(12),
+                      1650-1654, 2002.
+    """
+    def __init__(self, graph, clusters):
+        """Constructor for CalinskiHarabaszIndex class.
+
+        Parameters
+        ----------
+        graph       : graph
+            A graph to be evaluated.
+        clusters    : dict
+            Dictionary containing the cluster data. Key: cluster id, value: list of nodes.
+        """
         self.graph = graph
         self.clusters = clusters
-        self.total_nodes = total_nodes
         self.cluster_centroids = {}
         self.cluster_total_nodes = {}
+        self.total_nodes = 0
 
         # get cluster properties: centroid per cluster, total nodes per cluster
         self.__get_all_cluster_properties()
 
     def __get_centroid(self, cluster=None):
+        """Get the centroid of a cluster in the graph or the centroid of the graph.
+
+        Parameters
+        ----------
+        cluster : list
+            Nodes list of a cluster.
+
+        Returns
+        -------
+        centroid_node   : int
+            Centroid node of a cluster.
+        """
         # centroid of a cluster
         if cluster:
             subgraph = self.graph.subgraph(cluster)
@@ -27,13 +58,28 @@ class CalinskiHarabaszIndex(object):
         return centroid_node
 
     def __get_all_cluster_properties(self):
-        # get cluster centroid and cluster total nodes
+        """Get cluster properties, i.e., centroid, total nodes per cluster, and total nodes in a graph.
+        """
         for cluster_id, nodes in self.clusters.iteritems():
             self.cluster_centroids[cluster_id] = self.__get_centroid(nodes)
             self.cluster_total_nodes[cluster_id] = len(nodes)
+        self.total_nodes = self.graph.number_of_nodes()
 
     def __get_distance(self, source, dest):
-        # get distance from source to destination
+        """Get distance from source to destination using Dijkstra algorithm.
+
+        Parameters
+        ----------
+        source  : int
+            Source node.
+        dest    : int
+            Destination node.
+
+        Returns
+        -------
+        distance    : float
+            Distance from source node to destination node.
+        """
         try:
             distance = nx.dijkstra_path_length(self.graph, source, dest)
         except nx.NetworkXNoPath:
@@ -42,7 +88,13 @@ class CalinskiHarabaszIndex(object):
         return distance
 
     def __get_trace_b(self):
-        # get trace B
+        """Get trace B, trace between cluster, as described in [Maulik2002]_.
+
+        Returns
+        -------
+        total_trace_b   : float
+            Trace B value.
+        """
         traces_b = []
         graph_centroid = self.__get_centroid()
         for cluster_id, nodes in self.clusters.iteritems():
@@ -54,7 +106,13 @@ class CalinskiHarabaszIndex(object):
         return total_trace_b
 
     def __get_trace_w(self):
-        # get trace W
+        """Get trace W, trace within cluster, as described in [Maulik2002]_.
+
+        Returns
+        -------
+        total_traces_w  : float
+            Trace W value.
+        """
         traces_w = []
         for cluster_id, nodes in self.clusters.iteritems():
             trace_w_cluster = []
@@ -67,7 +125,13 @@ class CalinskiHarabaszIndex(object):
         return total_traces_w
 
     def get_calinski_harabasz(self):
-        # get Calinski-Harabasz index
+        """Get Calinski-Harabasz index.
+
+        Returns
+        -------
+        ch_index    : float
+            Calinski-Harabasz index.
+        """
         total_cluster = len(self.clusters.values())
         ch_index = (self.__get_trace_b() / (total_cluster - 1)) / \
                    (self.__get_trace_w() / (self.total_nodes - total_cluster))
