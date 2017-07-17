@@ -267,6 +267,7 @@ def main(dataset, year, method, log_type, evaluation, illustration):
                                                                                   properties, year, edges_dict,
                                                                                   log_type)
             true_false, specificity, precision, recall, accuracy = get_confusion(properties)
+            nx.write_dot(graph, 'illustration.dot')
             graph.clear()
 
         elif method == 'improved_majorclust':
@@ -468,9 +469,9 @@ if __name__ == '__main__':
 
     illustration_config = {
         'data': 'illustration',
-        'logtype': 'kippo',
-        'year': '2017',
-        'method': 'max_clique_weighted_sa',
+        'logtype': 'auth',
+        'year': '2014',
+        'method': 'majorclust',
         'evaluation': {
             'external': False,
             'internal': True
@@ -515,7 +516,7 @@ if __name__ == '__main__':
     }
 
     # change this line to switch to other datasets
-    config = syslog_config
+    config = illustration_config
 
     # run experiment
     main(config['data'], config['year'], config['method'], config['logtype'], config['evaluation'],
