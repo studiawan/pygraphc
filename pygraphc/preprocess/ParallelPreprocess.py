@@ -1,6 +1,5 @@
 from re import sub
 from nltk import corpus
-from time import time
 import multiprocessing
 
 
@@ -10,6 +9,8 @@ class ParallelPreprocess(object):
         self.logs = []
         self.log_length = 0
         self.unique_events = []
+        self.unique_events_length = 0
+        self.event_attributes = {}
 
     def __call__(self, line):
         return self.__get_events(line)
@@ -56,39 +57,24 @@ class ParallelPreprocess(object):
         pool.close()
         pool.join()
 
-        # get graph attributes
+        # get graph event_attributes
         unique_events_only = {}
         unique_event_id = 0
-        attributes = {}
         for log_id, event in events:
             if event not in unique_events_only.values():
                 unique_events_only[unique_event_id] = event
-                attributes[unique_event_id] = {'preprocessed_event': event,
-                                               'cluster': unique_event_id,
-                                               'member': [log_id]}
+                self.event_attributes[unique_event_id] = {'preprocessed_event': event,
+                                                          'cluster': unique_event_id,
+                                                          'member': [log_id]}
                 unique_event_id += 1
             else:
-                for index, attr in attributes.iteritems():
+                for index, attr in self.event_attributes.iteritems():
                     if event == attr['preprocessed_event']:
                         attr['member'].append(log_id)
 
         # get unique events for networkx
-        for index, attr in attributes.iteritems():
+        self.unique_events_length = unique_event_id
+        for index, attr in self.event_attributes.iteritems():
             self.unique_events.append((index, attr))
-            print (index, attr)
 
         return self.unique_events
-
-# open file
-start = time()
-logfile = '/home/hudan/Git/labeled-authlog/dataset/SecRepo/auth-perday/dec-1.log'
-
-# preprocess
-p = ParallelPreprocess(logfile)
-p.get_unique_events()
-
-# print runtime
-duration = time() - start
-minute, second = divmod(duration, 60)
-hour, minute = divmod(minute, 60)
-print "Runtime: %d:%02d:%02d" % (hour, minute, second)
