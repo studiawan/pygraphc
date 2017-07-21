@@ -29,7 +29,8 @@ setup(name='pygraphc',
           'Sphinx',
           'numpydoc',
           'TextBlob',
-          'pyparsing'
+          'pyparsing',
+          'jellyfish'
       ],
       include_package_data=True,
       zip_safe=False)
