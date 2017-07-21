@@ -5,3 +5,4 @@ Sphinx
 numpydoc
 textblob
 pyparsing
+jellyfish
