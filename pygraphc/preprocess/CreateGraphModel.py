@@ -1,7 +1,7 @@
 from pygraphc.preprocess.ParallelPreprocess import ParallelPreprocess
 from pygraphc.similarity.JaroWinkler import JaroWinkler
+from pygraphc.pruning.TrianglePruning import TrianglePruning
 import networkx as nx
-from time import time
 
 
 class CreateGraphModel(object):
@@ -28,19 +28,8 @@ class CreateGraphModel(object):
         self.graph.add_nodes_from(self.unique_events)
         self.graph.add_weighted_edges_from(self.distances)
 
+        tp = TrianglePruning(self.graph)
+        tp.get_triangle()
+        self.graph = tp.graph
+
         return self.graph
-
-# open file
-start = time()
-logfile = '/home/hudan/Git/labeled-authlog/dataset/SecRepo/auth-perday/dec-1.log'
-
-# preprocess
-cgm = CreateGraphModel(logfile)
-graph = cgm.create_graph()
-nx.write_dot(graph, 'test.dot')
-
-# print runtime
-duration = time() - start
-minute, second = divmod(duration, 60)
-hour, minute = divmod(minute, 60)
-print "Runtime: %d:%02d:%02d" % (hour, minute, second)
