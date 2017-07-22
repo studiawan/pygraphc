@@ -11,13 +11,14 @@ class JaroWinkler(object):
     def __jarowinkler(self, unique_event_id):
         string1 = unicode(self.event_attributes[unique_event_id[0]]['preprocessed_event'], 'utf-8')
         string2 = unicode(self.event_attributes[unique_event_id[1]]['preprocessed_event'], 'utf-8')
-        return jellyfish.jaro_winkler(string1, string2)
+        distance = jellyfish.jaro_winkler(string1, string2)
+        if distance > 0.:
+            return round(distance, 3)
 
     def __call__(self, unique_event_id):
         distance = self.__jarowinkler(unique_event_id)
-        if distance > 0:
-            distance_with_id = (unique_event_id[0], unique_event_id[1], distance)
-            return distance_with_id
+        distance_with_id = (unique_event_id[0], unique_event_id[1], distance)
+        return distance_with_id
 
     def get_jarowinkler(self):
         # get unique event id combination
