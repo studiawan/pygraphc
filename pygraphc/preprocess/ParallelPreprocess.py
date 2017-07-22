@@ -60,17 +60,35 @@ class ParallelPreprocess(object):
         # get graph event_attributes
         unique_events_only = {}
         unique_event_id = 0
+        unique_events_list = []
         for log_id, event in events:
+            event_split = event.split()
             if event not in unique_events_only.values():
                 unique_events_only[unique_event_id] = event
-                self.event_attributes[unique_event_id] = {'preprocessed_event': event,
+                self.event_attributes[unique_event_id] = {'preprocessed_event': event_split,
                                                           'cluster': unique_event_id,
                                                           'member': [log_id]}
                 unique_event_id += 1
+                unique_events_list.append(event_split)
             else:
                 for index, attr in self.event_attributes.iteritems():
-                    if event == attr['preprocessed_event']:
+                    if event_split == attr['preprocessed_event']:
                         attr['member'].append(log_id)
+
+        # transpose unique events list
+        unique_events_transpose = map(list, zip(*unique_events_list))
+
+        # check if each transposed list has the same elements
+        true_status = []
+        for index, transposed in enumerate(unique_events_transpose):
+            status = all(item == transposed[0] for item in transposed)
+            if status:
+                true_status.append(index)
+
+        # remove repetitive words
+        for index, attr in self.event_attributes.iteritems():
+            attr['preprocessed_event'] = [y for x, y in enumerate(attr['preprocessed_event']) if x not in true_status]
+            attr['preprocessed_event'] = ' '.join(attr['preprocessed_event'])
 
         # get unique events for networkx
         self.unique_events_length = unique_event_id
