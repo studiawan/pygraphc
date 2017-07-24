@@ -1,5 +1,5 @@
 from pygraphc.preprocess.ParallelPreprocess import ParallelPreprocess
-from pygraphc.similarity.JaroWinkler import JaroWinkler
+from pygraphc.similarity.CosineSimilarity import ParallelCosineSimilarity
 from pygraphc.pruning.TrianglePruning import TrianglePruning
 import networkx as nx
 
@@ -19,8 +19,8 @@ class CreateGraphModel(object):
         self.event_attributes = pp.event_attributes
 
     def __get_distances(self):
-        jw = JaroWinkler(self.event_attributes, self.unique_events_length)
-        self.distances = jw.get_jarowinkler()
+        pcs = ParallelCosineSimilarity(self.event_attributes, self.unique_events_length)
+        self.distances = pcs.get_parallel_cosine_similarity()
 
     def create_graph(self):
         self.__get_nodes()
