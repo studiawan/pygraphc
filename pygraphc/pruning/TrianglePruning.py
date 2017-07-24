@@ -36,7 +36,6 @@ class TrianglePruning(object):
 
         # remove edge that has the minimum weight
         if self.graph.has_edge(min_weight[0], min_weight[1]):
-            print min_weight[0], min_weight[1]
             self.graph.remove_edge(min_weight[0], min_weight[1])
 
     def get_triangle(self):
@@ -63,5 +62,4 @@ class TrianglePruning(object):
                 if a[first_vertex]['ind'] < a[second_vertex]['ind']:
                     for third_vertex in a[first_vertex]['set'].intersection(a[second_vertex]['set']):
                         self.__remove_edge((first_vertex, second_vertex, third_vertex))
-                        yield (first_vertex, second_vertex, third_vertex)
                     a[second_vertex]['set'].add(first_vertex)
