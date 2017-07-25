@@ -5,6 +5,7 @@ import networkx as nx
 from time import time
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.preprocess.CreateGraph import CreateGraph
+from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
 from pygraphc.clustering.GraphEntropy import GraphEntropy
 from pygraphc.clustering.MaxCliquesPercolation import MaxCliquesPercolationWeighted
@@ -180,7 +181,7 @@ def main(dataset, year, method, log_type, evaluation, illustration):
     # list of methods
     graph_method = ['connected_components', 'max_clique', 'max_clique_weighted', 'max_clique_weighted_sa',
                     'kclique_percolation', 'kclique_percolation_weighted', 'majorclust', 'improved_majorclust',
-                    'graph_entropy', 'improved_majorclust_wo_refine']
+                    'improved_majorclust_wo_refine']
     # nongraph_method = ['IPLoM', 'LKE']
 
     # get dataset files
@@ -296,14 +297,26 @@ def main(dataset, year, method, log_type, evaluation, illustration):
             graph.clear()
 
         elif method == 'graph_entropy':
+            # preprocess
+            preprocess = CreateGraphModel(properties['log_path'])
+            graph = preprocess.create_graph()
+
             # run GraphEntropy method
             ge = GraphEntropy(graph)
             ge_clusters = ge.get_graph_entropy()
+            print ge_clusters
 
             # do evaluation performance and clear graph
-            ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, ge_clusters, original_logs,
-                                                                                  properties, year, edges_dict,
-                                                                                  log_type)
+            if evaluation['external']:
+                ar, ami, nmi, h, c, v, silhoutte, anomaly_evaluation = get_evaluation(graph, ge_clusters, original_logs,
+                                                                                      properties, year, edges_dict,
+                                                                                      log_type)
+            elif evaluation['internal']:
+                ar, ami, nmi, h, c, v, anomaly_evaluation = 0., 0., 0., 0., 0., 0., ()
+                true_false, specificity, precision, recall, accuracy = [0., 0., 0., 0.], 0., 0., 0., 0.
+                silhoutte, dunn = 0., 0.
+
+            nx.write_dot(graph, 'dec.dot')
             graph.clear()
 
         elif method == 'max_clique_weighted':
@@ -471,7 +484,7 @@ if __name__ == '__main__':
         'data': 'illustration',
         'logtype': 'auth',
         'year': '2014',
-        'method': 'majorclust',
+        'method': 'graph_entropy',
         'evaluation': {
             'external': False,
             'internal': True
