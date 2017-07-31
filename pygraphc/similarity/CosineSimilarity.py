@@ -109,4 +109,10 @@ class ParallelCosineSimilarity(object):
         pool.close()
         pool.join()
 
+        removed = []
+        for index, distance in enumerate(distances):
+            if distance[2] is None:
+                removed.append(index)
+
+        distances = [y for x, y in enumerate(distances) if x not in removed]
         return distances
