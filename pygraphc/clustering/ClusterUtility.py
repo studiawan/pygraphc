@@ -1,5 +1,6 @@
 from itertools import combinations
 from datetime import datetime
+import networkx as nx
 
 
 class ClusterUtility(object):
@@ -204,3 +205,22 @@ class ClusterUtility(object):
         """
         cluster_density = float(num_edges) / float(num_nodes)
         return cluster_density
+
+    @staticmethod
+    def remove_outcluster(graph):
+        """Remove edges that connect to other clusters.
+
+        This method will first find any edges in the cluster member. If edges connecting to a node does not belong to
+        the current cluster, then it will be removed.
+        """
+        # remove edge outside cluster
+        for node in graph.nodes_iter(data=True):
+            neighbors = graph.neighbors(node[0])
+            for neighbor in neighbors:
+                # if cluster id of current node is not the same of the connecting node
+                if graph.node[node[0]]['cluster'] != graph.node[neighbor]['cluster']:
+                    try:
+                        graph.remove_edge(node[0], neighbor)
+                    except nx.exception.NetworkXError:
+                        graph.remove_edge(neighbor, node[0])
+        return graph
