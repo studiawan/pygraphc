@@ -1,5 +1,6 @@
 from math import log
 from ClusterUtility import ClusterUtility
+from itertools import combinations
 
 
 class GraphEntropy(object):
@@ -38,12 +39,17 @@ class GraphEntropy(object):
         nodes = set(self.graph.nodes())
         clusters = {}
         cluster_id = 0
+        iteration = 0
 
         while nodes:
+            print 'iteration:', iteration
             seed_node = nodes.pop()
+            print 'seed node:', seed_node
             cluster_candidate = set(self.graph.neighbors(seed_node))
             cluster_candidate.add(seed_node)
-            entropies = self._get_entropies(cluster_candidate, self.graph.nodes())
+            print 'cluster candidate:', cluster_candidate
+            entropies = self.__get_entropies(cluster_candidate, self.graph.nodes())
+            print 'entropies', entropies
 
             # removing neighbors to minimize entropy
             for node in list(cluster_candidate):
@@ -52,21 +58,26 @@ class GraphEntropy(object):
 
                 new_cluster = cluster_candidate.copy()
                 new_cluster.remove(node)
-                new_entropies = self._get_entropies(new_cluster, self.graph.neighbors(node))
+                print node, 'new cluster:', new_cluster
+                new_entropies = self.__get_entropies(new_cluster, self.graph.neighbors(node))
+                print node, 'new entropy:', new_entropies
 
                 if sum(new_entropies.itervalues()) < sum(entropies[v] for v in self.graph.neighbors(node)):
                     cluster_candidate = new_cluster
                     entropies.update(new_entropies)
+                    print 'inner cluster candidate:', cluster_candidate
+                    print 'inner entropies:', entropies
 
             # boundary candidates, a intersection with b
             c = reduce(lambda a, b: a | b, (set(self.graph.neighbors(v)) for v in cluster_candidate)) - \
                 cluster_candidate
+            print 'c:', c
 
             while c:
                 node = c.pop()
                 new_cluster = cluster_candidate.copy()
                 new_cluster.add(node)
-                new_entropies = self._get_entropies(new_cluster, self.graph.neighbors(node))
+                new_entropies = self.__get_entropies(new_cluster, self.graph.neighbors(node))
 
                 if sum(new_entropies.itervalues()) < sum(entropies[v] for v in self.graph.neighbors(node)):
                     cluster_candidate = new_cluster
@@ -76,14 +87,17 @@ class GraphEntropy(object):
             nodes -= cluster_candidate
 
             if len(cluster_candidate) > 0:
-                clusters[cluster_id] = list(cluster_candidate)
+                clusters[cluster_id] = set(cluster_candidate)
                 cluster_id += 1
                 # print '-'.join(str(c) for c in cluster_candidate)
+            iteration += 1
+            print '-----'
 
         ClusterUtility.set_cluster_id(self.graph, clusters)
+        # ClusterUtility.remove_outcluster(self.graph)
         return clusters
 
-    def _get_entropies(self, cluster_candidate, neighbors):
+    def __get_entropies(self, cluster_candidate, neighbors):
         """Get entropy from cluster candidate or all nodes in a graph.
 
         Parameters
@@ -100,11 +114,11 @@ class GraphEntropy(object):
         """
         entropies = {}
         for node in neighbors:
-            entropies[node] = self._get_node_entropy(cluster_candidate, node)
+            entropies[node] = self.__get_node_entropy(cluster_candidate, node)
 
         return entropies
 
-    def _get_node_entropy(self, cluster_candidate, node):
+    def __get_node_entropy(self, cluster_candidate, node):
         """Get node's entropy.
 
         Parameters
@@ -136,4 +150,15 @@ class GraphEntropy(object):
         entropy = 0 if inner_probability <= 0.0 or inner_probability >= 1.0 else \
             -inner_probability * log(inner_probability, 2) - (1 - inner_probability) * log(1 - inner_probability, 2)
 
-        return entropy
+        return round(entropy, 5)
+
+    @staticmethod
+    def __get_hard_cluster(clusters):
+        cluster_length = len(clusters.keys())
+        cluster_combination = combinations(xrange(cluster_length), 2)
+        for cluster_id1, cluster_id2 in cluster_combination:
+            intersection = clusters[cluster_id1] & clusters[cluster_id2]
+            if intersection:
+                for node in intersection:
+                    # remove node from cluster1
+                    print node
