@@ -152,13 +152,49 @@ class GraphEntropy(object):
 
         return round(entropy, 5)
 
-    @staticmethod
-    def __get_hard_cluster(clusters):
+    def __get_hard_cluster(self, clusters):
         cluster_length = len(clusters.keys())
         cluster_combination = combinations(xrange(cluster_length), 2)
         for cluster_id1, cluster_id2 in cluster_combination:
-            intersection = clusters[cluster_id1] & clusters[cluster_id2]
+            cluster1 = set(clusters[cluster_id1])
+            cluster2 = set(clusters[cluster_id2])
+            intersection = cluster1 & cluster2
             if intersection:
                 for node in intersection:
-                    # remove node from cluster1
-                    print node
+                    # remove node from cluster 1 and get entropy for cluster 1
+                    cluster1_candidate = cluster1 - set(node)
+                    old_entropy1 = self.__get_entropies(cluster1, self.graph.neighbors(node))
+                    new_entropy1 = self.__get_entropies(cluster1_candidate, self.graph.neighbors(node))
+
+                    # remove node from cluster 2 and get entropy for cluster 2
+                    cluster2_candidate = cluster2 - set(node)
+                    old_entropy2 = self.__get_entropies(cluster2, self.graph.neighbors(node))
+                    new_entropy2 = self.__get_entropies(cluster2_candidate, self.graph.neighbors(node))
+
+                    # get difference
+                    entropy_diff1 = sum(old_entropy1.itervalues()) - sum(new_entropy1.itervalues())
+                    entropy_diff2 = sum(old_entropy2.itervalues()) - sum(new_entropy2.itervalues())
+
+                    # choose cluster membership
+                    if entropy_diff1 == entropy_diff2:
+                        # choose cluster 1
+                        clusters[cluster_id2].remove(node)
+                    else:
+                        if (old_entropy1 < new_entropy1) and (old_entropy2 < new_entropy2):
+                            minimum_difference = min(entropy_diff1, entropy_diff2)
+                            if minimum_difference == entropy_diff1:
+                                clusters[cluster_id2].remove(node)
+                            else:
+                                clusters[cluster_id1].remove(node)
+                        elif (old_entropy1 < new_entropy1) and (old_entropy2 > new_entropy2):
+                            clusters[cluster_id2].remove(node)
+                        elif (old_entropy1 > new_entropy1) and (old_entropy2 < new_entropy2):
+                            clusters[cluster_id1].remove(node)
+                        elif (old_entropy1 > new_entropy1) and (old_entropy2 > new_entropy2):
+                            maximum_difference = max(entropy_diff1, entropy_diff2)
+                            if maximum_difference == entropy_diff1:
+                                clusters[cluster_id2].remove(node)
+                            else:
+                                clusters[cluster_id1].remove(node)
+
+        return clusters
