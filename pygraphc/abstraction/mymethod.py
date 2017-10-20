@@ -1,25 +1,40 @@
+from orderedset import OrderedSet
+
 
 class MyMethod(object):
     def __init__(self, graph, clusters):
         self.graph = graph
         self.clusters = clusters
-        self.count_partitions = {}
+        self.count_groups = {}
 
-    def __get_count(self):
-        abstraction = []
+    def get_abstraction(self):
+        abstraction = {}
+        abstraction_id = 0
         for cluster_id, nodes in self.clusters.iteritems():
+            nodes = list(nodes)
             if len(nodes) > 1:
+                # group the preprocessed event with the same word count
                 for node_id in nodes:
                     message = self.graph.node[node_id]['preprocessed_event']
 
                     # get count
-                    tokens = message.strip().split()
-                    token_count = len(tokens)
+                    words_split = message.strip().split()
+                    words_count = len(words_split)
 
-                    partition_keys = self.count_partitions.keys()
-                    if token_count not in partition_keys:
-                        self.count_partitions[token_count] = []
-                    self.count_partitions[token_count].append(message)
+                    group_keys = self.count_groups.keys()
+                    if words_count not in group_keys:
+                        self.count_groups[words_count] = []
+                    self.count_groups[words_count].append(OrderedSet(words_split))
+
+                # get common words as abstraction
+                for words_count, group in self.count_groups.iteritems():
+                    abstraction[abstraction_id] = group[0]
+                    for message in group:
+                        abstraction[abstraction_id].intersection_update(message)
+                    abstraction_id += 1
 
             elif len(nodes) == 1:
-                abstraction[cluster_id] = self.graph.node[nodes[0]]['preprocessed_event']
+                abstraction[abstraction_id] = self.graph.node[nodes[0]]['preprocessed_event']
+                abstraction_id += 1
+
+        return abstraction
