@@ -36,18 +36,21 @@ class AutoAbstraction(object):
         for words_count, group in self.count_groups.iteritems():
             group_length = len(group)
             if group_length > 1:
-                self.abstractions[abstraction_id] = group[0]
+                self.abstractions[abstraction_id] = OrderedSet(group[0])
                 for message in group:
                     self.abstractions[abstraction_id].intersection_update(message)
-                abstraction_id += 1
+
+                # check for abstraction that only contains one word
+                if len(self.abstractions[abstraction_id]) == 1:
+                    for message in group:
+                        self.abstractions[abstraction_id] = message
+                        abstraction_id += 1
+                else:
+                    abstraction_id += 1
 
             elif group_length == 1:
                 self.abstractions[abstraction_id] = group[0]
                 abstraction_id += 1
-
-            # check for abstraction that only contains one word
-            if group_length > 1 and len(self.abstractions[abstraction_id - 1]) == 1:
-                print 'oi'
 
 aa = AutoAbstraction('/home/hudan/Git/labeled-authlog/dataset/illustration/per_day/dec-15.log')
 aa.get_abstraction()
