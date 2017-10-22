@@ -21,12 +21,13 @@ class MyMethod(object):
                     words_split = message.strip().split()
                     words_count = len(words_split)
 
+                    # we need OrderedSet to preserve order because regular set does not preserve order
                     group_keys = self.count_groups.keys()
                     if words_count not in group_keys:
                         self.count_groups[words_count] = []
                     self.count_groups[words_count].append(OrderedSet(words_split))
 
-                # get common words as abstraction
+                # get common words as abstraction with intersection
                 for words_count, group in self.count_groups.iteritems():
                     abstraction[abstraction_id] = group[0]
                     for message in group:
@@ -34,7 +35,7 @@ class MyMethod(object):
                     abstraction_id += 1
 
             elif len(nodes) == 1:
-                abstraction[abstraction_id] = self.graph.node[nodes[0]]['preprocessed_event']
+                abstraction[abstraction_id] = OrderedSet(self.graph.node[nodes[0]]['preprocessed_event'].split())
                 abstraction_id += 1
 
         return abstraction
