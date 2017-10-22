@@ -42,14 +42,10 @@ class GraphEntropy(object):
         iteration = 0
 
         while nodes:
-            print 'iteration:', iteration
             seed_node = nodes.pop()
-            print 'seed node:', seed_node
             cluster_candidate = set(self.graph.neighbors(seed_node))
             cluster_candidate.add(seed_node)
-            print 'cluster candidate:', cluster_candidate
             entropies = self.__get_entropies(cluster_candidate, self.graph.nodes())
-            print 'entropies', entropies
 
             # removing neighbors to minimize entropy
             for node in list(cluster_candidate):
@@ -58,21 +54,17 @@ class GraphEntropy(object):
 
                 new_cluster = cluster_candidate.copy()
                 new_cluster.remove(node)
-                print node, 'new cluster:', new_cluster
                 new_entropies = self.__get_entropies(new_cluster, self.graph.neighbors(node))
-                print node, 'new entropy:', new_entropies
 
                 if sum(new_entropies.itervalues()) < sum(entropies[v] for v in self.graph.neighbors(node)):
                     cluster_candidate = new_cluster
                     entropies.update(new_entropies)
-                    print 'inner cluster candidate:', cluster_candidate
-                    print 'inner entropies:', entropies
 
             # boundary candidates, a intersection with b
             c = reduce(lambda a, b: a | b, (set(self.graph.neighbors(v)) for v in cluster_candidate)) - \
                 cluster_candidate
-            print 'c:', c
 
+            # check entropy for boundary candidates
             while c:
                 node = c.pop()
                 new_cluster = cluster_candidate.copy()
@@ -89,9 +81,10 @@ class GraphEntropy(object):
             if len(cluster_candidate) > 0:
                 clusters[cluster_id] = set(cluster_candidate)
                 cluster_id += 1
-                # print '-'.join(str(c) for c in cluster_candidate)
             iteration += 1
-            print '-----'
+
+        # get hard clustering from entropy soft clustering
+        clusters = self.__get_hard_cluster(clusters)
 
         ClusterUtility.set_cluster_id(self.graph, clusters)
         # ClusterUtility.remove_outcluster(self.graph)
@@ -153,6 +146,18 @@ class GraphEntropy(object):
         return round(entropy, 5)
 
     def __get_hard_cluster(self, clusters):
+        """Get hard clustering from soft clustering result based on graph entropy.
+
+        Parameters
+        ----------
+        clusters    : dict
+            Dictionary of soft clustering results.
+
+        Returns
+        -------
+        clusters    : dict
+            Dictionary of hard clustering results.
+        """
         cluster_length = len(clusters.keys())
         cluster_combination = combinations(xrange(cluster_length), 2)
         for cluster_id1, cluster_id2 in cluster_combination:
@@ -162,12 +167,12 @@ class GraphEntropy(object):
             if intersection:
                 for node in intersection:
                     # remove node from cluster 1 and get entropy for cluster 1
-                    cluster1_candidate = cluster1 - set(node)
+                    cluster1_candidate = cluster1 - {node}
                     old_entropy1 = self.__get_entropies(cluster1, self.graph.neighbors(node))
                     new_entropy1 = self.__get_entropies(cluster1_candidate, self.graph.neighbors(node))
 
                     # remove node from cluster 2 and get entropy for cluster 2
-                    cluster2_candidate = cluster2 - set(node)
+                    cluster2_candidate = cluster2 - {node}
                     old_entropy2 = self.__get_entropies(cluster2, self.graph.neighbors(node))
                     new_entropy2 = self.__get_entropies(cluster2_candidate, self.graph.neighbors(node))
 
@@ -196,5 +201,10 @@ class GraphEntropy(object):
                                 clusters[cluster_id2].remove(node)
                             else:
                                 clusters[cluster_id1].remove(node)
+
+        # remove empty element in clusters list
+        for cluster_id, nodes in clusters.iteritems():
+            if not nodes:
+                del clusters[cluster_id]
 
         return clusters
