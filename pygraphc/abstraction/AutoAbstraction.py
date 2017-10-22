@@ -52,6 +52,21 @@ class AutoAbstraction(object):
                                                              'abstraction': message}
                         abstraction_id += 1
                 else:
+                    # get index for abstraction
+                    abstraction_index = set()
+                    for word in self.abstractions[abstraction_id]['abstraction']:
+                        abstraction_index.add(group.values()[0].index(word))
+
+                    # get all index in original count_group and get asterisk index
+                    all_index = set(range(len(group.values()[0])))
+                    asterisk_index = all_index - abstraction_index
+                    final_abstraction = list(self.abstractions[abstraction_id]['abstraction'])
+
+                    # abstraction with asterisk symbol to represent the non-intersection words
+                    for index in asterisk_index:
+                        final_abstraction.insert(index, '*')
+                    self.abstractions[abstraction_id]['abstraction'] = final_abstraction
+
                     abstraction_id += 1
 
             elif group_length == 1:
