@@ -25,6 +25,7 @@ class ParallelPreprocess(object):
     @staticmethod
     def __get_events(logs_with_id):
         log_index, line = logs_with_id
+        line = line.replace('.', '')
         line = sub('[^a-zA-Z]', ' ', line)
         line = line.replace('_', ' ')
 
