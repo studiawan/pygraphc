@@ -30,7 +30,8 @@ setup(name='pygraphc',
           'numpydoc',
           'TextBlob',
           'pyparsing',
-          'jellyfish'
+          'jellyfish',
+          'orderedset'
       ],
       include_package_data=True,
       zip_safe=False)

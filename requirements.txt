@@ -6,3 +6,4 @@ numpydoc
 textblob
 pyparsing
 jellyfish
+orderedset
