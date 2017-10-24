@@ -4,13 +4,14 @@ import multiprocessing
 
 
 class ParallelPreprocess(object):
-    def __init__(self, log_file):
+    def __init__(self, log_file, count_groups=None):
         self.log_file = log_file
         self.logs = []
         self.log_length = 0
         self.unique_events = []
         self.unique_events_length = 0
         self.event_attributes = {}
+        self.count_groups = count_groups
 
     def __call__(self, line):
         return self.__get_events(line)
@@ -95,5 +96,15 @@ class ParallelPreprocess(object):
         self.unique_events_length = unique_event_id
         for index, attr in self.event_attributes.iteritems():
             self.unique_events.append((index, attr))
+
+        return self.unique_events
+
+    def get_unique_events_nopreprocess(self):
+        for event_id, words_split in self.count_groups.iteritems():
+            attr = {'preprocessed_event': words_split,
+                    'cluster': event_id}
+            self.unique_events.append((event_id, attr))
+            self.event_attributes[event_id] = attr
+        self.unique_events_length = len(self.unique_events)
 
         return self.unique_events
