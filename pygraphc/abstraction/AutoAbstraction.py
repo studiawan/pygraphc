@@ -19,14 +19,14 @@ class AutoAbstraction(object):
             message = attributes['preprocessed_event']
 
             # get count
-            words_split = message.strip().split()
+            words_split = OrderedSet(message.strip().split())
             words_count = len(words_split)
 
             # we need OrderedSet to preserve order because regular set does not preserve order
             group_keys = self.count_groups.keys()
             if words_count not in group_keys:
                 self.count_groups[words_count] = {}
-            self.count_groups[words_count][event_id] = OrderedSet(words_split)
+            self.count_groups[words_count][event_id] = words_split
 
     def get_abstraction(self):
         # group messages which has the same word count
@@ -49,7 +49,7 @@ class AutoAbstraction(object):
                 if len(self.abstractions[abstraction_id]['abstraction']) == 1:
                     for index, message in group.iteritems():
                         self.abstractions[abstraction_id] = {'original_id': [index],
-                                                             'abstraction': message}
+                                                             'abstraction': list(message)}
                         abstraction_id += 1
                 else:
                     # get index for abstraction
@@ -71,11 +71,14 @@ class AutoAbstraction(object):
 
             elif group_length == 1:
                 self.abstractions[abstraction_id] = {'original_id': [group.keys()[0]],
-                                                     'abstraction': group.values()[0]}
+                                                     'abstraction': list(group.values()[0])}
                 abstraction_id += 1
 
-aa = AutoAbstraction('/home/hudan/Git/labeled-authlog/dataset/illustration/per_day/dec-15.log')
+aa = AutoAbstraction('/home/hudan/Git/labeled-authlog/dataset/illustration/per_day/test.log')
 aa.get_abstraction()
 
-for k, v in aa.abstractions.iteritems():
+for k, v in aa.count_groups.iteritems():
     print k, v
+
+for k, v in aa.abstractions.iteritems():
+    print len(v['abstraction']), ' '.join(v['abstraction']), v['original_id']
