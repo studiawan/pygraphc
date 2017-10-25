@@ -40,7 +40,7 @@ class AutoAbstraction(object):
             # refine with graph clustering
             if group_length > 1:
                 # create nodes, edges, and graph
-                preprocess = CreateGraphModel('', self.count_groups)
+                preprocess = CreateGraphModel('', count_group)
                 graph = preprocess.create_graph_nopreprocess()
 
                 # graph clustering based on entropy
@@ -49,8 +49,11 @@ class AutoAbstraction(object):
 
                 # get new groups, if exists
                 for cluster_id, nodes in clusters.iteritems():
+                    self.count_groups_refine[refine_id] = {}
                     for node in nodes:
-                        self.count_groups_refine[refine_id][node] = count_group[node]
+                        # convert node id in graph clusters to original id of count group
+                        original_id = graph.node[node]['original_id']
+                        self.count_groups_refine[refine_id][original_id] = count_group[original_id]
                     refine_id += 1
 
             elif group_length == 1:
@@ -107,3 +110,6 @@ class AutoAbstraction(object):
 
 aa = AutoAbstraction('/home/hudan/Git/labeled-authlog/dataset/illustration/per_day/test.log')
 aa.get_abstraction()
+
+for k, v in aa.abstractions.iteritems():
+    print k, v
