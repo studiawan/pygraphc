@@ -100,11 +100,14 @@ class ParallelPreprocess(object):
         return self.unique_events
 
     def get_unique_events_nopreprocess(self):
+        unique_event_id = 0
         for event_id, words_split in self.count_groups.iteritems():
-            attr = {'preprocessed_event': words_split,
-                    'cluster': event_id}
-            self.unique_events.append((event_id, attr))
-            self.event_attributes[event_id] = attr
-        self.unique_events_length = len(self.unique_events)
+            attr = {'preprocessed_event': ' '.join(list(words_split)),
+                    'cluster': event_id,
+                    'original_id': event_id}
+            self.unique_events.append((unique_event_id, attr))
+            self.event_attributes[unique_event_id] = attr
+            unique_event_id += 1
 
+        self.unique_events_length = len(self.unique_events)
         return self.unique_events
