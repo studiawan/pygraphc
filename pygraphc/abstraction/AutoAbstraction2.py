@@ -102,6 +102,14 @@ class AutoAbstraction(object):
 
                     abstraction_id += 1
 
+                # check if abstraction only contains asterisks
+                if set(self.abstractions[abstraction_id-1]['abstraction']) == {'*'}:
+                    abstraction_id -= 1
+                    for index, message in group.iteritems():
+                        self.abstractions[abstraction_id] = {'original_id': [index],
+                                                             'abstraction': list(message)}
+                        abstraction_id += 1
+
             elif group_length == 1:
                 self.abstractions[abstraction_id] = {'original_id': [group.keys()[0]],
                                                      'abstraction': list(group.values()[0])}
