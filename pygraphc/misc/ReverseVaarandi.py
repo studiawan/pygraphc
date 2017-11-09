@@ -3,8 +3,9 @@ from operator import itemgetter
 import subprocess
 
 
-class ReverseLogCluster(object):
-    def __init__(self, support, log_file, outlier_file, output_file):
+class ReverseVaarandi(object):
+    def __init__(self, mode, support, log_file, outlier_file, output_file):
+        self.mode = mode
         self.support = support
         self.log_file = log_file
         self.outlier_file = outlier_file
@@ -17,9 +18,14 @@ class ReverseLogCluster(object):
         clusters = {}
         cluster_index = 0
 
-        # run LogCluster
-        command = '~/Downloads/log-cluster-tool/logcluster-0.08/logcluster.pl --input=' + self.log_file + \
-                  ' --support=' + str(self.support) + ' --outliers=' + self.outlier_file + ' > ' + self.output_file
+        # run LogCluster or SLCT
+        command = ''
+        if self.mode == 'LogCluster':
+            command = '~/Downloads/log-cluster-tool/logcluster-0.08/logcluster.pl --input=' + self.log_file + \
+                      ' --support=' + str(self.support) + ' --outliers=' + self.outlier_file + ' > ' + self.output_file
+        elif self.mode == 'SLCT':
+            command = '~/Downloads/log-cluster-tool/slct-0.05/slct -r -o ' + self.outlier_file + \
+                      ' -s ' + str(self.support) + ' ' + self.log_file
         system(command)
 
         # parse outlier results
