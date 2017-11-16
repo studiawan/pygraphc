@@ -1,7 +1,10 @@
 from ConfigParser import SafeConfigParser
 import os
+import errno
 import fnmatch
-# import csv
+import csv
+from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
+from pygraphc.clustering.MaxCliquesPercolationSA import MaxCliquesPercolationSA
 
 
 class Experiment(object):
@@ -73,20 +76,61 @@ class Experiment(object):
                 methods = options[name].split('\n')
             self.methods[section_name] = methods
 
+    @staticmethod
+    def __check_path(path):
+        try:
+            os.makedirs(path)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+
     def run_experiment(self):
         self.__get_methods()
         self.__read_config()
         self.__get_dataset()
 
-        # # open evaluation file
-        # f = open(self.files['evaluation_file'], 'wt')
-        # writer = csv.writer(f)
-        #
-        # # set header for evaluation file
-        # header = self.configuration['clustering_evaluation']['evaluation_file_header']
-        # writer.writerow(header)
-        #
-        # f.close()
+        # open evaluation file
+        f = open(self.files['evaluation_file'], 'wt')
+        writer = csv.writer(f)
+
+        # set header for evaluation file
+        header = self.configuration['clustering_evaluation']['evaluation_file_header']
+        writer.writerow(header)
+
+        # run the experiment
+        for filename, properties in self.files.iteritems():
+            print filename, '...'
+
+            # initialization
+            edges_weight, nodes_id = [], []
+            graph = None
+            if self.method == 'max_clique_weighted_sa':
+                best_parameter = {'k': 0., 'I': 0.}
+                print best_parameter
+
+            if self.method in self.methods['graph']:
+                # preprocess log file and create graph
+                preprocess = CreateGraphModel(properties['log_path'])
+                graph = preprocess.create_graph()
+                edges_weight = preprocess.edges_weight
+                nodes_id = range(preprocess.unique_events_length)
+
+            if self.method == 'max_clique_weighted_sa':
+                # Selim et al., 1991, Sun et al., 1996
+                tmin = 10 ** (-99)
+                tmax = 10.
+                alpha = 0.9
+
+                energy_type = 'calinski_harabasz'
+                iteration_threshold = 0.3  # only xx% of total trial with brute-force
+                brute_force = False
+                maxc_sa = MaxCliquesPercolationSA(graph, edges_weight, nodes_id, tmin, tmax, alpha,
+                                                  energy_type, iteration_threshold, brute_force)
+                maxc_sa.init_maxclique_percolation()
+                best_parameter, maxc_sa_cluster, best_energy = maxc_sa.get_maxcliques_sa()
+                print best_parameter, maxc_sa_cluster, best_energy
+
+        f.close()
 
 
 e = Experiment('max_clique_weighted_sa')
