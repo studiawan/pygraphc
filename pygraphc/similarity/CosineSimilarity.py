@@ -85,6 +85,7 @@ class ParallelCosineSimilarity(object):
         self.event_attributes = event_attributes
         self.event_length = event_length
         self.cosine_similarity = CosineSimilarity()
+        self.edges_weight = []
 
     def __get_cosine_similarity(self, unique_event_id):
         string1 = self.event_attributes[unique_event_id[0]]['preprocessed_event']
@@ -115,4 +116,5 @@ class ParallelCosineSimilarity(object):
                 removed.append(index)
 
         distances = [y for x, y in enumerate(distances) if x not in removed]
+        self.edges_weight = distances
         return distances
