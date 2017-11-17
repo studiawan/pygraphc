@@ -12,6 +12,7 @@ class CreateGraphModel(object):
         self.distances = []
         self.graph = nx.MultiGraph()
         self.count_groups = count_groups
+        self.edges_weight = self.distances
 
     def __get_nodes(self):
         pp = ParallelPreprocess(self.log_file)
