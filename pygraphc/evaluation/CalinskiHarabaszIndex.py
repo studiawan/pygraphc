@@ -132,7 +132,7 @@ class CalinskiHarabaszIndex(object):
         ch_index    : float
             Calinski-Harabasz index.
         """
-        total_cluster = len(self.clusters.values())
+        total_cluster = len(self.clusters.keys())
         ch_index = (self.__get_trace_b() / (total_cluster - 1)) / \
                    (self.__get_trace_w() / (self.total_nodes - total_cluster))
 
