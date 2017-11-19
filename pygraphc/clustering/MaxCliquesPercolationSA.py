@@ -10,7 +10,8 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
     """Get clustering based on maximal clique percolation and the parameters are optimized
        using simulated annealing.
     """
-    def __init__(self, graph, edges_weight, nodes_id, tmin, tmax, alpha, energy_type, iteration_threshold, brute_force):
+    def __init__(self, graph, edges_weight, nodes_id, tmin, tmax, alpha, energy_type, iteration_threshold,
+                 brute_force, preprocessed_logs, log_length):
         """The constructor of class MaxCliquesPercolationSA.
 
         Parameters
@@ -41,6 +42,8 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
         self.max_iteration = 0
         self.iteration_threshold = iteration_threshold
         self.brute_force = brute_force
+        self.preprocessed_logs = preprocessed_logs
+        self.log_length = log_length
 
     def __get_maxcliques_percolation_weighted_sa(self, percolation_only=False):
         """The main method to run maximal clique percolation using simulated annealing.
@@ -72,7 +75,8 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
 
         if parameters['k']:
             # create instance of simulated annealing utility
-            sa = SimulatedAnnealing(self.Tmin, self.Tmax, self.alpha, parameters, self.max_iteration)
+            sa = SimulatedAnnealing(self.Tmin, self.Tmax, self.alpha, parameters, self.max_iteration,
+                                    self.preprocessed_logs, self.log_length)
 
             if not percolation_only:
                 # get initial maximal clique percolation and its energy
@@ -92,7 +96,8 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                 best_cluster = mcpw_sa_cluster
 
             # print current parameter
-            print current_parameter['k'], ',', current_parameter['I'], ',', current_energy * -1
+            # if current_parameter['k'] and current_parameter['I']:
+            #     print current_parameter['k'], ',', current_parameter['I'], ',', current_energy * -1
 
             # cooling the temperature
             tnew = sa.get_temperature(self.Tmax)
@@ -120,7 +125,7 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                     new_energy = 0.
 
                 # print new parameter
-                print new_parameter['k'], ',', new_parameter['I'], ',', new_energy * -1
+                # print new_parameter['k'], ',', new_parameter['I'], ',', new_energy * -1
 
                 # get delta energy and check
                 delta_energy = new_energy - current_energy
