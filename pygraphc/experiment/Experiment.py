@@ -1,10 +1,15 @@
-from ConfigParser import SafeConfigParser
 import os
 import errno
 import fnmatch
 import csv
+from time import time
+from ConfigParser import SafeConfigParser
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.clustering.MaxCliquesPercolationSA import MaxCliquesPercolationSA
+from pygraphc.evaluation.EvaluationUtility import EvaluationUtility
+from pygraphc.evaluation.CalinskiHarabaszIndex import CalinskiHarabaszIndex
+from pygraphc.evaluation.DaviesBouldinIndex import DaviesBouldinIndex
+from pygraphc.evaluation.XieBeniIndex import XieBeniIndex
 
 
 class Experiment(object):
@@ -63,9 +68,6 @@ class Experiment(object):
                                  self.configuration['clustering_evaluation']['evaluation_directory'],
                                  self.configuration['clustering_evaluation']['evaluation_file'])
 
-        for k, v in self.files.iteritems():
-            print k, v
-
     def __get_methods(self):
         # get all of available methods from config file
         parser = SafeConfigParser()
@@ -80,24 +82,18 @@ class Experiment(object):
                 methods = options[name].split('\n')
             self.methods[section_name] = methods
 
-    def __get_internal_evaluation(self):
+    def __get_internal_evaluation(self, new_clusters, preprocessed_logs, log_length):
         # note that order of evaluation matter
         internal_evaluation = []
         if self.configuration['internal_evaluation']['calinski_harabasz']:
-            ch = 0.
+            ch = CalinskiHarabaszIndex(new_clusters, preprocessed_logs, log_length)
             internal_evaluation.append(ch)
         elif self.configuration['internal_evaluation']['davies_bouldin']:
-            db = 0.
+            db = DaviesBouldinIndex(new_clusters, preprocessed_logs, log_length)
             internal_evaluation.append(db)
         elif self.configuration['internal_evaluation']['xie_beni']:
-            xb = 0.
+            xb = XieBeniIndex(new_clusters, preprocessed_logs, log_length)
             internal_evaluation.append(xb)
-        elif self.configuration['internal_evaluation']['dunn']:
-            d = 0.
-            internal_evaluation.append(d)
-        elif self.configuration['internal_evaluation']['silhouette']:
-            s = 0.
-            internal_evaluation.append(s)
 
         return tuple(internal_evaluation)
 
@@ -122,7 +118,9 @@ class Experiment(object):
         writer = csv.writer(f)
 
         # set header for evaluation file
-        header = self.configuration['clustering_evaluation']['evaluation_file_header'].split('\n')
+        header = []
+        if self.configuration['main']['clustering']:
+            header = self.configuration['clustering_evaluation']['evaluation_file_header'].split('\n')
         writer.writerow(tuple(header))
         row = ()
 
@@ -136,23 +134,30 @@ class Experiment(object):
                 graph = preprocess.create_graph()
                 edges_weight = preprocess.edges_weight
                 nodes_id = range(preprocess.unique_events_length)
+                preprocessed_logs = preprocess.preprocessed_logs
+                log_length = preprocess.log_length
 
                 if self.method == 'max_clique_weighted_sa':
+                    # initialize parameter for simulated annealing
                     # Selim et al., 1991, Sun et al., 1996
                     tmin = 10 ** (-99)
                     tmax = 10.
                     alpha = 0.9
-
                     energy_type = 'calinski_harabasz'
                     iteration_threshold = 0.3  # only xx% of total trial with brute-force
                     brute_force = False
+
+                    # run maximal clique weighted with simulated annealing
                     maxc_sa = MaxCliquesPercolationSA(graph, edges_weight, nodes_id, tmin, tmax, alpha,
-                                                      energy_type, iteration_threshold, brute_force)
+                                                      energy_type, iteration_threshold, brute_force,
+                                                      preprocessed_logs, log_length)
                     maxc_sa.init_maxclique_percolation()
                     best_parameter, maxc_sa_cluster, best_energy = maxc_sa.get_maxcliques_sa()
 
                     # get internal evaluation
-                    internal_evaluation = self.__get_internal_evaluation()
+                    # convert clustering result from graph to text
+                    new_clusters = EvaluationUtility.convert_to_text(graph, maxc_sa_cluster)
+                    internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
                     row = (filename, best_parameter['k'], best_parameter['I']) + internal_evaluation
 
         # write experiment result and close evaluation file
@@ -160,5 +165,12 @@ class Experiment(object):
         f.close()
 
 
+start = time()
 e = Experiment('max_clique_weighted_sa')
 e.run_experiment()
+
+# print runtime
+duration = time() - start
+minute, second = divmod(duration, 60)
+hour, minute = divmod(minute, 60)
+print "Runtime: %d:%02d:%02d" % (hour, minute, second)
