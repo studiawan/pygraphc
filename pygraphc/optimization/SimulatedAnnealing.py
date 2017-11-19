@@ -1,9 +1,12 @@
 from random import choice
-from pygraphc.evaluation.InternalEvaluation import InternalEvaluation
+from pygraphc.evaluation.EvaluationUtility import EvaluationUtility
+from pygraphc.evaluation.CalinskiHarabaszIndex import CalinskiHarabaszIndex
+from pygraphc.evaluation.DaviesBouldinIndex import DaviesBouldinIndex
+from pygraphc.evaluation.XieBeniIndex import XieBeniIndex
 
 
 class SimulatedAnnealing(object):
-    def __init__(self, tmin, tmax, alpha, parameters, max_iteration):
+    def __init__(self, tmin, tmax, alpha, parameters, max_iteration, preprocessed_logs, log_length):
         """The utility class for Simulated Annealing method.
 
         Parameters
@@ -24,6 +27,8 @@ class SimulatedAnnealing(object):
         self.alpha = alpha
         self.parameters = parameters
         self.max_iteration = max_iteration
+        self.preprocessed_logs = preprocessed_logs
+        self.log_length = log_length
 
     def get_parameter(self, previous_parameter, all_combinations, percolation_only=False, bruteforce=False):
         """Get random parameter based on given range.
@@ -86,8 +91,7 @@ class SimulatedAnnealing(object):
         new_temperature = self.alpha * current_temperature
         return new_temperature
 
-    @staticmethod
-    def get_energy(graph, clusters, energy_type):
+    def get_energy(self, graph, clusters, energy_type):
         """Get energy.
 
         Parameters
@@ -105,10 +109,18 @@ class SimulatedAnnealing(object):
         energy  : float
             Current energy based on a specific internal or evaluation metric.
         """
+        # convert clustering result from graph to text
+        new_clusters = EvaluationUtility.convert_to_text(graph, clusters)
+
         energy = 0.
-        if energy_type == 'silhoutte':
-            energy = InternalEvaluation.get_silhoutte_index(clusters, 'graph', graph)
-        elif energy_type == 'dunn':
-            energy = InternalEvaluation.get_dunn_index(clusters, 'graph', graph)
+        if energy_type == 'calinski_harabasz':
+            ch = CalinskiHarabaszIndex(new_clusters, self.preprocessed_logs, self.log_length)
+            energy = ch.get_calinski_harabasz()
+        elif energy_type == 'davies_bouldin':
+            db = DaviesBouldinIndex(new_clusters, self.preprocessed_logs, self.log_length)
+            energy = db.get_davies_bouldin()
+        elif energy_type == 'xie_beni':
+            xb = XieBeniIndex(new_clusters, self.preprocessed_logs, self.log_length)
+            energy = xb.get_xie_beni()
 
         return energy
