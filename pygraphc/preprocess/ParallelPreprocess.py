@@ -8,6 +8,7 @@ class ParallelPreprocess(object):
         self.log_file = log_file
         self.logs = []
         self.log_length = 0
+        self.preprocess_logs = {}
         self.unique_events = []
         self.unique_events_length = 0
         self.event_attributes = {}
@@ -49,12 +50,15 @@ class ParallelPreprocess(object):
         return preprocessed_with_id
 
     def get_unique_events(self):
+        # read logs
         self.__read_log()
         logs_with_id = []
         for index, log in enumerate(self.logs):
             logs_with_id.append((index, log))
 
-        pool = multiprocessing.Pool(processes=4)
+        # run preprocessing in parallel
+        total_cpu = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=total_cpu)
         events = pool.map(self, logs_with_id)
         pool.close()
         pool.join()
@@ -76,6 +80,9 @@ class ParallelPreprocess(object):
                 for index, attr in self.event_attributes.iteritems():
                     if event_split == attr['preprocessed_event']:
                         attr['member'].append(log_id)
+
+            # get preprocessed logs as dictionary
+            self.preprocess_logs[log_id] = event
 
         # transpose unique events list
         unique_events_transpose = map(list, zip(*unique_events_list))
