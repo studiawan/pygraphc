@@ -10,7 +10,6 @@ class DaviesBouldinIndex(object):
         self.cluster_centroids = {}
         self.cluster_total_nodes = {}
         self.total_cluster = 0
-        self.__get_all_cluster_properties()
 
     def __get_centroid(self, cluster=None):
         centroid = ''
@@ -85,6 +84,7 @@ class DaviesBouldinIndex(object):
         return r
 
     def get_davies_bouldin(self):
+        self.__get_all_cluster_properties()
         r = self.__get_r()
         db_index = 1 / self.total_cluster * sum(r.values())
 
