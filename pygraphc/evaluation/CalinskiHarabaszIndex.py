@@ -8,7 +8,6 @@ class CalinskiHarabaszIndex(object):
         self.log_length = log_length
         self.cluster_centroids = {}
         self.cluster_total_nodes = {}
-        self.__get_all_cluster_properties()
 
     def __get_centroid(self, cluster=None):
         centroid = ''
@@ -59,9 +58,9 @@ class CalinskiHarabaszIndex(object):
         return total_traces_w
 
     def get_calinski_harabasz(self):
+        self.__get_all_cluster_properties()
         total_cluster = len(self.clusters.keys())
         ch_index = (self.__get_trace_b() / (total_cluster - 1)) / \
                    (self.__get_trace_w() / (self.log_length - total_cluster))
 
         return ch_index
-
