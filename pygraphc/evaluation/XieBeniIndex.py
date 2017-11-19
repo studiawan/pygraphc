@@ -10,7 +10,6 @@ class XieBeniIndex(object):
         self.cluster_centroids = {}
         self.cluster_total_nodes = {}
         self.total_cluster = 0
-        self.__get_all_cluster_properties()
 
     def __get_centroid(self, cluster):
         # centroid for a particular cluster
@@ -54,6 +53,7 @@ class XieBeniIndex(object):
         return separation
 
     def get_xie_beni(self):
+        self.__get_all_cluster_properties()
         xb_index = self.__get_separation() / self.__get_compactness()
         return xb_index
 
