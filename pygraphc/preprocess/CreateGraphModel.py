@@ -5,20 +5,25 @@ import networkx as nx
 
 
 class CreateGraphModel(object):
-    def __init__(self, log_file, count_groups=None):
+    def __init__(self, log_file, count_groups=None, pruning=False):
         self.log_file = log_file
+        self.log_length = 0
         self.unique_events = []
         self.unique_events_length = 0
+        self.preprocessed_logs = {}
         self.distances = []
         self.graph = nx.MultiGraph()
         self.count_groups = count_groups
         self.edges_weight = self.distances
+        self.pruning = pruning
 
     def __get_nodes(self):
         pp = ParallelPreprocess(self.log_file)
         self.unique_events = pp.get_unique_events()
         self.unique_events_length = pp.unique_events_length
         self.event_attributes = pp.event_attributes
+        self.preprocessed_logs = pp.preprocess_logs
+        self.log_length = pp.log_length
 
     def __get_distances(self):
         pcs = ParallelCosineSimilarity(self.event_attributes, self.unique_events_length)
@@ -30,9 +35,10 @@ class CreateGraphModel(object):
         self.graph.add_nodes_from(self.unique_events)
         self.graph.add_weighted_edges_from(self.distances)
 
-        tp = TrianglePruning(self.graph)
-        tp.get_triangle()
-        self.graph = tp.graph
+        if self.pruning:
+            tp = TrianglePruning(self.graph)
+            tp.get_triangle()
+            self.graph = tp.graph
 
         return self.graph
 
