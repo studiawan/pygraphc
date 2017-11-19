@@ -27,6 +27,7 @@ class CosineSimilarity(object):
         return count
 
     def __get_tfidf(self, string):
+        # calculate tf-idf
         string_split = string.split()
         term_frequency = Counter(string_split)          # calculate tf
         total_terms = len(string_split)
@@ -42,6 +43,7 @@ class CosineSimilarity(object):
 
     @staticmethod
     def __get_doclength(tfidf):
+        # get document length for cosine similarity
         length = 0
         for ti in tfidf.itervalues():
             length += pow(ti, 2)
@@ -88,6 +90,7 @@ class ParallelCosineSimilarity(object):
         self.edges_weight = []
 
     def __get_cosine_similarity(self, unique_event_id):
+        # calculate cosine similarity
         string1 = self.event_attributes[unique_event_id[0]]['preprocessed_event']
         string2 = self.event_attributes[unique_event_id[1]]['preprocessed_event']
         distance = self.cosine_similarity.get_cosine_similarity(string1, string2)
@@ -95,6 +98,7 @@ class ParallelCosineSimilarity(object):
             return round(distance, 3)
 
     def __call__(self, unique_event_id):
+        # get distance from two strings
         distance = self.__get_cosine_similarity(unique_event_id)
         distance_with_id = (unique_event_id[0], unique_event_id[1], distance)
         return distance_with_id
@@ -110,6 +114,7 @@ class ParallelCosineSimilarity(object):
         pool.close()
         pool.join()
 
+        # remove empty elements
         removed = []
         for index, distance in enumerate(distances):
             if distance[2] is None:
