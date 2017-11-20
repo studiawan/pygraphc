@@ -1,3 +1,4 @@
+from __future__ import division
 from pygraphc.similarity.CosineSimilarity import CosineSimilarity
 from itertools import product
 
