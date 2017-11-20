@@ -1,3 +1,4 @@
+from __future__ import division
 from pygraphc.similarity.CosineSimilarity import CosineSimilarity
 
 
@@ -77,7 +78,11 @@ class CalinskiHarabaszIndex(object):
     def get_calinski_harabasz(self):
         self.__get_all_cluster_properties()
         total_cluster = len(self.clusters.keys())
-        ch_index = (self.__get_trace_b() / (total_cluster - 1)) / \
-                   (self.__get_trace_w() / (self.log_length - total_cluster))
+
+        try:
+            ch_index = (self.__get_trace_b() / (total_cluster - 1)) / \
+                       (self.__get_trace_w() / (self.log_length - total_cluster))
+        except ZeroDivisionError:
+            ch_index = 0.
 
         return ch_index
