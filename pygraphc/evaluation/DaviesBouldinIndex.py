@@ -1,3 +1,4 @@
+from __future__ import division
 from pygraphc.similarity.CosineSimilarity import CosineSimilarity
 from itertools import combinations, product
 
@@ -10,6 +11,7 @@ class DaviesBouldinIndex(object):
         self.cluster_centroids = {}
         self.cluster_total_nodes = {}
         self.total_cluster = 0
+        self.distance_buffer = {}
 
     def __get_centroid(self, cluster=None):
         centroid = ''
@@ -31,10 +33,19 @@ class DaviesBouldinIndex(object):
             self.cluster_total_nodes[cluster_id] = len(log_ids)
         self.total_cluster = len(self.clusters.keys())
 
-    @staticmethod
-    def __get_distance(source, dest):
+    def __get_distance(self, source, dest):
         cs = CosineSimilarity()
         distance = cs.get_cosine_similarity(source, dest)
+        self.distance_buffer[(source, dest)] = distance
+
+        return distance
+
+    def __check_distance(self, checked_pair):
+        if checked_pair in self.distance_buffer:
+            distance = self.distance_buffer[checked_pair]
+        else:
+            distance = None
+
         return distance
 
     def __get_dispersion(self):
@@ -42,7 +53,9 @@ class DaviesBouldinIndex(object):
         for cluster_id, log_ids in self.clusters.iteritems():
             distances = []
             for log_id in log_ids:
-                distance = self.__get_distance(self.preprocessed_logs[log_id], self.cluster_centroids[cluster_id])
+                distance = self.__check_distance((self.preprocessed_logs[log_id], self.cluster_centroids[cluster_id]))
+                if distance is None:
+                    distance = self.__get_distance(self.preprocessed_logs[log_id], self.cluster_centroids[cluster_id])
                 distances.append(distance)
             total_distance = sum(distances)
             cluster_dispersions[cluster_id] = 1 / self.cluster_total_nodes[cluster_id] * total_distance
@@ -52,8 +65,11 @@ class DaviesBouldinIndex(object):
     def __get_dissimilarity(self):
         cluster_dissimilarity = {}
         for cluster_id1, cluster_id2 in combinations(xrange(self.total_cluster), 2):
-            cluster_dissimilarity[(cluster_id1, cluster_id2)] = self.__get_distance(self.cluster_centroids[cluster_id1],
-                                                                                    self.cluster_centroids[cluster_id2])
+            distance = self.__check_distance(())
+            if distance is None:
+                distance = self.__get_distance(self.cluster_centroids[cluster_id1], self.cluster_centroids[cluster_id2])
+            cluster_dissimilarity[(cluster_id1, cluster_id2)] = distance
+
         return cluster_dissimilarity
 
     def __get_similarity(self):
@@ -74,7 +90,7 @@ class DaviesBouldinIndex(object):
         for cluster_id, log_ids in self.clusters.iteritems():
             r_cluster = []
             for cluster_id1, cluster_id2 in product(xrange(self.total_cluster), repeat=2):
-                if cluster_id == cluster_id1:
+                if cluster_id == cluster_id1 and cluster_id1 != cluster_id2:
                     if (cluster_id1, cluster_id2) in similarity_keys:
                         r_cluster.append(similarity[(cluster_id1, cluster_id2)])
                     else:
@@ -86,6 +102,9 @@ class DaviesBouldinIndex(object):
     def get_davies_bouldin(self):
         self.__get_all_cluster_properties()
         r = self.__get_r()
-        db_index = 1 / self.total_cluster * sum(r.values())
+        try:
+            db_index = 1 / self.total_cluster * sum(r.values())
+        except ZeroDivisionError:
+            db_index = 0.
 
         return db_index
