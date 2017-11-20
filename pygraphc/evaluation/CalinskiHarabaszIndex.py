@@ -8,6 +8,7 @@ class CalinskiHarabaszIndex(object):
         self.log_length = log_length
         self.cluster_centroids = {}
         self.cluster_total_nodes = {}
+        self.distance_buffer = {}
 
     def __get_centroid(self, cluster=None):
         centroid = ''
@@ -28,18 +29,30 @@ class CalinskiHarabaszIndex(object):
             self.cluster_centroids[cluster_id] = self.__get_centroid(log_ids)
             self.cluster_total_nodes[cluster_id] = len(log_ids)
 
-    @staticmethod
-    def __get_distance(source, dest):
+    def __get_distance(self, source, dest):
         cs = CosineSimilarity()
         distance = cs.get_cosine_similarity(source, dest)
+        self.distance_buffer[(source, dest)] = distance
+
+        return distance
+
+    def __check_distance(self, checked_pair):
+        if checked_pair in self.distance_buffer:
+            distance = self.distance_buffer[checked_pair]
+        else:
+            distance = None
+
         return distance
 
     def __get_trace_b(self):
         traces_b = []
         logs_centroid = self.__get_centroid()
         for cluster_id, log_ids in self.clusters.iteritems():
-            trace_b = self.cluster_total_nodes[cluster_id] * \
-                      (self.__get_distance(self.cluster_centroids[cluster_id], logs_centroid) ** 2)
+            distance = self.__check_distance((self.cluster_centroids[cluster_id], logs_centroid))
+            if distance is None:
+                distance = self.__get_distance(self.cluster_centroids[cluster_id], logs_centroid)
+
+            trace_b = self.cluster_total_nodes[cluster_id] * (distance ** 2)
             traces_b.append(trace_b)
 
         total_trace_b = sum(traces_b)
@@ -50,7 +63,11 @@ class CalinskiHarabaszIndex(object):
         for cluster_id, log_ids in self.clusters.iteritems():
             trace_w_cluster = []
             for log_id in log_ids:
-                trace_w = self.__get_distance(self.preprocessed_logs[log_id], self.cluster_centroids[cluster_id]) ** 2
+                distance = self.__check_distance((self.preprocessed_logs[log_id], self.cluster_centroids[cluster_id]))
+                if distance is None:
+                    distance = self.__get_distance(self.preprocessed_logs[log_id], self.cluster_centroids[cluster_id])
+
+                trace_w = distance ** 2
                 trace_w_cluster.append(trace_w)
             traces_w.append(sum(trace_w_cluster))
 
