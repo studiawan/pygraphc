@@ -87,14 +87,15 @@ class Experiment(object):
         internal_evaluation = []
         if self.configuration['internal_evaluation']['calinski_harabasz']:
             ch = CalinskiHarabaszIndex(new_clusters, preprocessed_logs, log_length)
-            internal_evaluation.append(ch)
-        elif self.configuration['internal_evaluation']['davies_bouldin']:
+            internal_evaluation.append(ch.get_calinski_harabasz())
+        if self.configuration['internal_evaluation']['davies_bouldin']:
             db = DaviesBouldinIndex(new_clusters, preprocessed_logs, log_length)
-            internal_evaluation.append(db)
-        elif self.configuration['internal_evaluation']['xie_beni']:
+            internal_evaluation.append(db.get_davies_bouldin())
+        if self.configuration['internal_evaluation']['xie_beni']:
             xb = XieBeniIndex(new_clusters, preprocessed_logs, log_length)
-            internal_evaluation.append(xb)
+            internal_evaluation.append(xb.get_xie_beni())
 
+        print internal_evaluation
         return tuple(internal_evaluation)
 
     @staticmethod
@@ -122,12 +123,13 @@ class Experiment(object):
         if self.configuration['main']['clustering']:
             header = self.configuration['clustering_evaluation']['evaluation_file_header'].split('\n')
         writer.writerow(tuple(header))
-        row = ()
 
         # run the experiment
         for filename, properties in self.files.iteritems():
-            print filename, '...'
+            if filename == 'evaluation_directory' or filename == 'evaluation_file':
+                continue
 
+            print filename, '...'
             if self.method in self.methods['graph']:
                 # preprocess log file and create graph
                 preprocess = CreateGraphModel(properties['log_path'])
@@ -158,10 +160,11 @@ class Experiment(object):
                     # convert clustering result from graph to text
                     new_clusters = EvaluationUtility.convert_to_text(graph, maxc_sa_cluster)
                     internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
-                    row = (filename, best_parameter['k'], best_parameter['I']) + internal_evaluation
 
-        # write experiment result and close evaluation file
-        writer.writerow(row)
+                    # write experiment result and close evaluation file
+                    row = (filename, best_parameter['k'], best_parameter['I']) + internal_evaluation
+                    writer.writerow(row)
+
         f.close()
 
 
