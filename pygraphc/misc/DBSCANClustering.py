@@ -3,6 +3,7 @@ from sklearn.cluster import DBSCAN
 from numpy import linspace
 from itertools import product
 from operator import itemgetter
+from pygraphc.preprocess.ParallelPreprocess import ParallelPreprocess
 from pygraphc.evaluation.CalinskiHarabaszIndex import CalinskiHarabaszIndex
 
 
@@ -15,28 +16,30 @@ class DBSCANClustering(object):
         self.log_length = 0
 
     def __open_file(self):
+        # read a log file
         with open(self.log_file, 'r') as f:
             self.logs = f.readlines()
         self.log_length = len(self.logs)
 
     def __preprocess_logs(self):
-        self.preprocessed_logs = {}
-        pass
+        # preprocess event logs for evaluation
+        pp = ParallelPreprocess(self.log_file, False)
+        pp.get_unique_events()
+        self.preprocessed_logs = pp.preprocessed_logs
 
     def __run_cluster(self, eps, min_samples):
-        # convert dataset to vector
+        # convert event log dataset to vector
         vectorizer = TfidfVectorizer(max_df=0.5, max_features=10000, min_df=2, stop_words='english', use_idf=True)
         transformed_data = vectorizer.fit_transform(self.logs)
 
         # run clustering
         db = DBSCAN(eps=eps, min_samples=min_samples)
         db.fit(transformed_data)
-        print db.labels_
 
         # get clusters
         clusters = {}
         for index, label_index in enumerate(db.labels_):
-            if label_index not in clusters.keys():
+            if label_index not in clusters:
                 clusters[label_index] = []
             clusters[label_index].append(index + 1)
 
