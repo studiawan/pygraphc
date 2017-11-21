@@ -18,18 +18,21 @@ class CreateGraphModel(object):
         self.pruning = pruning
 
     def __get_nodes(self):
+        # preprocess logs and get unique events as nodes in a graph
         pp = ParallelPreprocess(self.log_file)
         self.unique_events = pp.get_unique_events()
         self.unique_events_length = pp.unique_events_length
         self.event_attributes = pp.event_attributes
-        self.preprocessed_logs = pp.preprocess_logs
+        self.preprocessed_logs = pp.preprocessed_logs
         self.log_length = pp.log_length
 
     def __get_distances(self):
+        # get cosine distance as edges with weight
         pcs = ParallelCosineSimilarity(self.event_attributes, self.unique_events_length)
         self.distances = pcs.get_parallel_cosine_similarity()
 
     def create_graph(self):
+        # create graph with previously created nodes and edges
         self.__get_nodes()
         self.__get_distances()
         self.graph.add_nodes_from(self.unique_events)
@@ -43,16 +46,19 @@ class CreateGraphModel(object):
         return self.graph
 
     def __get_nodes_nopreprocess(self):
+        # create nodes without log preprocessing
         pp = ParallelPreprocess('', self.count_groups)
         self.unique_events = pp.get_unique_events_nopreprocess()
         self.unique_events_length = pp.unique_events_length
         self.event_attributes = pp.event_attributes
 
     def __get_distances_nopreprocess(self):
+        # create distances as edge weight
         pcs = ParallelCosineSimilarity(self.event_attributes, self.unique_events_length)
         self.distances = pcs.get_parallel_cosine_similarity()
 
     def create_graph_nopreprocess(self):
+        # create graph without preprocessing logs
         self.__get_nodes_nopreprocess()
         self.__get_distances_nopreprocess()
         self.graph.add_nodes_from(self.unique_events)
