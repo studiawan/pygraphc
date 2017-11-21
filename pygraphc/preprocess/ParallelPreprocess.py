@@ -4,7 +4,7 @@ import multiprocessing
 
 
 class ParallelPreprocess(object):
-    def __init__(self, log_file, count_groups=None):
+    def __init__(self, log_file, refine_unique_events=True, count_groups=None):
         self.log_file = log_file
         self.logs = []
         self.log_length = 0
@@ -12,9 +12,11 @@ class ParallelPreprocess(object):
         self.unique_events = []
         self.unique_events_length = 0
         self.event_attributes = {}
+        self.refine_unique_events = refine_unique_events
         self.count_groups = count_groups
 
     def __call__(self, line):
+        # main method called when running in multiprocessing
         return self.__get_events(line)
 
     def __read_log(self):
@@ -84,20 +86,22 @@ class ParallelPreprocess(object):
             # get preprocessed logs as dictionary
             self.preprocess_logs[log_id] = event
 
-        # transpose unique events list
-        unique_events_transpose = map(list, zip(*unique_events_list))
+        # refine unique events to remove repetitive words
+        if self.refine_unique_events:
+            # transpose unique events list
+            unique_events_transpose = map(list, zip(*unique_events_list))
 
-        # check if each transposed list has the same elements
-        true_status = []
-        for index, transposed in enumerate(unique_events_transpose):
-            status = all(item == transposed[0] for item in transposed)
-            if status:
-                true_status.append(index)
+            # check if each transposed list has the same elements
+            true_status = []
+            for index, transposed in enumerate(unique_events_transpose):
+                status = all(item == transposed[0] for item in transposed)
+                if status:
+                    true_status.append(index)
 
-        # remove repetitive words
-        for index, attr in self.event_attributes.iteritems():
-            attr['preprocessed_event'] = [y for x, y in enumerate(attr['preprocessed_event']) if x not in true_status]
-            attr['preprocessed_event'] = ' '.join(attr['preprocessed_event'])
+            # remove repetitive words
+            for index, attr in self.event_attributes.iteritems():
+                attr['preprocessed_event'] = [y for x, y in enumerate(attr['preprocessed_event']) if x not in true_status]
+                attr['preprocessed_event'] = ' '.join(attr['preprocessed_event'])
 
         # get unique events for networkx
         self.unique_events_length = unique_event_id
@@ -107,6 +111,7 @@ class ParallelPreprocess(object):
         return self.unique_events
 
     def get_unique_events_nopreprocess(self):
+        # get unique events without preprocessing. this method is written for event log abstraction.
         unique_event_id = 0
         for event_id, words_split in self.count_groups.iteritems():
             attr = {'preprocessed_event': ' '.join(list(words_split)),
