@@ -3,6 +3,7 @@ from sklearn.cluster import DBSCAN
 from numpy import linspace
 from itertools import product
 from operator import itemgetter
+from pygraphc.evaluation.CalinskiHarabaszIndex import CalinskiHarabaszIndex
 
 
 class DBSCANClustering(object):
@@ -10,10 +11,17 @@ class DBSCANClustering(object):
         self.log_file = log_file
         self.logs = []
         self.clusters = {}
+        self.preprocessed_logs = {}
+        self.log_length = 0
 
     def __open_file(self):
         with open(self.log_file, 'r') as f:
             self.logs = f.readlines()
+        self.log_length = len(self.logs)
+
+    def __preprocess_logs(self):
+        self.preprocessed_logs = {}
+        pass
 
     def __run_cluster(self, eps, min_samples):
         # convert dataset to vector
@@ -55,8 +63,9 @@ class DBSCANClustering(object):
             all_clusters[parameter] = clusters
 
             # evaluate clustering result
-            # performance = evaluate(clusters)
-            # evaluations[(parameter)] = performance
+            ch = CalinskiHarabaszIndex(clusters, self.preprocessed_logs, self.log_length)
+            ch_index = ch.get_calinski_harabasz()
+            evaluations[parameter] = ch_index
 
         # get cluster with the best performance
         best_parameter, best_performance = sorted(evaluations.items(), key=itemgetter(1), reverse=True)[0]
