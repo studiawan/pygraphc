@@ -30,9 +30,9 @@ import gc
 # ******************************************************************************************
 
 class Para:
-    def __init__(self, path='../Data/2kBGL/', logname='rawlog.log', removable=True, removeCol=[0, 1, 2, 3, 4, 5],
+    def __init__(self, path='', logname='', removable=True, removeCol=[],
                  regular=True,
-                 rex=['blk_(|-)[0-9]+', '(/|)([0-9]+\.){3}[0-9]+(:[0-9]+|)(:|)'], savePath='./results_2kBGL/',
+                 rex=[], savePath='',
                  saveFileName='template', groupNum=14):  # line 66,change the regular expression replacement code
         self.path = path
         self.logname = logname
@@ -240,7 +240,7 @@ class LogSig:
         t1 = time.time()
         self.initialization()
         self.LogMessParti()
-        self.signatConstr()
+        # self.signatConstr()
         timeInterval = time.time() - t1
         self.templatetxt()
         print('this process takes', timeInterval)
@@ -250,6 +250,16 @@ class LogSig:
 
         # calculate the potential value that would be used in the local search
 
+    def get_clusters(self):
+        # get clusters
+        clusters = {}
+        for log_id, cluster_id in self.groupIndex.iteritems():
+            if cluster_id not in clusters:
+                clusters[cluster_id] = [log_id]
+            else:
+                clusters[cluster_id].append(log_id)
+
+        return clusters
 
 def potenFunc(curGroupIndex, termPairLogNumLD, logNumPerGroup, lineNum, termpairLT, k):
     maxDeltaD = 0
