@@ -8,7 +8,7 @@ class ParallelPreprocess(object):
         self.log_file = log_file
         self.logs = []
         self.log_length = 0
-        self.preprocess_logs = {}
+        self.preprocessed_logs = {}
         self.unique_events = []
         self.unique_events_length = 0
         self.event_attributes = {}
@@ -84,7 +84,7 @@ class ParallelPreprocess(object):
                         attr['member'].append(log_id)
 
             # get preprocessed logs as dictionary
-            self.preprocess_logs[log_id] = event
+            self.preprocessed_logs[log_id] = event
 
         # refine unique events to remove repetitive words
         if self.refine_unique_events:
