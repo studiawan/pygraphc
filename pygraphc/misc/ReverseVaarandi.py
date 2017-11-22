@@ -64,7 +64,7 @@ class ReverseVaarandi(object):
             if line.startswith('Support:'):
                 # abstraction element: [total_split, total_member, abstraction_list]
                 total_member = int(line.split(': ')[1])
-                line_splits = []
+                # line_splits = []      # do not add this line
                 line_splits.insert(0, total_member)
                 line_splits.insert(0, len(line_splits) - 1)
                 abstractions.append(line_splits)
