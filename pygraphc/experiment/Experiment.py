@@ -5,11 +5,16 @@ import csv
 from time import time
 from ConfigParser import SafeConfigParser
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
+from pygraphc.preprocess.ParallelPreprocess import ParallelPreprocess
 from pygraphc.clustering.MaxCliquesPercolationSA import MaxCliquesPercolationSA
 from pygraphc.evaluation.EvaluationUtility import EvaluationUtility
 from pygraphc.evaluation.CalinskiHarabaszIndex import CalinskiHarabaszIndex
 from pygraphc.evaluation.DaviesBouldinIndex import DaviesBouldinIndex
 from pygraphc.evaluation.XieBeniIndex import XieBeniIndex
+from pygraphc.misc.ReverseVaarandi import ReverseVaarandi
+from pygraphc.misc.IPLoM import ParaIPLoM, IPLoM
+from pygraphc.misc.LogSig import Para, LogSig
+from pygraphc.misc.DBSCANClustering import DBSCANClustering
 
 
 class Experiment(object):
@@ -163,6 +168,94 @@ class Experiment(object):
 
                     # write experiment result and close evaluation file
                     row = (filename, best_parameter['k'], best_parameter['I']) + internal_evaluation
+                    writer.writerow(row)
+                    graph.clear()
+
+            elif self.method in self.methods['']:
+                if self.method == 'LogCluster' or self.method == 'SLCT':
+                    # initialization of parameters
+                    mode = self.method
+                    support = 100
+                    log_file = filename
+                    outlier_file = ''
+                    output_file = ''
+
+                    # run LogCluster clustering
+                    lc = ReverseVaarandi(mode, support, log_file, outlier_file, output_file)
+                    clusters = lc.get_clusters()
+
+                    # preprocess logs for evaluation
+                    pp = ParallelPreprocess(log_file, False)
+                    pp.get_unique_events()
+                    preprocessed_logs = pp.preprocessed_logs
+                    log_length = pp.log_length
+
+                    # get internal evaluation
+                    internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
+                    row = (filename, ) + internal_evaluation
+                    writer.writerow(row)
+
+                elif self.method == 'IPLoM':
+                    # set path
+                    dataset = self.configuration['main']['dataset']
+                    dataset_path = self.configuration[dataset]['path']
+                    para = ParaIPLoM(path=dataset_path + '/', logname=filename,
+                                     save_path=self.configuration['experiment_result_path']['path'])
+
+                    # run IPLoM clustering
+                    myiplom = IPLoM(para)
+                    myiplom.main_process()
+                    clusters = myiplom.get_clusters()
+
+                    # preprocess logs for evaluation
+                    pp = ParallelPreprocess(filename, False)
+                    pp.get_unique_events()
+                    preprocessed_logs = pp.preprocessed_logs
+                    log_length = pp.log_length
+
+                    # get internal evaluation
+                    internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
+                    row = (filename,) + internal_evaluation
+                    writer.writerow(row)
+
+                elif self.method == 'LogSig':
+                    # set path
+                    dataset = self.configuration['main']['dataset']
+                    dataset_path = self.configuration[dataset]['path']
+                    para = Para(path=dataset_path + '/', logname=filename,
+                                savePath=self.configuration['experiment_result_path']['path'],
+                                groupNum=3)     # check again about groupNum parameter
+
+                    # run LogSig clustering
+                    ls = LogSig(para)
+                    ls.mainProcess()
+                    clusters = ls.get_clusters()
+
+                    # preprocess logs for evaluation
+                    pp = ParallelPreprocess(filename, False)
+                    pp.get_unique_events()
+                    preprocessed_logs = pp.preprocessed_logs
+                    log_length = pp.log_length
+
+                    # get internal evaluation
+                    internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
+                    row = (filename,) + internal_evaluation
+                    writer.writerow(row)
+
+                elif self.method == 'DBSCAN':
+                    # run DBSCAN clustering
+                    db = DBSCANClustering(filename)
+                    clusters = db.get_cluster()
+
+                    # preprocess logs for evaluation
+                    pp = ParallelPreprocess(filename, False)
+                    pp.get_unique_events()
+                    preprocessed_logs = pp.preprocessed_logs
+                    log_length = pp.log_length
+
+                    # get internal evaluation
+                    internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
+                    row = (filename,) + internal_evaluation
                     writer.writerow(row)
 
         f.close()
