@@ -36,6 +36,7 @@ class PreprocessLog(object):
         self.events_unique = []
         self.word_count = {}
         self.events_text = []
+        self.preprocessed_logs = {}
 
     def preprocess(self):
         self.__read_log()
@@ -169,6 +170,7 @@ class PreprocessLog(object):
             events_list.append(event)
 
             preprocessed_event, tfidf = self.get_tfidf(event, logs_total, logs_lower)
+            self.preprocessed_logs[index_log] = preprocessed_event
             check_events_unique = [e[1]['preprocessed_event'] for e in events_unique]
             # check_events_unique = [e[1]['event'] for e in events_unique]
 
