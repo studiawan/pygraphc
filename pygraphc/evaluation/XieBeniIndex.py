@@ -22,12 +22,14 @@ class XieBeniIndex(object):
         return centroid
 
     def __get_all_cluster_properties(self):
+        # get cluster properties
         for cluster_id, log_ids in self.clusters.iteritems():
             self.cluster_centroids[cluster_id] = self.__get_centroid(log_ids)
             self.cluster_total_nodes[cluster_id] = len(log_ids)
         self.total_cluster = len(self.clusters.keys())
 
     def __get_distance(self, source, dest):
+        # get cosine similarity as distance
         cs = CosineSimilarity()
         distance = cs.get_cosine_similarity(source, dest)
         self.distance_buffer[(source, dest)] = distance
@@ -35,6 +37,7 @@ class XieBeniIndex(object):
         return distance
 
     def __check_distance(self, checked_pair):
+        # check distance is exist or not
         if checked_pair in self.distance_buffer:
             distance = self.distance_buffer[checked_pair]
         else:
@@ -43,6 +46,7 @@ class XieBeniIndex(object):
         return distance
 
     def __get_compactness(self):
+        # get intra-cluster distance (compactness)
         all_distances = []
         for cluster_id, log_ids in self.clusters.iteritems():
             cluster_distances = []
@@ -58,21 +62,20 @@ class XieBeniIndex(object):
         return compactness
 
     def __get_separation(self):
+        # get inter-cluster distance (separation)
         all_distances = []
         for cluster_id1, cluster_id2 in product(xrange(self.total_cluster), repeat=2):
             distance = self.__check_distance((self.cluster_centroids[cluster_id1], self.cluster_centroids[cluster_id2]))
             if distance is None:
                 distance = self.__get_distance(self.cluster_centroids[cluster_id1], self.cluster_centroids[cluster_id2])
-            all_distances.append(pow(distance, 2))
+            all_distances.append(distance ** 2)
 
         min_distances = min(all_distances)
-        if min_distances == 0.:
-            min_distances = 0.001
-
         separation = self.log_length * min_distances
         return separation
 
     def get_xie_beni(self):
+        # get Xie-Beni index
         self.__get_all_cluster_properties()
         try:
             xb_index = self.__get_compactness() / self.__get_separation()
