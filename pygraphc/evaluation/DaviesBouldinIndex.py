@@ -19,21 +19,23 @@ class DaviesBouldinIndex(object):
         # centroid for a particular cluster
         if cluster:
             for log_id in cluster:
-                centroid += self.preprocessed_logs[log_id]
+                centroid = centroid + ' ' + self.preprocessed_logs[log_id]
         # centroid for the whole logs
         else:
             for log_id in self.preprocessed_logs:
-                centroid += self.preprocessed_logs[log_id]
+                centroid = ' '.join([centroid, self.preprocessed_logs[log_id]])
 
         return centroid
 
     def __get_all_cluster_properties(self):
+        # get cluster properties
         for cluster_id, log_ids in self.clusters.iteritems():
             self.cluster_centroids[cluster_id] = self.__get_centroid(log_ids)
             self.cluster_total_nodes[cluster_id] = len(log_ids)
         self.total_cluster = len(self.clusters.keys())
 
     def __get_distance(self, source, dest):
+        # get cosine similarity as distance
         cs = CosineSimilarity()
         distance = cs.get_cosine_similarity(source, dest)
         self.distance_buffer[(source, dest)] = distance
@@ -41,6 +43,7 @@ class DaviesBouldinIndex(object):
         return distance
 
     def __check_distance(self, checked_pair):
+        # check distance is exist or not
         if checked_pair in self.distance_buffer:
             distance = self.distance_buffer[checked_pair]
         else:
@@ -49,6 +52,7 @@ class DaviesBouldinIndex(object):
         return distance
 
     def __get_dispersion(self):
+        # get cluster dispersion (intra-cluster compactness)
         cluster_dispersions = {}
         for cluster_id, log_ids in self.clusters.iteritems():
             distances = []
@@ -63,9 +67,10 @@ class DaviesBouldinIndex(object):
         return cluster_dispersions
 
     def __get_dissimilarity(self):
+        # get cluster dissimilarity (inter-cluster separation)
         cluster_dissimilarity = {}
         for cluster_id1, cluster_id2 in combinations(xrange(self.total_cluster), 2):
-            distance = self.__check_distance(())
+            distance = self.__check_distance((self.cluster_centroids[cluster_id1], self.cluster_centroids[cluster_id2]))
             if distance is None:
                 distance = self.__get_distance(self.cluster_centroids[cluster_id1], self.cluster_centroids[cluster_id2])
             cluster_dissimilarity[(cluster_id1, cluster_id2)] = distance
@@ -73,17 +78,22 @@ class DaviesBouldinIndex(object):
         return cluster_dissimilarity
 
     def __get_similarity(self):
+        # get similarity (ratio between compactness and separation)
         similarity = {}
         cluster_dispersions = self.__get_dispersion()
         cluster_dissimilarity = self.__get_dissimilarity()
         for cluster_id1, cluster_id2 in combinations(xrange(self.total_cluster), 2):
-            similarity[(cluster_id1, cluster_id2)] = \
-                cluster_dispersions[cluster_id1] + cluster_dispersions[cluster_id2] / \
-                cluster_dissimilarity[(cluster_id1, cluster_id2)]
+            try:
+                similarity[(cluster_id1, cluster_id2)] = \
+                    cluster_dispersions[cluster_id1] + cluster_dispersions[cluster_id2] / \
+                    cluster_dissimilarity[(cluster_id1, cluster_id2)]
+            except ZeroDivisionError:
+                similarity[(cluster_id1, cluster_id2)] = 0.
 
         return similarity
 
     def __get_r(self):
+        # get R
         r = {}
         similarity = self.__get_similarity()
         similarity_keys = similarity.keys()
@@ -100,6 +110,7 @@ class DaviesBouldinIndex(object):
         return r
 
     def get_davies_bouldin(self):
+        # get Davies-Bouldin index
         self.__get_all_cluster_properties()
         r = self.__get_r()
         try:
