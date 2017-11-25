@@ -6,7 +6,10 @@ from time import time
 from ConfigParser import SafeConfigParser
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.preprocess.ParallelPreprocess import ParallelPreprocess
+from pygraphc.preprocess.PreprocessLog import PreprocessLog
+from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.clustering.MaxCliquesPercolationSA import MaxCliquesPercolationSA
+from pygraphc.clustering.MajorClust import ImprovedMajorClust
 from pygraphc.evaluation.EvaluationUtility import EvaluationUtility
 from pygraphc.evaluation.CalinskiHarabaszIndex import CalinskiHarabaszIndex
 from pygraphc.evaluation.DaviesBouldinIndex import DaviesBouldinIndex
@@ -112,7 +115,7 @@ class Experiment(object):
             if exception.errno != errno.EEXIST:
                 raise
 
-    def run_experiment(self):
+    def run_clustering_experiment(self):
         # initialization
         self.__get_methods()
         self.__read_config()
@@ -136,15 +139,16 @@ class Experiment(object):
 
             print filename, '...'
             if self.method in self.methods['graph']:
-                # preprocess log file and create graph
-                preprocess = CreateGraphModel(properties['log_path'])
-                graph = preprocess.create_graph()
-                edges_weight = preprocess.edges_weight
-                nodes_id = range(preprocess.unique_events_length)
-                preprocessed_logs = preprocess.preprocessed_logs
-                log_length = preprocess.log_length
 
                 if self.method == 'max_clique_weighted_sa':
+                    # preprocess log file and create graph
+                    preprocess = CreateGraphModel(properties['log_path'])
+                    graph = preprocess.create_graph()
+                    edges_weight = preprocess.edges_weight
+                    nodes_id = range(preprocess.unique_events_length)
+                    preprocessed_logs = preprocess.preprocessed_logs
+                    log_length = preprocess.log_length
+
                     # initialize parameter for simulated annealing
                     # Selim et al., 1991, Sun et al., 1996
                     tmin = 10 ** (-99)
@@ -168,6 +172,37 @@ class Experiment(object):
 
                     # write experiment result and close evaluation file
                     row = (filename, best_parameter['k'], best_parameter['I']) + internal_evaluation
+                    writer.writerow(row)
+                    graph.clear()
+
+                elif self.method == 'improved_majorclust':
+                    # preprocess log file
+                    # log_type = self.configuration[self.configuration['main']['dataset']]['log_type']
+                    log_type = 'auth'
+                    preprocess = PreprocessLog(log_type, properties['log_path'])
+                    if log_type == 'auth':
+                        preprocess.do_preprocess()  # auth
+
+                    events_unique = preprocess.events_unique
+                    log_length = preprocess.loglength
+                    preprocessed_logs = preprocess.preprocessed_logs
+
+                    # create graph
+                    g = CreateGraph(events_unique)
+                    g.do_create()
+                    graph = g.g
+
+                    # run improved MajorClust
+                    imc = ImprovedMajorClust(graph)
+                    clusters = imc.get_improved_majorclust()
+
+                    # get internal evaluation
+                    # convert clustering result from graph to text
+                    new_clusters = EvaluationUtility.convert_to_text(graph, clusters)
+                    internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
+
+                    # write experiment result and close evaluation file
+                    row = (filename, ) + internal_evaluation
                     writer.writerow(row)
                     graph.clear()
 
@@ -262,8 +297,8 @@ class Experiment(object):
 
 
 start = time()
-e = Experiment('max_clique_weighted_sa')
-e.run_experiment()
+e = Experiment('improved_majorclust')
+e.run_clustering_experiment()
 
 # print runtime
 duration = time() - start
