@@ -17,20 +17,22 @@ class CalinskiHarabaszIndex(object):
         # centroid for a particular cluster
         if cluster:
             for log_id in cluster:
-                centroid += self.preprocessed_logs[log_id]
+                centroid = centroid + ' ' + self.preprocessed_logs[log_id]
         # centroid for the whole logs
         else:
             for log_id in self.preprocessed_logs:
-                centroid += self.preprocessed_logs[log_id]
+                centroid = ' '.join([centroid, self.preprocessed_logs[log_id]])
 
         return centroid
 
     def __get_all_cluster_properties(self):
+        # get cluster properties
         for cluster_id, log_ids in self.clusters.iteritems():
             self.cluster_centroids[cluster_id] = self.__get_centroid(log_ids)
             self.cluster_total_nodes[cluster_id] = len(log_ids)
 
     def __get_distance(self, source, dest):
+        # get cosine similarity as distance
         cs = CosineSimilarity()
         distance = cs.get_cosine_similarity(source, dest)
         self.distance_buffer[(source, dest)] = distance
@@ -38,6 +40,7 @@ class CalinskiHarabaszIndex(object):
         return distance
 
     def __check_distance(self, checked_pair):
+        # check distance is exist or not
         if checked_pair in self.distance_buffer:
             distance = self.distance_buffer[checked_pair]
         else:
@@ -46,6 +49,7 @@ class CalinskiHarabaszIndex(object):
         return distance
 
     def __get_trace_b(self):
+        # get trace B
         traces_b = []
         logs_centroid = self.__get_centroid()
         for cluster_id, log_ids in self.clusters.iteritems():
@@ -60,6 +64,7 @@ class CalinskiHarabaszIndex(object):
         return total_trace_b
 
     def __get_trace_w(self):
+        # get trace W
         traces_w = []
         for cluster_id, log_ids in self.clusters.iteritems():
             trace_w_cluster = []
@@ -76,6 +81,7 @@ class CalinskiHarabaszIndex(object):
         return total_traces_w
 
     def get_calinski_harabasz(self):
+        # get Calinski-Harbasz index
         self.__get_all_cluster_properties()
         total_cluster = len(self.clusters.keys())
 
