@@ -17,7 +17,7 @@ class XieBeniIndex(object):
         # centroid for a particular cluster
         centroid = ''
         for log_id in cluster:
-            centroid += self.preprocessed_logs[log_id]
+            centroid = centroid + ' ' + self.preprocessed_logs[log_id]
 
         return centroid
 
@@ -65,13 +65,17 @@ class XieBeniIndex(object):
                 distance = self.__get_distance(self.cluster_centroids[cluster_id1], self.cluster_centroids[cluster_id2])
             all_distances.append(pow(distance, 2))
 
-        separation = self.log_length * min(all_distances)
+        min_distances = min(all_distances)
+        if min_distances == 0.:
+            min_distances = 0.001
+
+        separation = self.log_length * min_distances
         return separation
 
     def get_xie_beni(self):
         self.__get_all_cluster_properties()
         try:
-            xb_index = self.__get_separation() / self.__get_compactness()
+            xb_index = self.__get_compactness() / self.__get_separation()
         except ZeroDivisionError:
             xb_index = 0.
 
