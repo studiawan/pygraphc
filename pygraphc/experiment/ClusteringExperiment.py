@@ -17,10 +17,10 @@ from pygraphc.evaluation.XieBeniIndex import XieBeniIndex
 from pygraphc.misc.ReverseVaarandi import ReverseVaarandi
 from pygraphc.misc.IPLoM import ParaIPLoM, IPLoM
 from pygraphc.misc.LogSig import Para, LogSig
-from pygraphc.misc.DBSCANClustering import DBSCANClustering
+from pygraphc.output.OutputText import OutputText
 
 
-class Experiment(object):
+class ClusteringExperiment(object):
     def __init__(self, method):
         self.method = method
         self.configuration = {}
@@ -31,7 +31,7 @@ class Experiment(object):
         # read configuration file to run an experiment based on a specific method and a dataset
         parser = SafeConfigParser()
         current_path = os.path.dirname(os.path.realpath(__file__))
-        config_path = os.path.join(current_path, 'config', self.method + '.conf')
+        config_path = os.path.join(current_path, 'config', 'clustering', self.method + '.conf')
         parser.read(config_path)
 
         for section_name in parser.sections():
@@ -59,13 +59,13 @@ class Experiment(object):
                 'log_path': full_path
             }
 
-        if self.configuration['main']['clustering']:
+        if self.configuration['main']['clustering'] == '1':
             for full_path, filename in matches:
                 # get all files for clustering
-                properties = {}
-                for key, value in self.configuration['clustering_result_path'].iteritems():
-                    properties[key] = os.path.join(result_path, dataset, value, filename)
-                self.files[filename].update(properties)
+                percluster_directory = os.path.join(result_path, dataset,
+                                                    self.configuration['clustering_result_path']['percluster_path'])
+                self.__check_path(percluster_directory)
+                self.files[filename]['percluster_path'] = os.path.join(percluster_directory, filename)
 
                 # get evaluation directory and file for clustering
                 self.files['evaluation_directory'] = \
@@ -80,7 +80,7 @@ class Experiment(object):
         # get all of available methods from config file
         parser = SafeConfigParser()
         current_path = os.path.dirname(os.path.realpath(__file__))
-        config_path = os.path.join(current_path, 'config', 'method.conf')
+        config_path = os.path.join(current_path, 'config', 'clustering', 'method.conf')
         parser.read(config_path)
 
         for section_name in parser.sections():
@@ -93,13 +93,13 @@ class Experiment(object):
     def __get_internal_evaluation(self, new_clusters, preprocessed_logs, log_length):
         # note that order of evaluation matter
         internal_evaluation = []
-        if self.configuration['internal_evaluation']['calinski_harabasz']:
+        if self.configuration['internal_evaluation']['calinski_harabasz'] == '1':
             ch = CalinskiHarabaszIndex(new_clusters, preprocessed_logs, log_length)
             internal_evaluation.append(ch.get_calinski_harabasz())
-        if self.configuration['internal_evaluation']['davies_bouldin']:
+        if self.configuration['internal_evaluation']['davies_bouldin'] == '1':
             db = DaviesBouldinIndex(new_clusters, preprocessed_logs, log_length)
             internal_evaluation.append(db.get_davies_bouldin())
-        if self.configuration['internal_evaluation']['xie_beni']:
+        if self.configuration['internal_evaluation']['xie_beni'] == '1':
             xb = XieBeniIndex(new_clusters, preprocessed_logs, log_length)
             internal_evaluation.append(xb.get_xie_beni())
 
@@ -114,6 +114,154 @@ class Experiment(object):
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
+
+    def __get_clustering(self, filename_properties):
+        # run the experiment
+        filename = filename_properties[0]
+        properties = filename_properties[1]
+        row = ()
+
+        if filename != 'evaluation_directory' or filename != 'evaluation_file':
+            print filename, '...'
+            if self.method in self.methods['graph']:
+                new_clusters, original_logs = {}, []
+
+                if self.method == 'max_clique_weighted_sa':
+                    # preprocess log file and create graph
+                    preprocess = CreateGraphModel(properties['log_path'])
+                    graph = preprocess.create_graph()
+                    edges_weight = preprocess.edges_weight
+                    nodes_id = range(preprocess.unique_events_length)
+                    preprocessed_logs = preprocess.preprocessed_logs
+                    log_length = preprocess.log_length
+                    original_logs = preprocess.logs
+
+                    # initialize parameter for simulated annealing
+                    # Selim et al., 1991, Sun et al., 1996
+                    tmin = 10 ** (-99)
+                    tmax = 10.
+                    alpha = 0.9
+                    energy_type = 'calinski_harabasz'
+                    iteration_threshold = 0.3  # only xx% of total trial with brute-force
+                    brute_force = False
+
+                    # run maximal clique weighted with simulated annealing
+                    maxc_sa = MaxCliquesPercolationSA(graph, edges_weight, nodes_id, tmin, tmax, alpha,
+                                                      energy_type, iteration_threshold, brute_force,
+                                                      preprocessed_logs, log_length)
+                    maxc_sa.init_maxclique_percolation()
+                    best_parameter, maxc_sa_cluster, best_energy = maxc_sa.get_maxcliques_sa()
+
+                    # get internal evaluation
+                    # convert clustering result from graph to text
+                    new_clusters = EvaluationUtility.convert_to_text(graph, maxc_sa_cluster)
+                    internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
+
+                    # write experiment result and close evaluation file
+                    row = (filename,) + internal_evaluation + (best_parameter['k'], best_parameter['I'])
+                    graph.clear()
+
+                elif self.method == 'improved_majorclust':
+                    # preprocess log file
+                    # log_type = self.configuration[self.configuration['main']['dataset']]['log_type']
+                    log_type = 'auth'
+                    preprocess = PreprocessLog(log_type, properties['log_path'])
+                    if log_type == 'auth':
+                        preprocess.do_preprocess()  # auth
+
+                    events_unique = preprocess.events_unique
+                    log_length = preprocess.loglength
+                    preprocessed_logs = preprocess.preprocessed_logs
+                    original_logs = preprocess.logs
+
+                    # create graph
+                    g = CreateGraph(events_unique)
+                    g.do_create()
+                    graph = g.g
+
+                    # run improved MajorClust
+                    imc = ImprovedMajorClust(graph)
+                    clusters = imc.get_improved_majorclust()
+
+                    # get internal evaluation
+                    # convert clustering result from graph to text
+                    new_clusters = EvaluationUtility.convert_to_text(graph, clusters)
+                    internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
+
+                    # write experiment result and close evaluation file
+                    row = (filename,) + internal_evaluation
+                    graph.clear()
+
+                # write clustering result per cluster to text file
+                OutputText.percluster_with_logid(self.files[filename]['percluster_path'], new_clusters, original_logs)
+
+            elif self.method in self.methods['non_graph']:
+                clusters, original_logs = {}, []
+                preprocessed_logs, log_length = {}, 0
+
+                if self.method == 'LogCluster' or self.method == 'SLCT':
+                    # initialization of parameters
+                    mode = self.method
+                    support = 100
+                    log_file = filename
+                    outlier_file = '/tmp/outlier.txt'
+                    output_file = '/tmp/output.txt'
+
+                    # run LogCluster clustering
+                    lc = ReverseVaarandi(mode, support, log_file, outlier_file, output_file)
+                    clusters = lc.get_clusters()
+
+                    # preprocess logs for evaluation
+                    pp = ParallelPreprocess(log_file, False)
+                    pp.get_unique_events()
+                    preprocessed_logs = pp.preprocessed_logs
+                    log_length = pp.log_length
+
+                elif self.method == 'IPLoM':
+                    # set path
+                    dataset = self.configuration['main']['dataset']
+                    dataset_path = self.configuration[dataset]['path']
+                    para = ParaIPLoM(path=dataset_path + '/', logname=filename,
+                                     save_path=self.configuration['experiment_result_path']['path'])
+
+                    # run IPLoM clustering
+                    myiplom = IPLoM(para)
+                    myiplom.main_process()
+                    clusters = myiplom.get_clusters()
+
+                    # preprocess logs for evaluation
+                    pp = ParallelPreprocess(filename, False)
+                    pp.get_unique_events()
+                    preprocessed_logs = pp.preprocessed_logs
+                    log_length = pp.log_length
+
+                elif self.method == 'LogSig':
+                    # set path
+                    dataset = self.configuration['main']['dataset']
+                    dataset_path = self.configuration[dataset]['path']
+                    para = Para(path=dataset_path + '/', logname=filename,
+                                savePath=self.configuration['experiment_result_path']['path'],
+                                groupNum=3)  # check again about groupNum parameter
+
+                    # run LogSig clustering
+                    ls = LogSig(para)
+                    ls.mainProcess()
+                    clusters = ls.get_clusters()
+
+                    # preprocess logs for evaluation
+                    pp = ParallelPreprocess(filename, False)
+                    pp.get_unique_events()
+                    preprocessed_logs = pp.preprocessed_logs
+                    log_length = pp.log_length
+
+                # get internal evaluation
+                internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
+                row = (filename,) + internal_evaluation
+
+                # write clustering result per cluster to text file
+                OutputText.percluster_with_logid(self.files[filename]['percluster_path'], clusters, original_logs)
+
+        return row
 
     def run_clustering_experiment(self):
         # initialization
@@ -139,6 +287,7 @@ class Experiment(object):
 
             print filename, '...'
             if self.method in self.methods['graph']:
+                new_clusters, original_logs = {}, []
 
                 if self.method == 'max_clique_weighted_sa':
                     # preprocess log file and create graph
@@ -148,6 +297,7 @@ class Experiment(object):
                     nodes_id = range(preprocess.unique_events_length)
                     preprocessed_logs = preprocess.preprocessed_logs
                     log_length = preprocess.log_length
+                    original_logs = preprocess.logs
 
                     # initialize parameter for simulated annealing
                     # Selim et al., 1991, Sun et al., 1996
@@ -171,7 +321,7 @@ class Experiment(object):
                     internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
 
                     # write experiment result and close evaluation file
-                    row = (filename, best_parameter['k'], best_parameter['I']) + internal_evaluation
+                    row = (filename, ) + internal_evaluation + (best_parameter['k'], best_parameter['I'])
                     writer.writerow(row)
                     graph.clear()
 
@@ -186,6 +336,7 @@ class Experiment(object):
                     events_unique = preprocess.events_unique
                     log_length = preprocess.loglength
                     preprocessed_logs = preprocess.preprocessed_logs
+                    original_logs = preprocess.logs
 
                     # create graph
                     g = CreateGraph(events_unique)
@@ -206,14 +357,20 @@ class Experiment(object):
                     writer.writerow(row)
                     graph.clear()
 
-            elif self.method in self.methods['']:
+                # write clustering result per cluster to text file
+                OutputText.percluster_with_logid(self.files[filename]['percluster_path'], new_clusters, original_logs)
+
+            elif self.method in self.methods['non_graph']:
+                clusters, original_logs = {}, []
+                preprocessed_logs, log_length = {}, 0
+
                 if self.method == 'LogCluster' or self.method == 'SLCT':
                     # initialization of parameters
                     mode = self.method
                     support = 100
                     log_file = filename
-                    outlier_file = ''
-                    output_file = ''
+                    outlier_file = '/tmp/outlier.txt'
+                    output_file = '/tmp/output.txt'
 
                     # run LogCluster clustering
                     lc = ReverseVaarandi(mode, support, log_file, outlier_file, output_file)
@@ -224,11 +381,6 @@ class Experiment(object):
                     pp.get_unique_events()
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
-
-                    # get internal evaluation
-                    internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
-                    row = (filename, ) + internal_evaluation
-                    writer.writerow(row)
 
                 elif self.method == 'IPLoM':
                     # set path
@@ -247,11 +399,6 @@ class Experiment(object):
                     pp.get_unique_events()
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
-
-                    # get internal evaluation
-                    internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
-                    row = (filename,) + internal_evaluation
-                    writer.writerow(row)
 
                 elif self.method == 'LogSig':
                     # set path
@@ -272,32 +419,21 @@ class Experiment(object):
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
 
-                    # get internal evaluation
-                    internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
-                    row = (filename,) + internal_evaluation
-                    writer.writerow(row)
+                # get internal evaluation
+                internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
+                row = (filename, ) + internal_evaluation
+                writer.writerow(row)
 
-                elif self.method == 'DBSCAN':
-                    # run DBSCAN clustering
-                    db = DBSCANClustering(filename)
-                    clusters = db.get_cluster()
-
-                    # preprocess logs for evaluation
-                    pp = ParallelPreprocess(filename, False)
-                    pp.get_unique_events()
-                    preprocessed_logs = pp.preprocessed_logs
-                    log_length = pp.log_length
-
-                    # get internal evaluation
-                    internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
-                    row = (filename,) + internal_evaluation
-                    writer.writerow(row)
+                # write clustering result per cluster to text file
+                OutputText.percluster_with_logid(self.files[filename]['percluster_path'], clusters, original_logs)
 
         f.close()
 
 
+# change the method in ClusteringExperiment() to run an experiment.
+# change the config file to change the dataset used in experiment.
 start = time()
-e = Experiment('improved_majorclust')
+e = ClusteringExperiment('improved_majorclust')
 e.run_clustering_experiment()
 
 # print runtime
