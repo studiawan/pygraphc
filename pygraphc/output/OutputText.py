@@ -59,6 +59,15 @@ class OutputText(object):
         f.close()
 
     @staticmethod
+    def percluster_with_logid(percluster_file, clusters, original_logs):
+        f = open(percluster_file, 'w')
+        for cluster_id, log_ids in clusters.iteritems():
+            f.write('\nCluster #' + str(cluster_id) + '\n')
+            for log_id in log_ids:
+                f.write(str(log_id) + ', ' + original_logs[log_id])
+        f.close()
+
+    @staticmethod
     def csv_cluster_property(report_file, cluster_property, cluster_abstraction, anomaly_score, quadratic_score,
                              normalized_score, sentiment_score, anomaly_decision, evaluation_metrics):
         """Write cluster property to a csv file.
