@@ -2,6 +2,7 @@ import os
 import errno
 import fnmatch
 import csv
+import multiprocessing
 from time import time
 from ConfigParser import SafeConfigParser
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
@@ -121,7 +122,7 @@ class ClusteringExperiment(object):
         properties = filename_properties[1]
         row = ()
 
-        if filename != 'evaluation_directory' or filename != 'evaluation_file':
+        if filename != 'evaluation_directory' and filename != 'evaluation_file':
             print filename, '...'
             if self.method in self.methods['graph']:
                 new_clusters, original_logs = {}, []
@@ -158,7 +159,7 @@ class ClusteringExperiment(object):
                     internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
 
                     # write experiment result and close evaluation file
-                    row = (filename,) + internal_evaluation + (best_parameter['k'], best_parameter['I'])
+                    row = (filename, ) + internal_evaluation + (best_parameter['k'], best_parameter['I'])
                     graph.clear()
 
                 elif self.method == 'improved_majorclust':
@@ -189,7 +190,7 @@ class ClusteringExperiment(object):
                     internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
 
                     # write experiment result and close evaluation file
-                    row = (filename,) + internal_evaluation
+                    row = (filename, ) + internal_evaluation
                     graph.clear()
 
                 # write clustering result per cluster to text file
@@ -256,12 +257,52 @@ class ClusteringExperiment(object):
 
                 # get internal evaluation
                 internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
-                row = (filename,) + internal_evaluation
+                row = (filename, ) + internal_evaluation
 
                 # write clustering result per cluster to text file
                 OutputText.percluster_with_logid(self.files[filename]['percluster_path'], clusters, original_logs)
 
         return row
+
+    def __call__(self, filename_properties):
+        # main method called when running in multiprocessing
+        return self.__get_clustering(filename_properties)
+
+    def run_clustering(self):
+        # initialization
+        self.__get_methods()
+        self.__read_config()
+        self.__get_dataset()
+
+        # get filename and properties
+        filename_properties = []
+        for filename, properties in self.files.iteritems():
+            filename_properties.append((filename, properties))
+
+        # run experiment in multiprocessing mode
+        total_cpu = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=total_cpu)
+        results = pool.map(self, filename_properties)
+        pool.close()
+        pool.join()
+
+        # open evaluation file
+        self.__check_path(self.files['evaluation_directory'])
+        f = open(self.files['evaluation_file'], 'wt')
+        writer = csv.writer(f)
+
+        # set header for evaluation file
+        header = []
+        if self.configuration['main']['clustering']:
+            header = self.configuration['clustering_evaluation']['evaluation_file_header'].split('\n')
+        writer.writerow(tuple(header))
+
+        # write experiment result
+        for result in results:
+            writer.writerow(result)
+
+        # close evaluation file
+        f.close()
 
     def run_clustering_experiment(self):
         # initialization
@@ -434,7 +475,7 @@ class ClusteringExperiment(object):
 # change the config file to change the dataset used in experiment.
 start = time()
 e = ClusteringExperiment('improved_majorclust')
-e.run_clustering_experiment()
+e.run_clustering()
 
 # print runtime
 duration = time() - start
