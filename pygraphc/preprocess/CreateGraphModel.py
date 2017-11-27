@@ -16,6 +16,7 @@ class CreateGraphModel(object):
         self.count_groups = count_groups
         self.edges_weight = self.distances
         self.pruning = pruning
+        self.logs = []
 
     def __get_nodes(self):
         # preprocess logs and get unique events as nodes in a graph
@@ -25,6 +26,7 @@ class CreateGraphModel(object):
         self.event_attributes = pp.event_attributes
         self.preprocessed_logs = pp.preprocessed_logs
         self.log_length = pp.log_length
+        self.logs = pp.logs
 
     def __get_distances(self):
         # get cosine distance as edges with weight
