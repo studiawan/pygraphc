@@ -3,6 +3,7 @@ import errno
 import fnmatch
 import csv
 import multiprocessing
+import multiprocessing.pool
 from time import time
 from ConfigParser import SafeConfigParser
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
@@ -281,7 +282,8 @@ class ClusteringExperiment(object):
 
         # run experiment in multiprocessing mode
         total_cpu = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=total_cpu)
+        # pool = multiprocessing.Pool(processes=total_cpu)
+        pool = NoDaemonProcessPool(processes=total_cpu)
         results = pool.map(self, filename_properties)
         pool.close()
         pool.join()
@@ -471,10 +473,31 @@ class ClusteringExperiment(object):
         f.close()
 
 
+class NoDaemonProcess(multiprocessing.Process):
+    # make 'daemon' attribute always return False
+    # https://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
+    def _get_daemon(self):
+        return False
+
+    def _set_daemon(self, value):
+        pass
+
+    daemon = property(_get_daemon, _set_daemon)
+
+
+class NoDaemonProcessPool(multiprocessing.pool.Pool):
+    # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+    # because the latter is only a wrapper function, not a proper class.
+    def __reduce__(self):
+        pass
+
+    Process = NoDaemonProcess
+
+
 # change the method in ClusteringExperiment() to run an experiment.
 # change the config file to change the dataset used in experiment.
 start = time()
-e = ClusteringExperiment('improved_majorclust')
+e = ClusteringExperiment('max_clique_weighted_sa')
 e.run_clustering()
 
 # print runtime
