@@ -95,53 +95,62 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                 best_parameter = current_parameter
                 best_cluster = mcpw_sa_cluster
 
-            # print current parameter
-            # if current_parameter['k'] and current_parameter['I']:
-            #     print current_parameter['k'], ',', current_parameter['I'], ',', current_energy * -1
-
-            # cooling the temperature
-            tnew = sa.get_temperature(self.Tmax)
-
-            # main loop of simulated annealing
-            count_iteration = 0
-            while tnew > self.Tmin and count_iteration <= self.max_iteration:
-                # reset current clique percolation before finding the new one
-                self.clique_percolation.clear()
-
-                # set perameter, find cluster, and get energy
-                tcurrent = tnew
-                if not percolation_only:
-                    new_parameter = sa.get_parameter(processed_parameter, all_combinations, False, self.brute_force)
-                    processed_parameter.append((new_parameter['k'], new_parameter['I']))
-                    mcpw_sa_cluster = self.get_maxcliques_percolation_weighted(new_parameter['k'], new_parameter['I'])
-                else:
-                    new_parameter = sa.get_parameter(processed_parameter, all_combinations, True, self.brute_force)
-                    processed_parameter.append(new_parameter['k'])
-                    mcpw_sa_cluster = self.get_maxcliques_percolation(new_parameter['k'])
-
-                if mcpw_sa_cluster:
-                    new_energy = sa.get_energy(self.graph, mcpw_sa_cluster, self.energy_type) * -1
-                else:
-                    new_energy = 0.
-
-                # print new parameter
-                # print new_parameter['k'], ',', new_parameter['I'], ',', new_energy * -1
-
-                # get delta energy and check
-                delta_energy = new_energy - current_energy
-                if new_energy <= current_energy:
-                    if new_energy <= best_energy:
-                        best_energy = new_energy
-                        best_parameter = new_parameter
-                        best_cluster = mcpw_sa_cluster
-                    else:
-                        current_energy = new_energy
-                elif exp(-delta_energy / tcurrent) > uniform(0, 1):
-                    current_energy = new_energy
+                # print current parameter
+                # if current_parameter['k'] and current_parameter['I']:
+                #     print current_parameter['k'], ',', current_parameter['I'], ',', current_energy * -1
 
                 # cooling the temperature
-                tnew = sa.get_temperature(tcurrent)
-                count_iteration += 1
+                tnew = sa.get_temperature(self.Tmax)
+
+                # main loop of simulated annealing
+                count_iteration = 0
+                while tnew > self.Tmin and count_iteration <= self.max_iteration:
+                    # reset current clique percolation before finding the new one
+                    self.clique_percolation.clear()
+
+                    # set perameter, find cluster, and get energy
+                    tcurrent = tnew
+                    if not percolation_only:
+                        new_parameter = sa.get_parameter(processed_parameter, all_combinations, False, self.brute_force)
+                        processed_parameter.append((new_parameter['k'], new_parameter['I']))
+                        mcpw_sa_cluster = \
+                            self.get_maxcliques_percolation_weighted(new_parameter['k'], new_parameter['I'])
+                    else:
+                        new_parameter = sa.get_parameter(processed_parameter, all_combinations, True, self.brute_force)
+                        processed_parameter.append(new_parameter['k'])
+                        mcpw_sa_cluster = self.get_maxcliques_percolation(new_parameter['k'])
+
+                    if mcpw_sa_cluster:
+                        new_energy = sa.get_energy(self.graph, mcpw_sa_cluster, self.energy_type) * -1
+                    else:
+                        new_energy = 0.
+
+                    # print new parameter
+                    # print new_parameter['k'], ',', new_parameter['I'], ',', new_energy * -1
+
+                    # get delta energy and check
+                    delta_energy = new_energy - current_energy
+                    if new_energy <= current_energy:
+                        if new_energy <= best_energy:
+                            best_energy = new_energy
+                            best_parameter = new_parameter
+                            best_cluster = mcpw_sa_cluster
+                        else:
+                            current_energy = new_energy
+                    elif exp(-delta_energy / tcurrent) > uniform(0, 1):
+                        current_energy = new_energy
+
+                    # cooling the temperature
+                    tnew = sa.get_temperature(tcurrent)
+                    count_iteration += 1
+            else:
+                # no cluster found using both k and I
+                best_parameter['k'] = -1
+                best_parameter['I'] = -1
+                best_energy = -1
+
+                # a connected component becomes a cluster
+                best_cluster = self._get_clusters()
 
         return best_parameter, best_cluster, best_energy
 
@@ -205,7 +214,9 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
             The best energy based on specific type, i.e., Silhouette index or Dunn index.
         """
         best_parameter, best_cluster, best_energy = self.__get_maxcliques_percolation_weighted_sa()
-        if not best_cluster:
+
+        # no cluster found using I, use only k
+        if not best_cluster and best_parameter['k'] != -1 and best_parameter['I'] != -1:
             best_parameter, best_cluster, best_energy = self.__get_maxcliques_percolation_weighted_sa(True)
             best_parameter['I'] = 0.
 
