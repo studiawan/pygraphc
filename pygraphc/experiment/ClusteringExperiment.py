@@ -105,7 +105,7 @@ class ClusteringExperiment(object):
             xb = XieBeniIndex(new_clusters, preprocessed_logs, log_length)
             internal_evaluation.append(xb.get_xie_beni())
 
-        print internal_evaluation
+        # print internal_evaluation
         return tuple(internal_evaluation)
 
     @staticmethod
@@ -124,7 +124,7 @@ class ClusteringExperiment(object):
         row = ()
 
         if filename != 'evaluation_directory' and filename != 'evaluation_file':
-            print filename, '...'
+            # print filename, '...'
             if self.method in self.methods['graph']:
                 new_clusters, original_logs = {}, []
 
@@ -158,8 +158,14 @@ class ClusteringExperiment(object):
                     # convert clustering result from graph to text
                     new_clusters = EvaluationUtility.convert_to_text(graph, maxc_sa_cluster)
                     internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
+                    print filename, internal_evaluation
 
                     # write experiment result and close evaluation file
+                    if 'k' not in best_parameter.keys():
+                        best_parameter['k'] = -1
+                    if 'I' not in best_parameter.keys():
+                        best_parameter['I'] = -1
+
                     row = (filename, ) + internal_evaluation + (best_parameter['k'], best_parameter['I'])
                     graph.clear()
 
