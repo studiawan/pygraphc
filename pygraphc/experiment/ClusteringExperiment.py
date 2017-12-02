@@ -64,10 +64,14 @@ class ClusteringExperiment(object):
         if self.configuration['main']['clustering'] == '1':
             for full_path, filename in matches:
                 # get all files for clustering
-                percluster_directory = os.path.join(result_path, dataset,
-                                                    self.configuration['clustering_result_path']['percluster_path'])
-                self.__check_path(percluster_directory)
-                self.files[filename]['percluster_path'] = os.path.join(percluster_directory, filename)
+                properties = {}
+                for key, value in self.configuration['clustering_result_path'].iteritems():
+                    directory = os.path.join(result_path, dataset, value)
+                    self.__check_path(directory)
+                    properties[key] = os.path.join(directory, filename)
+
+                # update files dictionary
+                self.files[filename].update(properties)
 
                 # get evaluation directory and file for clustering
                 self.files['evaluation_directory'] = \
@@ -211,9 +215,9 @@ class ClusteringExperiment(object):
                     # initialization of parameters
                     mode = self.method
                     support = 100
-                    log_file = filename
-                    outlier_file = '/tmp/outlier.txt'
-                    output_file = '/tmp/output.txt'
+                    log_file = self.files[filename]['log_path']
+                    outlier_file = self.files[filename]['outlier_path']
+                    output_file = self.files[filename]['output_path']
 
                     # run LogCluster clustering
                     lc = ReverseVaarandi(mode, support, log_file, outlier_file, output_file)
@@ -417,9 +421,9 @@ class ClusteringExperiment(object):
                     # initialization of parameters
                     mode = self.method
                     support = 100
-                    log_file = filename
-                    outlier_file = '/tmp/outlier.txt'
-                    output_file = '/tmp/output.txt'
+                    log_file = self.files[filename]['log_path']
+                    outlier_file = self.files[filename]['outlier_path']
+                    output_file = self.files[filename]['output_path']
 
                     # run LogCluster clustering
                     lc = ReverseVaarandi(mode, support, log_file, outlier_file, output_file)
@@ -505,6 +509,7 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
 start = time()
 e = ClusteringExperiment('max_clique_weighted_sa')
 e.run_clustering()
+# e.run_clustering_experiment()
 
 # print runtime
 duration = time() - start
