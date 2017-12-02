@@ -25,7 +25,7 @@ class ReverseVaarandi(object):
                       ' --support=' + str(self.support) + ' --outliers=' + self.outlier_file + ' > ' + self.output_file
         elif self.mode == 'SLCT':
             command = '~/Downloads/log-cluster-tool/slct-0.05/slct -r -o ' + self.outlier_file + \
-                      ' -s ' + str(self.support) + ' ' + self.log_file
+                      ' > ' + self.output_file + ' -s ' + str(self.support) + ' ' + self.log_file
         system(command)
 
         # parse outlier results
