@@ -143,14 +143,24 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                     # cooling the temperature
                     tnew = sa.get_temperature(tcurrent)
                     count_iteration += 1
-            else:
-                # no cluster found using both k and I
-                best_parameter['k'] = -1
-                best_parameter['I'] = -1
-                best_energy = -1
 
-                # a connected component becomes a cluster
-                best_cluster = self._get_clusters()
+        else:
+            # no cluster found using both k and I
+            best_parameter['k'] = -1
+            best_parameter['I'] = -1
+            best_energy = -1
+
+            # a connected component becomes a cluster
+            best_cluster = self._get_clusters()
+
+            # if only one connected component found, then a node become a cluster
+            if len(best_cluster) == 1:
+                cluster_id = 0
+                best_cluster = {}
+                for node in self.graph.nodes_iter(data=True):
+                    members = node[1]['member']
+                    best_cluster[cluster_id] = members
+                    cluster_id += 1
 
         return best_parameter, best_cluster, best_energy
 
