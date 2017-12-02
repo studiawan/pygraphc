@@ -62,7 +62,11 @@ class DaviesBouldinIndex(object):
                     distance = self.__get_distance(self.preprocessed_logs[log_id], self.cluster_centroids[cluster_id])
                 distances.append(distance)
             total_distance = sum(distances)
-            cluster_dispersions[cluster_id] = 1 / self.cluster_total_nodes[cluster_id] * total_distance
+
+            try:
+                cluster_dispersions[cluster_id] = 1 / self.cluster_total_nodes[cluster_id] * total_distance
+            except ZeroDivisionError:
+                cluster_dispersions[cluster_id] = 0.
 
         return cluster_dispersions
 
