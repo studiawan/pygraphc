@@ -1,4 +1,5 @@
 from pyparsing import Word, alphas, Suppress, Combine, nums, string, Optional, Regex, ParseException
+import os
 
 
 class LogGrammar(object):
@@ -28,6 +29,10 @@ class LogGrammar(object):
             self.raslog_grammar = self.__get_raslog_grammar()
         elif self.log_type == 'vpnlog':
             self.vpnlog_grammar = self.__get_vpnlog_grammar()
+        elif self.log_type == 'snort_secrepo':
+            self.snort_secrepo_grammar = self.__get_snort_secrepo_grammar()
+        elif self.log_type == 'snort_sotm34':
+            self.snort_sotm34_grammar = self.__get_snort_sotm34_grammar()
 
     @staticmethod
     def __get_authlog_grammar():
@@ -372,3 +377,69 @@ class LogGrammar(object):
             parsed['message'] = parsed_vpnlog[7]
 
         return parsed
+
+    @staticmethod
+    def __get_snort_secrepo_grammar():
+        timestamp = Word(nums + '/' + '-' + ':' + '.')
+        host = Word(alphas + '[' + '*' + ']')
+        someid = Word(alphas + nums + '[' + ':' + ']')
+        message = Regex(".*")
+
+        snort_secrepo_grammar = timestamp + host + someid + message
+        return snort_secrepo_grammar
+
+    def parse_snort_secrepo(self, log_line):
+        parsed_snort_secrepo = self.snort_secrepo_grammar.parseString(log_line)
+
+        parsed = dict()
+        parsed['timestamp'] = parsed_snort_secrepo[0]
+        parsed['host'] = parsed_snort_secrepo[1]
+        parsed['someid'] = parsed_snort_secrepo[2]
+        parsed['message'] = parsed_snort_secrepo[3]
+
+        return parsed
+
+    @staticmethod
+    def __get_snort_sotm34_grammar():
+        ints = Word(nums)
+
+        month = Word(string.uppercase, string.lowercase, exact=3)
+        day = ints
+        hour = Combine(ints + ":" + ints + ":" + ints)
+        timestamp = month + day + hour
+
+        host = Word(alphas)
+        pid = Word(alphas + ':')
+        someid = Word(nums + '[' + ':' + ']')
+        # action = Word(alphas + ':' + '-' + '(' + ')')
+        message = Regex(".*")
+
+        snort_sotm34_grammar = timestamp + host + pid + someid + message
+        return snort_sotm34_grammar
+
+    def parse_snort_sotm34(self, log_line):
+        parsed_snort_sotm34 = self.snort_sotm34_grammar.parseString(log_line)
+
+        parsed = dict()
+        parsed['timestamp'] = parsed_snort_sotm34[0] + ' ' + parsed_snort_sotm34[1] + ' ' + parsed_snort_sotm34[2]
+        parsed['host'] = parsed_snort_sotm34[3]
+        parsed['pid'] = parsed_snort_sotm34[4]
+        parsed['someid'] = parsed_snort_sotm34[5]
+        # parsed['action'] = parsed_snort_sotm34[6]
+        parsed['message'] = parsed_snort_sotm34[6]
+
+        return parsed
+
+
+directory = '/home/hudan/Git/datasets/Snort_SotM34/perday'
+filenames = os.listdir(directory)
+lg = LogGrammar('snort_sotm34')
+
+for filename in filenames:
+    print filename
+    with open(os.path.join(directory, filename), 'r') as f:
+        lines = f.readlines()
+
+    for line in lines:
+        p = lg.parse_snort_sotm34(line)
+        print p
