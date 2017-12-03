@@ -33,6 +33,8 @@ class LogGrammar(object):
             self.snort_secrepo_grammar = self.__get_snort_secrepo_grammar()
         elif self.log_type == 'snort_sotm34':
             self.snort_sotm34_grammar = self.__get_snort_sotm34_grammar()
+        elif self.log_type == 'httpd_error_chuvakin':
+            self.httpd_error_chuvakin_grammar = self.__get_httpd_error_chuvakin()
 
     @staticmethod
     def __get_authlog_grammar():
@@ -430,16 +432,35 @@ class LogGrammar(object):
 
         return parsed
 
+    @staticmethod
+    def __get_httpd_error_chuvakin():
+        ints = Word(nums)
 
-directory = '/home/hudan/Git/datasets/Snort_SotM34/perday'
-filenames = os.listdir(directory)
-lg = LogGrammar('snort_sotm34')
+        day = Word('[' + alphas)
+        month = Word(alphas)
+        date = ints
+        hour = Combine(ints + ":" + ints + ":" + ints)
+        year = Word(nums + ']')
+        timestamp = day + month + date + hour + year
 
-for filename in filenames:
-    print filename
-    with open(os.path.join(directory, filename), 'r') as f:
-        lines = f.readlines()
+        message_type = Word('[' + alphas + ']')
+        message = Regex(".*")
 
-    for line in lines:
-        p = lg.parse_snort_sotm34(line)
-        print p
+        httpd_error_chuvakin_grammar = timestamp + message_type + message
+        return httpd_error_chuvakin_grammar
+
+    def parse_httpd_error_chuvakin(self, log_line):
+        parsed = dict()
+        try:
+            parsed_httpd_error_chuvakin = self.httpd_error_chuvakin_grammar.parseString(log_line)
+            parsed['timestamp'] = parsed_httpd_error_chuvakin[0] + ' ' + parsed_httpd_error_chuvakin[1] + ' ' + \
+                parsed_httpd_error_chuvakin[2] + ' ' + parsed_httpd_error_chuvakin[3] + ' ' + parsed_httpd_error_chuvakin[4]
+            parsed['message_type'] = parsed_httpd_error_chuvakin[5]
+            parsed['message'] = parsed_httpd_error_chuvakin[6]
+
+        except ParseException:
+            parsed['timestamp'] = ''
+            parsed['message_type'] = ''
+            parsed['message'] = log_line
+
+        return parsed
