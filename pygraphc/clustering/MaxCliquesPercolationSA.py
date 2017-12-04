@@ -158,8 +158,7 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                 cluster_id = 0
                 best_cluster = {}
                 for node in self.graph.nodes_iter(data=True):
-                    members = node[1]['member']
-                    best_cluster[cluster_id] = members
+                    best_cluster[cluster_id] = [node[0]]
                     cluster_id += 1
 
         return best_parameter, best_cluster, best_energy
