@@ -236,7 +236,7 @@ class ClusteringExperiment(object):
                     dataset = self.configuration['main']['dataset']
                     dataset_path = self.configuration[dataset]['path']
                     para = ParaIPLoM(path=dataset_path + '/', logname=filename,
-                                     save_path=self.configuration['experiment_result_path']['path'])
+                                     save_path=self.configuration['experiment_result_path']['result_path'])
 
                     # run IPLoM clustering
                     myiplom = IPLoM(para)
@@ -244,17 +244,18 @@ class ClusteringExperiment(object):
                     clusters = myiplom.get_clusters()
 
                     # preprocess logs for evaluation
-                    pp = ParallelPreprocess(filename, False)
+                    pp = ParallelPreprocess(properties['log_path'], False)
                     pp.get_unique_events()
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
+                    original_logs = pp.logs
 
                 elif self.method == 'LogSig':
                     # set path
                     dataset = self.configuration['main']['dataset']
                     dataset_path = self.configuration[dataset]['path']
                     para = Para(path=dataset_path + '/', logname=filename,
-                                savePath=self.configuration['experiment_result_path']['path'],
+                                savePath=self.configuration['experiment_result_path']['result_path'],
                                 groupNum=3)  # check again about groupNum parameter
 
                     # run LogSig clustering
@@ -263,14 +264,16 @@ class ClusteringExperiment(object):
                     clusters = ls.get_clusters()
 
                     # preprocess logs for evaluation
-                    pp = ParallelPreprocess(filename, False)
+                    pp = ParallelPreprocess(properties['log_path'], False)
                     pp.get_unique_events()
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
+                    original_logs = pp.logs
 
                 # get internal evaluation
                 internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
                 row = (filename, ) + internal_evaluation
+                print filename, internal_evaluation
 
                 # write clustering result per cluster to text file
                 OutputText.percluster_with_logid(self.files[filename]['percluster_path'], clusters, original_logs)
@@ -437,13 +440,14 @@ class ClusteringExperiment(object):
                     pp.get_unique_events()
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
+                    original_logs = pp.logs
 
                 elif self.method == 'IPLoM':
                     # set path
                     dataset = self.configuration['main']['dataset']
                     dataset_path = self.configuration[dataset]['path']
                     para = ParaIPLoM(path=dataset_path + '/', logname=filename,
-                                     save_path=self.configuration['experiment_result_path']['path'])
+                                     save_path=self.configuration['experiment_result_path']['result_path'])
 
                     # run IPLoM clustering
                     myiplom = IPLoM(para)
@@ -451,10 +455,11 @@ class ClusteringExperiment(object):
                     clusters = myiplom.get_clusters()
 
                     # preprocess logs for evaluation
-                    pp = ParallelPreprocess(filename, False)
+                    pp = ParallelPreprocess(properties['log_path'], False)
                     pp.get_unique_events()
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
+                    original_logs = pp.logs
 
                 elif self.method == 'LogSig':
                     # set path
@@ -474,11 +479,13 @@ class ClusteringExperiment(object):
                     pp.get_unique_events()
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
+                    original_logs = pp.logs
 
                 # get internal evaluation
                 internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
                 row = (filename, ) + internal_evaluation
                 writer.writerow(row)
+                print filename, internal_evaluation
 
                 # write clustering result per cluster to text file
                 OutputText.percluster_with_logid(self.files[filename]['percluster_path'], clusters, original_logs)
@@ -510,7 +517,7 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
 # change the method in ClusteringExperiment() to run an experiment.
 # change the config file to change the dataset used in experiment.
 start = time()
-e = ClusteringExperiment('improved_majorclust')
+e = ClusteringExperiment('LogSig')
 e.run_clustering()
 # e.run_clustering_experiment()
 
