@@ -175,11 +175,12 @@ class ClusteringExperiment(object):
 
                 elif self.method == 'improved_majorclust':
                     # preprocess log file
-                    # log_type = self.configuration[self.configuration['main']['dataset']]['log_type']
-                    log_type = 'auth'
+                    log_type = self.configuration[self.configuration['main']['dataset']]['log_type']
                     preprocess = PreprocessLog(log_type, properties['log_path'])
                     if log_type == 'auth':
                         preprocess.do_preprocess()  # auth
+                    else:
+                        preprocess.preprocess()
 
                     events_unique = preprocess.events_unique
                     log_length = preprocess.loglength
@@ -199,6 +200,7 @@ class ClusteringExperiment(object):
                     # convert clustering result from graph to text
                     new_clusters = EvaluationUtility.convert_to_text(graph, clusters)
                     internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
+                    print filename, internal_evaluation
 
                     # write experiment result and close evaluation file
                     row = (filename, ) + internal_evaluation
@@ -338,7 +340,6 @@ class ClusteringExperiment(object):
             if filename == 'evaluation_directory' or filename == 'evaluation_file':
                 continue
 
-            print filename, '...'
             if self.method in self.methods['graph']:
                 new_clusters, original_logs = {}, []
 
@@ -380,11 +381,12 @@ class ClusteringExperiment(object):
 
                 elif self.method == 'improved_majorclust':
                     # preprocess log file
-                    # log_type = self.configuration[self.configuration['main']['dataset']]['log_type']
-                    log_type = 'auth'
+                    log_type = self.configuration[self.configuration['main']['dataset']]['log_type']
                     preprocess = PreprocessLog(log_type, properties['log_path'])
                     if log_type == 'auth':
                         preprocess.do_preprocess()  # auth
+                    else:
+                        preprocess.preprocess()
 
                     events_unique = preprocess.events_unique
                     log_length = preprocess.loglength
@@ -404,6 +406,7 @@ class ClusteringExperiment(object):
                     # convert clustering result from graph to text
                     new_clusters = EvaluationUtility.convert_to_text(graph, clusters)
                     internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
+                    print filename, internal_evaluation
 
                     # write experiment result and close evaluation file
                     row = (filename, ) + internal_evaluation
@@ -507,7 +510,7 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
 # change the method in ClusteringExperiment() to run an experiment.
 # change the config file to change the dataset used in experiment.
 start = time()
-e = ClusteringExperiment('max_clique_weighted_sa')
+e = ClusteringExperiment('improved_majorclust')
 e.run_clustering()
 # e.run_clustering_experiment()
 
