@@ -164,6 +164,13 @@ class ImprovedMajorClust(MajorClust):
         self.clusters = {}
         super(ImprovedMajorClust, self)._get_cluster()
 
+        # if only one cluster found, then a node become a cluster
+        if len(self.clusters) == 1:
+            cluster_id = 0
+            for node in self.graph.nodes_iter(data=True):
+                self.clusters[cluster_id] = [node[0]]
+                cluster_id += 1
+
         return self.clusters
 
     def get_improved_majorclust_wo_refine(self):
