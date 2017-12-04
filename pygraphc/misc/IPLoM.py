@@ -87,7 +87,7 @@ class ParaIPLoM:
         self.removeCol = remove_col
         self.regular = regular
         self.rex = rex
-        print 'max', self.maxEventLen
+        # print 'max', self.maxEventLen
 
 
 class IPLoM:
@@ -124,8 +124,8 @@ class IPLoM:
         # for cluster in clusters:
         #    print cluster
 
-        print('this process takes', t2 - t1)
-        print('*********************************************')
+        # print('this process takes', t2 - t1)
+        # print('*********************************************')
         gc.collect()
         Event.eventId = 1
         return t2 - t1

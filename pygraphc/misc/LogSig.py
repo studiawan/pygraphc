@@ -59,10 +59,10 @@ class LogSig:
 
     # Load datasets and use regular expression to split it and remove some columns
     def termpairGene(self):
-        print('Loading Log File...')
-        print(self.para.path + self.para.logname)
-        print(self.para.regular)
-        print(self.para.groupNum)
+        # print('Loading Log File...')
+        # print(self.para.path + self.para.logname)
+        # print(self.para.regular)
+        # print(self.para.groupNum)
         with open(self.para.path + self.para.logname) as lines:
             for line in lines:
                 if self.para.regular:
@@ -77,7 +77,7 @@ class LogSig:
 
     # initialize different variables
     def initialization(self):
-        print('Generating term pairs...')
+        # print('Generating term pairs...')
         i = 0
         for wordL in self.wordLL:
             wordLT = []
@@ -88,7 +88,7 @@ class LogSig:
             self.termpairLLT.append(wordLT)
             i += 1
 
-        print('initializing...')
+        # print('initializing...')
         # termPairLogNumLD, used to account the occurance of each termpair of each group
         for i in range(self.para.groupNum):
             newDict = dict()
@@ -115,8 +115,8 @@ class LogSig:
                     self.termPairLogNumLD[currGroupIndex][key] += 1
                 j += 1
             i += 1
-        print('=======initial group division(Random Select)=====================')
-        print('Log Number of each group is: ', self.logNumPerGroup)
+        # print('=======initial group division(Random Select)=====================')
+        # print('Log Number of each group is: ', self.logNumPerGroup)
 
     # use local search, for each log, find the group that it should be moved to.
     # in this process, termpairs occurange should also make some changes and logNumber of corresponding should be changed
@@ -146,10 +146,10 @@ class LogSig:
                     self.logNumPerGroup[curGroup] -= 1
                     self.logNumPerGroup[alterGroup] += 1
                 i += 1
-        print('===================================================')
-        print(self.logNumPerGroup)
-        print self.groupIndex
-        print('===================================================')
+        # print('===================================================')
+        # print(self.logNumPerGroup)
+        # print self.groupIndex
+        # print('===================================================')
 
     # calculate the occurancy of each word of each group, and for each group, save the words that
     # happen more than half all log number to be candidateTerms(list of dict, words:frequency),
@@ -219,7 +219,7 @@ class LogSig:
             sig = max(candidateSeq[i].items(), key=operator.itemgetter(1))[0]
             # sig=max(candidateSeq[i].iteritems(), key=operator.itemgetter(1))[0]
             signature.append(sig)
-        print(signature)
+        # print(signature)
 
         # save the templates
         with open(self.para.savePath + 'logTemplates.txt', 'w') as fi:
@@ -243,8 +243,8 @@ class LogSig:
         # self.signatConstr()
         timeInterval = time.time() - t1
         self.templatetxt()
-        print('this process takes', timeInterval)
-        print('*********************************************')
+        # print('this process takes', timeInterval)
+        # print('*********************************************')
         gc.collect()
         return timeInterval
 
