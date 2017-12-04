@@ -59,6 +59,13 @@ class PreprocessLog(object):
                 parsed = grammar.parse_raslog(line)
             elif self.logtype == 'vpnlog':
                 parsed = grammar.parse_vpnlog(line)
+            elif self.logtype == 'snort_secrepo':
+                parsed = grammar.parse_snort_secrepo(line)
+            elif self.logtype == 'snort_sotm34':
+                parsed = grammar.parse_snort_sotm34(line)
+            elif self.logtype == 'httpd_error_chuvakin':
+                parsed = grammar.parse_httpd_error_chuvakin(line)
+
             parsed['message'] = parsed['message'].lower()
             logs_lower.append(parsed['message'])
             parsed_log.append(parsed)
@@ -70,6 +77,7 @@ class PreprocessLog(object):
         for l in parsed_log:
             events_list.append(l['message'])
             preprocessed_event, tfidf = self.get_tfidf(l['message'], self.loglength, logs_lower)
+            self.preprocessed_logs[index_log] = preprocessed_event
             check_events_unique = [e[1]['preprocessed_event'] for e in events_unique]
 
             # if not exist, add new element
@@ -335,10 +343,3 @@ class PreprocessLog(object):
 
         length = sqrt(length)
         return length
-
-    def remove_regex(self):
-        regexs = ['\.[0-9]*']
-        self.__read_log()
-        for line in self.logs:
-            for regex in regexs:
-                line = sub(regex, '', line)
