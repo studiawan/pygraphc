@@ -100,7 +100,8 @@ class ParallelPreprocess(object):
 
             # remove repetitive words
             for index, attr in self.event_attributes.iteritems():
-                attr['preprocessed_event'] = [y for x, y in enumerate(attr['preprocessed_event']) if x not in true_status]
+                attr['preprocessed_event'] = \
+                    [y for x, y in enumerate(attr['preprocessed_event']) if x not in true_status]
                 attr['preprocessed_event'] = ' '.join(attr['preprocessed_event'])
 
         # get unique events for networkx
