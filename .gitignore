@@ -6,3 +6,9 @@
 /dist/
 /*.egg-info
 /profile.txt
+
+/bin/
+/include/
+/lib/
+/local/
+/share/
