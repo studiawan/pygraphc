@@ -1,5 +1,4 @@
 from pyparsing import Word, alphas, Suppress, Combine, nums, string, Optional, Regex, ParseException
-import os
 
 
 class LogGrammar(object):
@@ -454,7 +453,8 @@ class LogGrammar(object):
         try:
             parsed_httpd_error_chuvakin = self.httpd_error_chuvakin_grammar.parseString(log_line)
             parsed['timestamp'] = parsed_httpd_error_chuvakin[0] + ' ' + parsed_httpd_error_chuvakin[1] + ' ' + \
-                parsed_httpd_error_chuvakin[2] + ' ' + parsed_httpd_error_chuvakin[3] + ' ' + parsed_httpd_error_chuvakin[4]
+                parsed_httpd_error_chuvakin[2] + ' ' + parsed_httpd_error_chuvakin[3] + ' ' + \
+                parsed_httpd_error_chuvakin[4]
             parsed['message_type'] = parsed_httpd_error_chuvakin[5]
             parsed['message'] = parsed_httpd_error_chuvakin[6]
 
