@@ -12,55 +12,55 @@ class ReverseVaarandi(object):
         self.log_file = log_file
         self.outlier_file = outlier_file
         self.output_file = output_file
+        self.replaced = {'[': '\[', ']': '\]', '/': '\/', '$': '\$', '"': '\"', '*': '\*'}
+        self.months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        self.line_number_file = '/tmp/line_number' + self.log_file.split('/')[-1] + '.txt'
+        self.clusters = defaultdict(list)
+        self.log_id_cluster = defaultdict(list)
+        self.cluster_index = 0
+        self.big_clusters = defaultdict(list)
 
-    def get_clusters(self):
-        # initialization
-        replaced = {'[': '\[', ']': '\]', '/': '\/', '$': '\$', '"': '\"', '*': '\*'}
-        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        clusters = defaultdict(list)
-        log_id_cluster = defaultdict(list)
-        cluster_index = 0
-        line_number_file = '/tmp/line_number' + self.log_file.split('/')[-1] + '.txt'
+    def __run_vaarandi(self):
+            # run LogCluster or SLCT
+            command = ''
+            if self.mode == 'LogCluster':
+                command = '~/Downloads/log-cluster-tool/logcluster-0.08/logcluster.pl --input=' + self.log_file + \
+                          ' --support=' + str(self.support) + ' --outliers=' + self.outlier_file + ' > ' + \
+                          self.output_file
+            elif self.mode == 'SLCT':
+                command = '~/Downloads/log-cluster-tool/slct-0.05/slct -r -o ' + self.outlier_file + \
+                          ' > ' + self.output_file + ' -s ' + str(self.support) + ' ' + self.log_file
+            system(command)
 
-        # run LogCluster or SLCT
-        command = ''
-        if self.mode == 'LogCluster':
-            command = '~/Downloads/log-cluster-tool/logcluster-0.08/logcluster.pl --input=' + self.log_file + \
-                      ' --support=' + str(self.support) + ' --outliers=' + self.outlier_file + ' > ' + self.output_file
-        elif self.mode == 'SLCT':
-            command = '~/Downloads/log-cluster-tool/slct-0.05/slct -r -o ' + self.outlier_file + \
-                      ' > ' + self.output_file + ' -s ' + str(self.support) + ' ' + self.log_file
-        system(command)
-
+    def __parse_outlier(self):
         # parse outlier results
         with open(self.outlier_file, 'r') as fi:
             outliers = fi.readlines()
 
         outliers_member = []
         for outlier in outliers:
-            for k, v in replaced.iteritems():
+            for k, v in self.replaced.iteritems():
                 outlier = outlier.replace(k, v)
 
             # get outlier line numbers
             cat = subprocess.Popen(('cat', self.log_file), stdout=subprocess.PIPE)
             grep = subprocess.Popen(('grep', '-xn', outlier), stdin=cat.stdout, stdout=subprocess.PIPE)
-            with open(line_number_file, 'w') as fi:
+            with open(self.line_number_file, 'w') as fi:
                 cut = subprocess.Popen(('cut', '-f1', '-d:'), stdin=grep.stdout, stdout=fi)
             cat.wait()
             grep.wait()
             cut.wait()
 
-            with open(line_number_file, 'r') as fi:
+            with open(self.line_number_file, 'r') as fi:
                 member_line = fi.readline()
             outliers_member.append(member_line.rstrip())
 
         # get line number id for outlier clusters
         for log_id in outliers_member:
-            log_id_cluster[int(log_id) - 1].append(cluster_index)
-            clusters[cluster_index].append(int(log_id) - 1)
+            self.log_id_cluster[int(log_id) - 1].append(self.cluster_index)
+            self.clusters[self.cluster_index].append(int(log_id) - 1)
 
-        cluster_index += 1
-
+    def __parse_cluster(self):
         # parse clustering result
         # get abstraction per line and cluster member
         with open(self.output_file, 'r') as fi:
@@ -87,7 +87,7 @@ class ReverseVaarandi(object):
                 line_splits = line.split('|')
                 if line_splits:
                     for line_split in line_splits:
-                        for month in months:
+                        for month in self.months:
                             # check day with single digit
                             if line_split.startswith(month):
                                 extract_day = line_split.split()
@@ -109,80 +109,104 @@ class ReverseVaarandi(object):
 
         # build big cluster per first pattern found (usually timestamp)
         # abstraction element: [total_split, total_all_split, total_member, abstraction_list]
-        big_clusters = defaultdict(list)
         for abstraction in abstractions:
-            big_clusters[abstraction[3]].append(abstraction)
+            self.big_clusters[abstraction[3]].append(abstraction)
 
         # sort based on frequency of words
-        for key, value in big_clusters.iteritems():
+        for key, value in self.big_clusters.iteritems():
             sorted_value = sorted(value, key=itemgetter(1, 0), reverse=True)
-            big_clusters[key] = sorted_value
+            self.big_clusters[key] = sorted_value
 
-        # get member per cluster
-        for key, values in big_clusters.iteritems():
-            for value in values:
-                commands = list()
-                commands.append(['cat', self.log_file])
-                for index, abstraction_split in enumerate(value[3:]):
-                    for k, v in replaced.iteritems():
-                        abstraction_split = abstraction_split.replace(k, v)
-                    if index == 0:
-                        commands.append(['grep', '-n', abstraction_split])
-                    else:
-                        commands.append(['grep', abstraction_split])
-                commands.append(['cut', '-f1', '-d:'])
+    def __compose_run_command(self, value, refine=False):
+        commands = list()
+        commands.append(['cat', self.log_file])
+        for index, abstraction_split in enumerate(value):
+            for k, v in self.replaced.iteritems():
+                abstraction_split = abstraction_split.replace(k, v)
+            if index == 0:
+                commands.append(['grep', '-n', abstraction_split])
+            elif index > 0 and refine is False:
+                commands.append(['grep', abstraction_split])
+            elif index > 0 and refine is True:
+                commands.append(['grep', '-w', abstraction_split])
+        commands.append(['cut', '-f1', '-d:'])
 
-                # run commands
-                total_command = len(commands)
-                popen_list = []
-                for index, command in enumerate(commands):
-                    if index == 0:
-                        popen_list.append(subprocess.Popen(command, stdout=subprocess.PIPE))
-                    elif index == total_command - 1:
-                        with open(line_number_file, 'w') as fi:
-                            popen_list.append(
-                                subprocess.Popen(command, stdin=popen_list[index - 1].stdout, stdout=fi))
-                    else:
-                        popen_list.append(
-                            subprocess.Popen(command, stdin=popen_list[index - 1].stdout, stdout=subprocess.PIPE))
+        # run commands
+        total_command = len(commands)
+        popen_list = []
+        for index, command in enumerate(commands):
+            if index == 0:
+                popen_list.append(subprocess.Popen(command, stdout=subprocess.PIPE))
+            elif index == total_command - 1:
+                with open(self.line_number_file, 'w') as fi:
+                    popen_list.append(
+                        subprocess.Popen(command, stdin=popen_list[index - 1].stdout, stdout=fi))
+            else:
+                popen_list.append(
+                    subprocess.Popen(command, stdin=popen_list[index - 1].stdout, stdout=subprocess.PIPE))
 
-                    if index > 0:
-                        popen_list[index - 1].stdout.close()
+            if index > 0:
+                popen_list[index - 1].stdout.close()
 
-                # wait for all subprocess finish
-                for p in popen_list:
-                    p.wait()
+        # wait for all subprocess finish
+        for p in popen_list:
+            p.wait()
 
-                # get cluster member
-                with open(line_number_file, 'r') as fi:
-                    member_lines = fi.readlines()
-                member_lines = [int(x) - 1 for x in member_lines]
+        return commands
 
-                # save clusters
-                for log_id in member_lines:
-                    # if not in outlier cluster (cluster[0]) and not included in another cluster
-                    if log_id not in clusters[0] and len(log_id_cluster[log_id]) == 0:
-                        log_id_cluster[log_id].append(cluster_index)
-                        clusters[cluster_index].append(int(log_id))
+    def __get_cluster_member(self):
+        # get cluster member
+        with open(self.line_number_file, 'r') as fi:
+            member_lines = fi.readlines()
+        member_lines = [int(x) - 1 for x in member_lines]
 
-                # check for total members is match or not
-                total_member = len(clusters[cluster_index])
-                if value[2] != total_member:
-                    print '[WARNING] Total member of a cluster is not match.', value[2], total_member, commands
+        # save clusters
+        for log_id in member_lines:
+            # if not in outlier cluster (cluster[0]) and not included in another cluster
+            if log_id not in self.clusters[0] and len(self.log_id_cluster[log_id]) == 0:
+                self.log_id_cluster[log_id].append(self.cluster_index)
+                self.clusters[self.cluster_index].append(int(log_id))
 
-                cluster_index += 1
-
+    def __write_to_file(self):
         # read logs
         with open(self.log_file, 'r') as f:
             original_logs = f.readlines()
 
-        OutputText.percluster_with_logid('/home/hudan/Desktop/results.log', clusters, original_logs)
-        return clusters
+        OutputText.percluster_with_logid('/home/hudan/Desktop/results.log', self.clusters, original_logs)
+
+    def get_clusters(self):
+        self.__run_vaarandi()
+        self.__parse_outlier()
+        self.__parse_cluster()
+        self.cluster_index += 1
+
+        # get member per cluster
+        for key, values in self.big_clusters.iteritems():
+            for value in values:
+                commands = self.__compose_run_command(value[3:])
+                self.__get_cluster_member()
+
+                # check for total members is match or not
+                total_member = len(self.clusters[self.cluster_index])
+                if value[2] != total_member:
+                    print '[WARNING] Total member of a cluster is not match.', value[2], total_member, commands
+                    commands = self.__compose_run_command(' '.join(value[3:]).split(), True)
+                    print commands
+                    self.__get_cluster_member()
+
+                    total_member = len(self.clusters[self.cluster_index])
+                    print '[AFTER CHECK]', value[2], total_member
+                    print '-----'
+
+                self.cluster_index += 1
+
+        self.__write_to_file()
+        return self.clusters
 
 
 # xmode = 'LogCluster'
 # xsupport = 10
-# xlog_file = '/home/hudan/Git/datasets/SecRepo/perday/dec-16.log'
+# xlog_file = '/home/hudan/Git/datasets/SecRepo/perday/nov-30.log'
 # xoutlier_file = '/home/hudan/Desktop/outlier.log'
 # xoutput_file = '/home/hudan/Desktop/output.log'
 #
