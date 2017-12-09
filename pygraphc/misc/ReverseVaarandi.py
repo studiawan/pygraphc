@@ -1,6 +1,8 @@
 from os import system
 from operator import itemgetter
+from collections import defaultdict
 import subprocess
+from pygraphc.output.OutputText import OutputText
 
 
 class ReverseVaarandi(object):
@@ -15,8 +17,10 @@ class ReverseVaarandi(object):
         # initialization
         replaced = {'[': '\[', ']': '\]', '/': '\/', '$': '\$', '"': '\"', '*': '\*'}
         months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        clusters = {}
+        clusters = defaultdict(list)
+        log_id_cluster = defaultdict(list)
         cluster_index = 0
+        line_number_file = '/tmp/line_number' + self.log_file.split('/')[-1] + '.txt'
 
         # run LogCluster or SLCT
         command = ''
@@ -40,18 +44,21 @@ class ReverseVaarandi(object):
             # get outlier line numbers
             cat = subprocess.Popen(('cat', self.log_file), stdout=subprocess.PIPE)
             grep = subprocess.Popen(('grep', '-xn', outlier), stdin=cat.stdout, stdout=subprocess.PIPE)
-            with open('/tmp/line_number.txt', 'w') as fi:
+            with open(line_number_file, 'w') as fi:
                 cut = subprocess.Popen(('cut', '-f1', '-d:'), stdin=grep.stdout, stdout=fi)
             cat.wait()
             grep.wait()
             cut.wait()
 
-            with open('/tmp/line_number.txt', 'r') as fi:
+            with open(line_number_file, 'r') as fi:
                 member_line = fi.readline()
             outliers_member.append(member_line.rstrip())
 
         # get line number id for outlier clusters
-        clusters[cluster_index] = [int(x) - 1 for x in outliers_member]
+        for log_id in outliers_member:
+            log_id_cluster[int(log_id) - 1].append(cluster_index)
+            clusters[cluster_index].append(int(log_id) - 1)
+
         cluster_index += 1
 
         # parse clustering result
@@ -60,13 +67,19 @@ class ReverseVaarandi(object):
             lines = fi.readlines()
 
         abstractions = []
+        line_splits = []
         for line in lines:
             if line.startswith('Support:'):
-                # abstraction element: [total_split, total_member, abstraction_list]
+                # abstraction element: [total_split, total_all_split, total_member, abstraction_list]
+                # get all splits of line_splits
+                all_splits_length = 0
+                for ls in line_splits:
+                    all_splits_length += len(ls.split())
+
                 total_member = int(line.split(': ')[1])
-                # line_splits = []      # do not add this line
                 line_splits.insert(0, total_member)
-                line_splits.insert(0, len(line_splits) - 1)
+                line_splits.insert(0, all_splits_length)
+                line_splits.insert(0, len(line_splits) - 2)
                 abstractions.append(line_splits)
 
             else:
@@ -95,18 +108,14 @@ class ReverseVaarandi(object):
                             line_splits.remove(line_split)
 
         # build big cluster per first pattern found (usually timestamp)
-        # abstraction element: [total_split, total_member, abstraction_list]
-        big_clusters = {}
+        # abstraction element: [total_split, total_all_split, total_member, abstraction_list]
+        big_clusters = defaultdict(list)
         for abstraction in abstractions:
-            if abstraction[2] not in big_clusters.keys():
-                big_clusters[abstraction[2]] = []
-                big_clusters[abstraction[2]].append(abstraction)
-            else:
-                big_clusters[abstraction[2]].append(abstraction)
+            big_clusters[abstraction[3]].append(abstraction)
 
-        # sort based on frequency
+        # sort based on frequency of words
         for key, value in big_clusters.iteritems():
-            sorted_value = sorted(value, key=itemgetter(0), reverse=True)
+            sorted_value = sorted(value, key=itemgetter(1, 0), reverse=True)
             big_clusters[key] = sorted_value
 
         # get member per cluster
@@ -114,7 +123,7 @@ class ReverseVaarandi(object):
             for value in values:
                 commands = list()
                 commands.append(['cat', self.log_file])
-                for index, abstraction_split in enumerate(value[2:]):
+                for index, abstraction_split in enumerate(value[3:]):
                     for k, v in replaced.iteritems():
                         abstraction_split = abstraction_split.replace(k, v)
                     if index == 0:
@@ -130,7 +139,7 @@ class ReverseVaarandi(object):
                     if index == 0:
                         popen_list.append(subprocess.Popen(command, stdout=subprocess.PIPE))
                     elif index == total_command - 1:
-                        with open('/tmp/line_number.txt', 'w') as fi:
+                        with open(line_number_file, 'w') as fi:
                             popen_list.append(
                                 subprocess.Popen(command, stdin=popen_list[index - 1].stdout, stdout=fi))
                     else:
@@ -145,21 +154,38 @@ class ReverseVaarandi(object):
                     p.wait()
 
                 # get cluster member
-                with open('/tmp/line_number.txt', 'r') as fi:
+                with open(line_number_file, 'r') as fi:
                     member_lines = fi.readlines()
                 member_lines = [int(x) - 1 for x in member_lines]
-                total_member = len(member_lines)
-
-                # check for members in other clusters
-                if value[1] != total_member:
-                    for index, cluster in clusters.iteritems():
-                        member_lines = list(set(member_lines) - set(cluster))
-                    total_member = len(member_lines)
-                    if value[1] != total_member:
-                        print 'After evaluation', value[1], total_member, commands
 
                 # save clusters
-                clusters[cluster_index] = member_lines
+                for log_id in member_lines:
+                    # if not in outlier cluster (cluster[0]) and not included in another cluster
+                    if log_id not in clusters[0] and len(log_id_cluster[log_id]) == 0:
+                        log_id_cluster[log_id].append(cluster_index)
+                        clusters[cluster_index].append(int(log_id))
+
+                # check for total members is match or not
+                total_member = len(clusters[cluster_index])
+                if value[2] != total_member:
+                    print '[WARNING] Total member of a cluster is not match.', value[2], total_member, commands
+
                 cluster_index += 1
 
+        # read logs
+        with open(self.log_file, 'r') as f:
+            original_logs = f.readlines()
+
+        OutputText.percluster_with_logid('/home/hudan/Desktop/results.log', clusters, original_logs)
         return clusters
+
+
+# xmode = 'LogCluster'
+# xsupport = 10
+# xlog_file = '/home/hudan/Git/datasets/SecRepo/perday/dec-16.log'
+# xoutlier_file = '/home/hudan/Desktop/outlier.log'
+# xoutput_file = '/home/hudan/Desktop/output.log'
+#
+# rv = ReverseVaarandi(xmode, xsupport, xlog_file, xoutlier_file, xoutput_file)
+# xclusters = rv.get_clusters()
+# print xclusters
