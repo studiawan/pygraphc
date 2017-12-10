@@ -5,6 +5,7 @@ import csv
 import multiprocessing
 import multiprocessing.pool
 from time import time
+from operator import itemgetter
 from ConfigParser import SafeConfigParser
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.preprocess.ParallelPreprocess import ParallelPreprocess
@@ -109,7 +110,6 @@ class ClusteringExperiment(object):
             xb = XieBeniIndex(new_clusters, preprocessed_logs, log_length)
             internal_evaluation.append(xb.get_xie_beni())
 
-        # print internal_evaluation
         return tuple(internal_evaluation)
 
     @staticmethod
@@ -128,7 +128,6 @@ class ClusteringExperiment(object):
         row = ()
 
         if filename != 'evaluation_directory' and filename != 'evaluation_file':
-            # print filename, '...'
             if self.method in self.methods['graph']:
                 new_clusters, original_logs = {}, []
 
@@ -216,20 +215,28 @@ class ClusteringExperiment(object):
                 if self.method == 'LogCluster' or self.method == 'SLCT':
                     # initialization of parameters
                     mode = self.method
-                    support = 100
+                    supports = range(10, 110, 10)
                     log_file = self.files[filename]['log_path']
                     outlier_file = self.files[filename]['outlier_path']
                     output_file = self.files[filename]['output_path']
-
-                    # run LogCluster clustering
-                    lc = ReverseVaarandi(mode, support, log_file, outlier_file, output_file)
-                    clusters = lc.get_clusters()
+                    evaluation_results = []
 
                     # preprocess logs for evaluation
                     pp = ParallelPreprocess(log_file, False)
                     pp.get_unique_events()
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
+
+                    # run LogCluster clustering
+                    for support in supports:
+                        lc = ReverseVaarandi(mode, support, log_file, outlier_file, output_file)
+                        clusters = lc.get_clusters()
+                        evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
+                        evaluation_results.append([evaluation[0], clusters])
+
+                    # choose the best evaluation
+                    sorted_value = sorted(evaluation_results, key=itemgetter(0), reverse=True)
+                    clusters = sorted_value[0][1]
 
                 elif self.method == 'IPLoM':
                     # set path
@@ -518,9 +525,9 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
 # change the method in ClusteringExperiment() to run an experiment.
 # change the config file to change the dataset used in experiment.
 start = time()
-e = ClusteringExperiment('LogSig')
-e.run_clustering()
-# e.run_clustering_experiment()
+e = ClusteringExperiment('LogCluster')
+# e.run_clustering()
+e.run_clustering_experiment()
 
 # print runtime
 duration = time() - start
