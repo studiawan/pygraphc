@@ -2,7 +2,6 @@ from os import system
 from operator import itemgetter
 from collections import defaultdict
 import subprocess
-from pygraphc.output.OutputText import OutputText
 
 
 class ReverseVaarandi(object):
@@ -167,13 +166,6 @@ class ReverseVaarandi(object):
                 self.log_id_cluster[log_id].append(self.cluster_index)
                 self.clusters[self.cluster_index].append(int(log_id))
 
-    def __write_to_file(self):
-        # read logs
-        with open(self.log_file, 'r') as f:
-            original_logs = f.readlines()
-
-        OutputText.percluster_with_logid('/home/hudan/Desktop/results.log', self.clusters, original_logs)
-
     def get_clusters(self):
         self.__run_vaarandi()
         self.__parse_outlier()
@@ -191,25 +183,11 @@ class ReverseVaarandi(object):
                 if value[2] != total_member:
                     print '[WARNING] Total member of a cluster is not match.', value[2], total_member, commands
                     commands = self.__compose_run_command(' '.join(value[3:]).split(), True)
-                    print commands
                     self.__get_cluster_member()
 
                     total_member = len(self.clusters[self.cluster_index])
-                    print '[AFTER CHECK]', value[2], total_member
-                    print '-----'
+                    print '[AFTER REFINEMENT]', value[2], total_member, commands
 
                 self.cluster_index += 1
 
-        self.__write_to_file()
         return self.clusters
-
-
-# xmode = 'LogCluster'
-# xsupport = 10
-# xlog_file = '/home/hudan/Git/datasets/SecRepo/perday/nov-30.log'
-# xoutlier_file = '/home/hudan/Desktop/outlier.log'
-# xoutput_file = '/home/hudan/Desktop/output.log'
-#
-# rv = ReverseVaarandi(xmode, xsupport, xlog_file, xoutlier_file, xoutput_file)
-# xclusters = rv.get_clusters()
-# print xclusters
