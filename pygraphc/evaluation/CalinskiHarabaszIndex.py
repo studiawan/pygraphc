@@ -1,4 +1,5 @@
 from __future__ import division
+from orderedset import OrderedSet
 from pygraphc.similarity.CosineSimilarity import CosineSimilarity
 
 
@@ -17,12 +18,20 @@ class CalinskiHarabaszIndex(object):
         # centroid for a particular cluster
         if cluster:
             for log_id in cluster:
-                centroid = centroid + ' ' + self.preprocessed_logs[log_id]
+                if centroid == '':
+                    centroid = self.preprocessed_logs[log_id]
+                else:
+                    centroid = ' '.join([centroid, self.preprocessed_logs[log_id]])
         # centroid for the whole logs
         else:
             for log_id in self.preprocessed_logs:
-                centroid = ' '.join([centroid, self.preprocessed_logs[log_id]])
+                if centroid == '':
+                    centroid = self.preprocessed_logs[log_id]
+                else:
+                    centroid = ' '.join([centroid, self.preprocessed_logs[log_id]])
 
+        centroid = OrderedSet(centroid.split())
+        centroid = ' '.join(list(centroid))
         return centroid
 
     def __get_all_cluster_properties(self):
@@ -33,11 +42,14 @@ class CalinskiHarabaszIndex(object):
 
     def __get_distance(self, source, dest):
         # get cosine similarity as distance
-        cs = CosineSimilarity()
-        distance = cs.get_cosine_similarity(source, dest)
+        if source == dest:
+            distance = 0.1
+        else:
+            cs = CosineSimilarity()
+            distance = 1 - cs.get_cosine_similarity(source, dest)
         self.distance_buffer[(source, dest)] = distance
 
-        return distance
+        return round(distance, 3)
 
     def __check_distance(self, checked_pair):
         # check distance is exist or not
@@ -61,7 +73,7 @@ class CalinskiHarabaszIndex(object):
             traces_b.append(trace_b)
 
         total_trace_b = sum(traces_b)
-        return total_trace_b
+        return round(total_trace_b, 3)
 
     def __get_trace_w(self):
         # get trace W
@@ -78,7 +90,7 @@ class CalinskiHarabaszIndex(object):
             traces_w.append(sum(trace_w_cluster))
 
         total_traces_w = sum(traces_w)
-        return total_traces_w
+        return round(total_traces_w, 3)
 
     def get_calinski_harabasz(self):
         # get Calinski-Harbasz index
@@ -91,4 +103,4 @@ class CalinskiHarabaszIndex(object):
         except ZeroDivisionError:
             ch_index = 0.
 
-        return ch_index
+        return round(ch_index, 3)
