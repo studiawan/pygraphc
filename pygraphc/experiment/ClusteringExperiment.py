@@ -376,6 +376,7 @@ class ClusteringExperiment(object):
                     # convert clustering result from graph to text
                     new_clusters = EvaluationUtility.convert_to_text(graph, maxc_sa_cluster)
                     internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
+                    print filename, internal_evaluation
 
                     # write experiment result and close evaluation file
                     row = (filename, ) + internal_evaluation + (best_parameter['k'], best_parameter['I'])
