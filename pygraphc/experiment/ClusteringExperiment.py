@@ -259,24 +259,37 @@ class ClusteringExperiment(object):
                     original_logs = pp.logs
 
                 elif self.method == 'LogSig':
-                    # set path
-                    dataset = self.configuration['main']['dataset']
-                    dataset_path = self.configuration[dataset]['path']
-                    para = Para(path=dataset_path + '/', logname=filename,
-                                savePath=self.configuration['experiment_result_path']['result_path'],
-                                groupNum=3)  # check again about groupNum parameter
-
-                    # run LogSig clustering
-                    ls = LogSig(para)
-                    ls.mainProcess()
-                    clusters = ls.get_clusters()
-
                     # preprocess logs for evaluation
                     pp = ParallelPreprocess(properties['log_path'], False)
                     pp.get_unique_events()
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
                     original_logs = pp.logs
+
+                    # set path
+                    dataset = self.configuration['main']['dataset']
+                    dataset_path = self.configuration[dataset]['path']
+                    group_nums = range(2, 11, 1)
+                    evaluation_results = []
+
+                    for group_num in group_nums:
+                        para = Para(path=dataset_path + '/', logname=filename,
+                                    savePath=self.configuration['experiment_result_path']['result_path'],
+                                    groupNum=group_num)  # check again about groupNum parameter
+
+                        # run LogSig clustering
+                        ls = LogSig(para)
+                        ls.mainProcess()
+                        clusters = ls.get_clusters()
+
+                        # get evaluation
+                        evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
+                        evaluation_results.append([evaluation[0], clusters])
+                        print evaluation
+
+                    # choose the best evaluation
+                    sorted_value = sorted(evaluation_results, key=itemgetter(0), reverse=True)
+                    clusters = sorted_value[0][1]
 
                 # get internal evaluation
                 internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
@@ -534,7 +547,7 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
 # change the method in ClusteringExperiment() to run an experiment.
 # change the config file to change the dataset used in experiment.
 start = time()
-e = ClusteringExperiment('LogCluster')
+e = ClusteringExperiment('LogSig')
 e.run_clustering()
 # e.run_clustering_experiment()
 
