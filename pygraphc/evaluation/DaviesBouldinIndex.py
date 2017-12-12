@@ -127,7 +127,8 @@ class DaviesBouldinIndex(object):
 
     def get_davies_bouldin(self):
         # get Davies-Bouldin index
-        if len(self.clusters) > 0:
+        # print 'cluster length', len(self.clusters)
+        if len(self.clusters) not in [0, 1]:
             self.__get_all_cluster_properties()
             r = self.__get_r()
             try:
