@@ -28,8 +28,9 @@ class ReverseVaarandi(object):
                           self.output_file
             elif self.mode == 'SLCT':
                 command = '/home/hudan/Downloads/log-cluster-tool/slct-0.05/slct -r -o ' + self.outlier_file + \
-                          ' > ' + self.output_file + ' -s ' + str(self.support) + ' ' + self.log_file
+                          ' -s ' + str(self.support) + ' ' + self.log_file + ' > ' + self.output_file
             system(command)
+            # print command
 
     def __parse_outlier(self):
         # parse outlier results
@@ -56,8 +57,10 @@ class ReverseVaarandi(object):
 
         # get line number id for outlier clusters
         for log_id in outliers_member:
-            self.log_id_cluster[int(log_id) - 1].append(self.cluster_index)
-            self.clusters[self.cluster_index].append(int(log_id) - 1)
+            # print log_id
+            if log_id != '':
+                self.log_id_cluster[int(log_id) - 1].append(self.cluster_index)
+                self.clusters[self.cluster_index].append(int(log_id) - 1)
 
     def __parse_cluster(self):
         # parse clustering result
