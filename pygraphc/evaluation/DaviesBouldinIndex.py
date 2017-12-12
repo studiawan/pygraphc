@@ -127,11 +127,14 @@ class DaviesBouldinIndex(object):
 
     def get_davies_bouldin(self):
         # get Davies-Bouldin index
-        self.__get_all_cluster_properties()
-        r = self.__get_r()
-        try:
-            db_index = 1 / self.total_cluster * sum(r.values())
-        except ZeroDivisionError:
+        if len(self.clusters) > 0:
+            self.__get_all_cluster_properties()
+            r = self.__get_r()
+            try:
+                db_index = 1 / self.total_cluster * sum(r.values())
+            except ZeroDivisionError:
+                db_index = 0.
+        else:
             db_index = 0.
 
         return round(db_index, 3)
