@@ -20,6 +20,7 @@ from pygraphc.evaluation.XieBeniIndex import XieBeniIndex
 from pygraphc.misc.ReverseVaarandi import ReverseVaarandi
 from pygraphc.misc.IPLoM import ParaIPLoM, IPLoM
 from pygraphc.misc.LogSig import Para, LogSig
+from pygraphc.misc.LKE import ParaLKE, LKE
 from pygraphc.output.OutputText import OutputText
 
 
@@ -291,6 +292,25 @@ class ClusteringExperiment(object):
                     sorted_value = sorted(evaluation_results, key=itemgetter(0), reverse=True)
                     clusters = sorted_value[0][1]
 
+                elif self.method == 'LKE':
+                    # set path
+                    dataset = self.configuration['main']['dataset']
+                    dataset_path = self.configuration[dataset]['path']
+                    para = ParaLKE(path=dataset_path + '/', logname=filename, threshold2=5,
+                                   save_path=self.configuration['experiment_result_path']['result_path'])
+
+                    # run LKE clustering
+                    lke = LKE(para)
+                    lke.main_process()
+                    clusters = lke.get_clusters()
+
+                    # preprocess logs for evaluation
+                    pp = ParallelPreprocess(properties['log_path'], False)
+                    pp.get_unique_events()
+                    preprocessed_logs = pp.preprocessed_logs
+                    log_length = pp.log_length
+                    original_logs = pp.logs
+
                 # get internal evaluation
                 internal_evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
                 row = (filename, ) + internal_evaluation
@@ -497,7 +517,7 @@ class ClusteringExperiment(object):
                     dataset = self.configuration['main']['dataset']
                     dataset_path = self.configuration[dataset]['path']
                     para = Para(path=dataset_path + '/', logname=filename,
-                                savePath=self.configuration['experiment_result_path']['path'],
+                                savePath=self.configuration['experiment_result_path']['result_path'],
                                 groupNum=3)     # check again about groupNum parameter
 
                     # run LogSig clustering
@@ -506,7 +526,26 @@ class ClusteringExperiment(object):
                     clusters = ls.get_clusters()
 
                     # preprocess logs for evaluation
-                    pp = ParallelPreprocess(filename, False)
+                    pp = ParallelPreprocess(properties['log_path'], False)
+                    pp.get_unique_events()
+                    preprocessed_logs = pp.preprocessed_logs
+                    log_length = pp.log_length
+                    original_logs = pp.logs
+
+                elif self.method == 'LKE':
+                    # set path
+                    dataset = self.configuration['main']['dataset']
+                    dataset_path = self.configuration[dataset]['path']
+                    para = ParaLKE(path=dataset_path + '/', logname=filename, threshold2=5,
+                                   save_path=self.configuration['experiment_result_path']['result_path'])
+
+                    # run LKE clustering
+                    lke = LKE(para)
+                    lke.main_process()
+                    clusters = lke.get_clusters()
+
+                    # preprocess logs for evaluation
+                    pp = ParallelPreprocess(properties['log_path'], False)
                     pp.get_unique_events()
                     preprocessed_logs = pp.preprocessed_logs
                     log_length = pp.log_length
@@ -548,7 +587,7 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
 # change the method in ClusteringExperiment() to run an experiment.
 # change the config file to change the dataset used in experiment.
 start = time()
-e = ClusteringExperiment('LogSig')
+e = ClusteringExperiment('LKE')
 e.run_clustering()
 # e.run_clustering_experiment()
 
