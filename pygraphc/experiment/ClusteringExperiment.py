@@ -285,7 +285,7 @@ class ClusteringExperiment(object):
                         # get evaluation
                         evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
                         evaluation_results.append([evaluation[0], clusters])
-                        print evaluation
+                        print filename, group_num, evaluation
 
                     # choose the best evaluation
                     sorted_value = sorted(evaluation_results, key=itemgetter(0), reverse=True)
@@ -463,6 +463,7 @@ class ClusteringExperiment(object):
 
                     # run LogCluster clustering
                     for support in supports:
+                        print filename, support
                         lc = ReverseVaarandi(mode, support, log_file, outlier_file, output_file)
                         clusters = lc.get_clusters()
                         evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
