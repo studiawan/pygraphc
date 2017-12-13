@@ -20,9 +20,9 @@ import os
 import sys
 
 
-class Para:
+class ParaLKE:
     def __init__(self, path='', data_name='', logname='', removable=True,
-                 remove_col=[], threshold2=5, regular=True, rex=['core\.[0-9]*'],
+                 remove_col=[], threshold2=5, regular=True, rex=[],
                  save_path='', save_filename=''):
         self.path = path
         self.logname = logname
@@ -52,9 +52,10 @@ class LKE:
         self.logs = []
 
     def para_erasing(self):
-        print('Loading log files and split into words lists...')
-        print('threshold2 is:', self.para.threshold2)
-        print(self.para.path + self.para.dataName + '/' + self.para.logname)
+        # print('Loading log files and split into words lists...')
+        # print('threshold2 is:', self.para.threshold2)
+        # print(self.para.path + self.para.dataName + '/' + self.para.logname)
+        print('Processing ' + self.para.logname)
         with open(self.para.path + self.para.dataName + '/' + self.para.logname) as lines:
             for line in lines:
                 self.logs.append(line)
@@ -77,25 +78,25 @@ class LKE:
     def clustering(self, t1):
         sys.setrecursionlimit(100000000)  # set the recursion limits number
         v = math.floor(sum(self.wordLen) / len(self.wordLen))
-        print('the parameter v is: %d' % v)
+        # print('the parameter v is: %d' % v)
         log_num = len(self.wordLen)
-        print('there are about %d loglines' % log_num)
+        # print('there are about %d loglines' % log_num)
         load_data_time = 0
         cal_data_time = 0
         # In order to save time, load distArraydata, if exist, do not calculate the edit distance again:
         if os.path.exists(self.para.savePath + self.para.dataName + 'editDistance.csv'):
-            print('Loading data instead of calculating..')
+            # print('Loading data instead of calculating..')
             dist_mat = genfromtxt(self.para.savePath + self.para.dataName + 'editDistance.csv', delimiter=',')
             dist_list = genfromtxt(self.para.savePath + self.para.dataName + 'distArray.csv', delimiter=',')
             load_data_time = time.time() - t1
         else:
-            print('calculating distance....')
+            # print('calculating distance....')
             path = self.para.savePath + self.para.dataName
             dist_mat, dist_list = cal_distance(self.wordLL, v, path)
             cal_data_time = time.time() - t1
         dist_array = array(dist_list)
         threshold1 = getk_means_threshold(dist_array)
-        print('the threshold1 is: %s' % threshold1)
+        # print('the threshold1 is: %s' % threshold1)
 
         # connect two loglines with distance < threshold, log_dict is a dictionary
         # where the key is line num while
@@ -119,17 +120,17 @@ class LKE:
             self.loglinesOfGroups.append(group_loglist)
             self.loglineNumPerGroup.append(len(group_loglist))
 
-        print('================get the initial groups splitting=============')
+        # print('================get the initial groups splitting=============')
         word_len_array = array(self.wordLen)
         for row in self.loglinesOfGroups:
-            print row
+            # print row
             each_line_log_list = []
             self.wordLenPerGroup.append(max(word_len_array[row]))
             for colu in row:
                 each_line_log_list.append(self.wordLL[colu])
             self.groups.append(each_line_log_list)
-        print('========================================================================')
-        print('there are %s groups' % (len(self.wordLenPerGroup)))
+        # print('========================================================================')
+        # print('there are %s groups' % (len(self.wordLenPerGroup)))
         return load_data_time, cal_data_time
 
     def print_each_cluster(self):
@@ -205,14 +206,14 @@ class LKE:
         t1 = time.time()
         load_data_time, cal_data_time = self.clustering(t1)
         # self.print_each_cluster()
-        clusters = self.get_clusters()
-        print clusters
+        # self.get_clusters()
+        # print clusters
         # self.splitting()
         # self.extracting()
         time_interval = time.time() - t1
         # self.templatetxt()
-        print('this process takes', time_interval)
-        print('*********************************************')
+        # print('this process takes', time_interval)
+        # print('*********************************************')
         return load_data_time, cal_data_time, time_interval
 
 
@@ -452,7 +453,7 @@ def dfs_traversal(key, log_dict, flag, group_loglist):
 
 # k-means where k equals 2 to divide the edit distance into two groups
 def getk_means_threshold(dist_array):
-    print('kMeans calculation...')
+    # print('kMeans calculation...')
     dist_array_size = len(dist_array)
     # random choose two centroids
     min_value = min(dist_array)
