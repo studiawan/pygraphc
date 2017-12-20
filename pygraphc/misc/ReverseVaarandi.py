@@ -20,17 +20,17 @@ class ReverseVaarandi(object):
         self.big_clusters = defaultdict(list)
 
     def __run_vaarandi(self):
-            # run LogCluster or SLCT
-            command = ''
-            if self.mode == 'LogCluster':
-                command = '/home/hudan/Downloads/log-cluster-tool/logcluster-0.08/logcluster.pl --input=' + self.log_file + \
-                          ' --support=' + str(self.support) + ' --outliers=' + self.outlier_file + ' > ' + \
-                          self.output_file
-            elif self.mode == 'SLCT':
-                command = '/home/hudan/Downloads/log-cluster-tool/slct-0.05/slct -r -o ' + self.outlier_file + \
-                          ' -s ' + str(self.support) + ' ' + self.log_file + ' > ' + self.output_file
-            system(command)
-            # print command
+        # run LogCluster or SLCT
+        command = ''
+        if self.mode == 'LogCluster':
+            command = '/home/hudan/Downloads/log-cluster-tool/logcluster-0.08/logcluster.pl --input=' + \
+                      self.log_file + ' --support=' + str(self.support) + ' --outliers=' + \
+                      self.outlier_file + ' > ' + self.output_file
+        elif self.mode == 'SLCT':
+            command = '/home/hudan/Downloads/log-cluster-tool/slct-0.05/slct -r -o ' + self.outlier_file + \
+                      ' -s ' + str(self.support) + ' ' + self.log_file + ' > ' + self.output_file
+        system(command)
+        # print command
 
     def __parse_outlier(self):
         # parse outlier results
@@ -184,12 +184,12 @@ class ReverseVaarandi(object):
                 # check for total members is match or not
                 total_member = len(self.clusters[self.cluster_index])
                 if value[2] != total_member:
-                    print '[WARNING] Total member of a cluster is not match.', value[2], total_member
+                    print '[WARNING] Total member of a cluster is not match.', value[2], total_member, commands
                     commands = self.__compose_run_command(' '.join(value[3:]).split(), True)
                     self.__get_cluster_member()
 
                     total_member = len(self.clusters[self.cluster_index])
-                    print '[AFTER REFINEMENT]', value[2], total_member
+                    print '[AFTER REFINEMENT]', value[2], total_member, commands
 
                 self.cluster_index += 1
 

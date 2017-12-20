@@ -18,9 +18,7 @@ class ReverseVaarandi(object):
         self.months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         self.line_number_file = '/tmp/line_number' + self.log_file.split('/')[-1] + '.txt'
         self.clusters = defaultdict(list)
-        self.log_id_cluster = defaultdict(list)
         self.cluster_index = 0
-        self.big_clusters = defaultdict(list)
 
     def __run_vaarandi(self):
         # run LogCluster or SLCT
@@ -30,7 +28,7 @@ class ReverseVaarandi(object):
                       self.log_file + ' --support=' + str(self.support) + ' --outliers=' + \
                       self.outlier_file + ' > ' + self.output_file
         elif self.mode == 'SLCT':
-            command = '/home/hudan/Downloads/log-cluster-tool/slct-0.05/slct -r -o ' + self.outlier_file + \
+            command = '/home/hudan/Desktop/slct-0.05/slct -r -o ' + self.outlier_file + \
                       ' -s ' + str(self.support) + ' ' + self.log_file + ' > ' + self.output_file
         system(command)
 
@@ -65,8 +63,27 @@ class ReverseVaarandi(object):
 
         return remove_id
 
+    def __parse_abstraction(self):
+        # get abstraction per line and cluster member
+        with open(self.output_file, 'r') as fi:
+            lines = fi.readlines()
+
+        abstractions = {}
+        abstraction = ''
+        for line in lines:
+            if line.startswith('Support:'):
+                total_member = int(line.split(': ')[1])
+                abstractions[abstraction] = total_member
+            elif line == '':
+                continue
+            else:
+                abstraction = line
+
+        return abstractions
+
     def __match_templog(self, templates, logs, remove_id):
         # match the templates with Logs
+        # templates == abstractions
         temp_num = len(templates)
         log_num = len(logs)
         log_label = -1 * ones((log_num, 1))
@@ -107,10 +124,8 @@ class ReverseVaarandi(object):
                 logs.append(line)
 
         # read the templates
-        templates = []
-        with open(self.output_file) as tl:
-            for line in tl:
-                templates.append(line)
+        abstrations = self.__parse_abstraction()
+        templates = abstrations.keys()
         temp_num = len(templates)
 
         # initialize the groups for outlier and templates
@@ -133,12 +148,8 @@ class ReverseVaarandi(object):
             cluster_id += 1
 
     def get_cluster(self):
-        # self.__run_vaarandi()
+        self.__run_vaarandi()
         self.__template_processing()
 
+        return self.clusters
 
-lf = '/home/hudan/Desktop/slct-0.05/nov-30.log'
-outlierf = '/home/hudan/Desktop/slct-0.05/outliers.log'
-outputf = '/home/hudan/Desktop/slct-0.05/templates.txt'
-rv = ReverseVaarandi('SLCT', 10, lf, outlierf, outputf)
-rv.get_cluster()
