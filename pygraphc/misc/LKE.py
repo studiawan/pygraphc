@@ -84,16 +84,17 @@ class LKE:
         load_data_time = 0
         cal_data_time = 0
         # In order to save time, load distArraydata, if exist, do not calculate the edit distance again:
-        if os.path.exists(self.para.savePath + self.para.dataName + 'editDistance.csv'):
-            # print('Loading data instead of calculating..')
-            dist_mat = genfromtxt(self.para.savePath + self.para.dataName + 'editDistance.csv', delimiter=',')
-            dist_list = genfromtxt(self.para.savePath + self.para.dataName + 'distArray.csv', delimiter=',')
-            load_data_time = time.time() - t1
-        else:
-            # print('calculating distance....')
-            path = self.para.savePath + self.para.dataName
-            dist_mat, dist_list = cal_distance(self.wordLL, v, path)
-            cal_data_time = time.time() - t1
+        # if os.path.exists(self.para.savePath + self.para.dataName + 'editDistance.csv'):
+        #     print('Loading data instead of calculating..')
+        #     print self.para.savePath + self.para.dataName + 'editDistance.csv'
+        #     dist_mat = genfromtxt(self.para.savePath + self.para.dataName + 'editDistance.csv', delimiter=',')
+        #     dist_list = genfromtxt(self.para.savePath + self.para.dataName + 'distArray.csv', delimiter=',')
+        #     load_data_time = time.time() - t1
+        # else:
+        #     print('calculating distance....')
+        path = self.para.savePath + self.para.dataName
+        dist_mat, dist_list = cal_distance(self.wordLL, v, path)
+        cal_data_time = time.time() - t1
         dist_array = array(dist_list)
         threshold1 = getk_means_threshold(dist_array)
         # print('the threshold1 is: %s' % threshold1)
@@ -484,7 +485,7 @@ def getk_means_threshold(dist_array):
 
 # calculate the distance betweent each two logs and save into a matrix
 def cal_distance(word_ll, v, path):
-    print('calculate distance between every two logs...')
+    # print('calculate distance between every two logs...')
     log_num = len(word_ll)
     dist_list = []
     dist_mat = zeros((log_num, log_num))
