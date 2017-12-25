@@ -55,7 +55,7 @@ class LKE:
         # print('Loading log files and split into words lists...')
         # print('threshold2 is:', self.para.threshold2)
         # print(self.para.path + self.para.dataName + '/' + self.para.logname)
-        print('Processing ' + self.para.logname)
+        # print('Processing ' + self.para.logname)
         with open(self.para.path + self.para.dataName + '/' + self.para.logname) as lines:
             for line in lines:
                 self.logs.append(line)
