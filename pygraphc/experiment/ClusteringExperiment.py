@@ -12,7 +12,7 @@ from pygraphc.preprocess.ParallelPreprocess import ParallelPreprocess
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
 from pygraphc.preprocess.CreateGraph import CreateGraph
 from pygraphc.clustering.MaxCliquesPercolationSA import MaxCliquesPercolationSA
-from pygraphc.clustering.MajorClust import ImprovedMajorClust
+from pygraphc.clustering.MajorClust import MajorClust, ImprovedMajorClust
 from pygraphc.evaluation.EvaluationUtility import EvaluationUtility
 from pygraphc.evaluation.CalinskiHarabaszIndex import CalinskiHarabaszIndex
 from pygraphc.evaluation.DaviesBouldinIndex import DaviesBouldinIndex
@@ -173,6 +173,39 @@ class ClusteringExperiment(object):
                     row = (filename, ) + internal_evaluation + (best_parameter['k'], best_parameter['I'])
                     graph.clear()
 
+                elif self.method == 'majorclust':
+                    # preprocess log file
+                    log_type = self.configuration[self.configuration['main']['dataset']]['log_type']
+                    preprocess = PreprocessLog(log_type, properties['log_path'])
+                    if log_type == 'auth':
+                        preprocess.do_preprocess()  # auth
+                    else:
+                        preprocess.preprocess()
+
+                    events_unique = preprocess.events_unique
+                    log_length = preprocess.loglength
+                    preprocessed_logs = preprocess.preprocessed_logs
+                    original_logs = preprocess.logs
+
+                    # create graph
+                    g = CreateGraph(events_unique)
+                    g.do_create()
+                    graph = g.g
+
+                    # run MajorClust
+                    mc = MajorClust(graph)
+                    clusters = mc.get_majorclust(graph)
+
+                    # get internal evaluation
+                    # convert clustering result from graph to text
+                    new_clusters = EvaluationUtility.convert_to_text(graph, clusters)
+                    internal_evaluation = self.__get_internal_evaluation(new_clusters, preprocessed_logs, log_length)
+                    print filename, internal_evaluation
+
+                    # write experiment result and close evaluation file
+                    row = (filename,) + internal_evaluation
+                    graph.clear()
+
                 elif self.method == 'improved_majorclust':
                     # preprocess log file
                     log_type = self.configuration[self.configuration['main']['dataset']]['log_type']
@@ -270,7 +303,7 @@ class ClusteringExperiment(object):
                     # set path
                     dataset = self.configuration['main']['dataset']
                     dataset_path = self.configuration[dataset]['path']
-                    group_nums = range(2, 11, 1)
+                    group_nums = range(2, 10, 1)
                     evaluation_results = []
 
                     for group_num in group_nums:
@@ -587,7 +620,7 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
 # change the method in ClusteringExperiment() to run an experiment.
 # change the config file to change the dataset used in experiment.
 start = time()
-e = ClusteringExperiment('LKE')
+e = ClusteringExperiment('majorclust')
 e.run_clustering()
 # e.run_clustering_experiment()
 
