@@ -170,8 +170,10 @@ class LogGrammar(object):
 
         # hostname, service name, message
         hostname = Word(alphas + nums + "_" + "-" + ".")
-        appname = Word(alphas + "/" + "-" + "_" + ".") + Optional(Suppress("[") + ints + Suppress("]")) + Suppress(":")
-        message = Optional(Suppress(": [") + Word(nums + '.') + Suppress("]")) + Regex(".*")
+        appname = Word(alphas + "/" + "-" + "_" + ".") + \
+            Optional(Suppress("(") + Word(alphas + "_") + Suppress(")")) + \
+            Optional(Suppress("[") + ints + Suppress("]")) + Optional(Suppress(":"))
+        message = Regex(".*")
         
         syslog_grammar = timestamp + hostname + appname + message
         return syslog_grammar
@@ -195,12 +197,20 @@ class LogGrammar(object):
         parsed = dict()
         parsed['timestamp'] = parsed_syslog[0] + ' ' + parsed_syslog[1] + ' ' + parsed_syslog[2]
         parsed['hostname'] = parsed_syslog[3]
-        parsed['service'] = parsed_syslog[4]
-        if '.' in parsed_syslog[5]:
-            parsed['second'] = parsed_syslog[5]
-        else:
+        if len(parsed_syslog) == 6:
+            parsed['service'] = parsed_syslog[4]
+            parsed['message'] = parsed_syslog[5]
+        elif len(parsed_syslog) == 7:
+            parsed['service'] = parsed_syslog[4]
             parsed['pid'] = parsed_syslog[5]
-        parsed['message'] = parsed_syslog[6]
+            parsed['message'] = parsed_syslog[6]
+        else:
+            if '.' in parsed_syslog[5]:
+                parsed['second'] = parsed_syslog[5]
+            else:
+                parsed['service'] = parsed_syslog[4] + ' ' + parsed_syslog[5]
+                parsed['pid'] = parsed_syslog[6]
+            parsed['message'] = parsed_syslog[7]
 
         return parsed
 
