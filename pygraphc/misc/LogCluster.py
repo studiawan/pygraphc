@@ -68,6 +68,7 @@ class LogCluster(object):
     # This function makes a pass over the data set and builds the sketch
     # @wsketch which is used for finding frequent words+ The sketch contains
     # wsize counters (wsize can be set with --wsize command line option)+
+    # This function is OPTIONAL
     def build_word_sketch(self):
         words_dict = {}
         # for index in range(self.wsize):
@@ -100,6 +101,7 @@ class LogCluster(object):
     # This function makes a pass over the data set and builds the sketch
     # @csketch which is used for finding frequent candidates. The sketch contains
     # $csize counters ($csize can be set with --csize command line option).
+    # This function is OPTIONAL
     def build_candidate_sketch(self):
         pass
 
@@ -120,17 +122,20 @@ class LogCluster(object):
         pass
 
     # This function inserts a candidate into the prefix tree
+    # This function is OPTIONAL
     def insert_into_prefix_tree(self):
         pass
 
     # This function arranges all candidates into the prefix tree data structure,
     # in order to facilitate fast matching between candidates
+    # This function is OPTIONAL
     def build_prefix_tree(self):
         pass
 
     # This function finds more specific candidates for the given candidate with
     # the help of the prefix tree, and records more specific candidates into
     # the SubClusters hash table of the given candidate
+    # This function is OPTIONAL
     def find_more_specific(self):
         pass
 
@@ -142,6 +147,7 @@ class LogCluster(object):
     # In order to facilitate the detection of outliers, for each X with sufficient
     # support the clusters Yi are stored to %outlierpat hash table (this allows
     # for fast detection of non-outliers which match X).
+    # This function is OPTIONAL
     def aggregate_supports(self):
         pass
 
@@ -153,40 +159,47 @@ class LogCluster(object):
     # This function inspects the cluster candidate parameter1 and finds the weight
     # of each word in the candidate description. The weights are calculated from
     # word dependency information according to --weightf=1.
+    # This function is OPTIONAL
     def find_weights(self):
         pass
 
     # This function inspects the cluster candidate parameter1 and finds the weight
     # of each word in the candidate description. The weights are calculated from
     # word dependency information according to --weightf=2.
+    # This function is OPTIONAL
     def find_weights2(self):
         pass
 
     # This function inspects the cluster candidate parameter1 and finds the weight
     # of each word in the candidate description. The weights are calculated from
     # word dependency information according to --weightf=3.
+    # This function is OPTIONAL
     def find_weights3(self):
         pass
 
     # This function inspects the cluster candidate parameter1 and finds the weight
     # of each word in the candidate description. The weights are calculated from
     # word dependency information according to --weightf=4.
+    # This function is OPTIONAL
     def find_weights4(self):
         pass
 
     # This function prints word weights for cluster candidate parameter1.
+    # This function is OPTIONAL
     def print_weights(self):
         pass
 
     # This function joins the cluster candidate parameter1 to a suitable cluster
     # by words with insufficient weights. If there is no suitable cluster,
     # a new cluster is created from the candidate.
+    # This function is OPTIONAL
     def join_candidate(self):
         pass
 
     # This function joins the cluster candidate parameter1 to a suitable cluster
     # by words with insufficient weights. If there is no suitable cluster,
     # a new cluster is created from the candidate.
+    # This function is OPTIONAL
     def join_candidate2(self):
         pass
 
@@ -195,6 +208,7 @@ class LogCluster(object):
     # are first calculated and the candidate is then compared to already
     # existing clusters, in order to find a suitable cluster for joining.
     # If no such cluster exists, a new cluster is created from the candidate.
+    # This function is OPTIONAL
     def join_candidates(self):
         pass
 
