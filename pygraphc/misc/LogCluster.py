@@ -1,11 +1,14 @@
 import datetime
 import hashlib
 import textwrap
+from collections import defaultdict
 
 
 class LogCluster(object):
-    def __init__(self, log_file, wsize, csize):
+    def __init__(self, log_file, support, rsupport, wsize, csize):
         self.log_file = log_file
+        self.support = support
+        self.rsupport = rsupport
         self.wsize = wsize
         self.csize = csize
         self.wsketch = {}
@@ -61,6 +64,7 @@ class LogCluster(object):
     # replaces the original line+
     # If neither --lfilter nor --lcfunc option has been given, the line
     # is returned without a trailing newline+
+    # This function is OPTIONAL
     @staticmethod
     def process_line(line):
         return line
@@ -95,8 +99,26 @@ class LogCluster(object):
 
     # This function makes a pass over the data set, finds frequent words and
     # stores them to %fwords hash table.
+    # This function is MANDATORY
     def find_frequent_words(self):
-        pass
+        i = 0
+        frequent_words = defaultdict(lambda: 0)
+        with open(self.log_file, 'r') as f:
+            for line in f:
+                if not line:
+                    continue
+                i += 1
+
+                words_split = line.split()
+                for word in words_split:
+                    frequent_words[word] += 1
+
+        if not self.support:
+            self.support = int(self.rsupport * i / 100)
+
+        for word, frequency in frequent_words.iteritems():
+            if frequency < self.support:
+                del frequent_words[word]
 
     # This function makes a pass over the data set and builds the sketch
     # @csketch which is used for finding frequent candidates. The sketch contains
