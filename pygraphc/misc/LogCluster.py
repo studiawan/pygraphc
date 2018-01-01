@@ -181,7 +181,9 @@ class LogCluster(object):
     # This function finds frequent candidates by removing candidates with
     # insufficient support from the %candidates hash table.
     def find_frequent_candidates(self):
-        pass
+        for candidate in self.candidates.keys():
+            if self.candidates[candidate]['Count'] < self.support:
+                del self.candidates[candidate]
 
     # This function inserts a candidate into the prefix tree
     # This function is OPTIONAL
