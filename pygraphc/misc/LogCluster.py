@@ -13,6 +13,8 @@ class LogCluster(object):
         self.csize = csize
         self.wsketch = {}
         self.wfilter = 0
+        self.frequent_words = defaultdict(lambda: 0)
+        self.candidates = {}
 
     # This function logs the message given with parameter2,++,parameterN to
     # syslog, using the level parameter1+ The message is also written to stderr+
@@ -102,7 +104,6 @@ class LogCluster(object):
     # This function is MANDATORY
     def find_frequent_words(self):
         i = 0
-        frequent_words = defaultdict(lambda: 0)
         with open(self.log_file, 'r') as f:
             for line in f:
                 if not line:
@@ -111,14 +112,14 @@ class LogCluster(object):
 
                 words_split = line.split()
                 for word in words_split:
-                    frequent_words[word] += 1
+                    self.frequent_words[word] += 1
 
         if not self.support:
             self.support = int(self.rsupport * i / 100)
 
-        for word, frequency in frequent_words.iteritems():
+        for word, frequency in self.frequent_words.iteritems():
             if frequency < self.support:
-                del frequent_words[word]
+                del self.frequent_words[word]
 
     # This function makes a pass over the data set and builds the sketch
     # @csketch which is used for finding frequent candidates. The sketch contains
@@ -136,7 +137,46 @@ class LogCluster(object):
     # option has been provided, dependencies between frequent words are also
     # identified during the data pass and stored to %fword_deps hash table.
     def find_candidates(self):
-        pass
+        with open(self.log_file, 'r') as f:
+            for line in f:
+                if not line:
+                    continue
+
+                words = line.split()
+                candidate = []
+                varx = []
+                varnum = 0
+
+                for word in words:
+                    if self.frequent_words[word]:
+                        candidate.append(word)
+                        varx.append(varnum)
+                        varnum = 0
+                    else:
+                        varnum += 1
+                varx.append(varnum)
+
+                # if the given candidate already exists, increase its support and
+                # adjust its wildcard information, otherwise create a new candidate
+                if candidate:
+                    candidate_join = '\n'.join(candidate)
+                    if candidate_join not in self.candidates:
+                        self.candidates[candidate_join] = {}
+                        self.candidates[candidate_join]['Words'] = candidate
+                        self.candidates[candidate_join]['WordCount'] = len(candidate)
+                        self.candidates[candidate_join]['Vars'] = []
+                        for var in varx:
+                            self.candidates[candidate_join]['Vars'][var].append([varnum, varnum])
+                        self.candidates[candidate_join]['Count'] = 1
+
+                    else:
+                        total = len(varx)
+                        for index in range(total):
+                            if self.candidates[candidate_join]['Vars'][index][0] > varx[index]:
+                                self.candidates[candidate_join]['Vars'][index][0] = varx[index]
+                            elif self.candidates[candidate_join]['Vars'][index][1] < varx[index]:
+                                self.candidates[candidate_join]['Vars'][index][1] = varx[index]
+                        self.candidates[candidate_join]['Count'] += 1
 
     # This function finds frequent candidates by removing candidates with
     # insufficient support from the %candidates hash table.
