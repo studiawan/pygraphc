@@ -5,7 +5,7 @@ from collections import defaultdict
 
 
 class LogCluster(object):
-    def __init__(self, log_file, support, rsupport, wsize, csize):
+    def __init__(self, log_file, support, rsupport=0.0, wsize=0, csize=0):
         self.log_file = log_file
         self.support = support
         self.rsupport = rsupport
@@ -15,6 +15,7 @@ class LogCluster(object):
         self.wfilter = 0
         self.frequent_words = defaultdict(lambda: 0)
         self.candidates = {}
+        self.clusters = {}
 
     # This function logs the message given with parameter2,++,parameterN to
     # syslog, using the level parameter1+ The message is also written to stderr+
@@ -112,14 +113,24 @@ class LogCluster(object):
 
                 words_split = line.split()
                 for word in words_split:
-                    self.frequent_words[word] += 1
+                    if word.strip() not in self.frequent_words.keys():
+                        self.frequent_words[word] = 1
+                    else:
+                        self.frequent_words[word] += 1
 
         if not self.support:
             self.support = int(self.rsupport * i / 100)
 
         for word, frequency in self.frequent_words.iteritems():
             if frequency < self.support:
-                del self.frequent_words[word]
+                self.frequent_words[word] = 0
+
+        frequent_words_nonzero = {}
+        for word, frequency in self.frequent_words.iteritems():
+            if frequency != 0:
+                frequent_words_nonzero[word] = frequency
+
+        self.frequent_words = frequent_words_nonzero
 
     # This function makes a pass over the data set and builds the sketch
     # @csketch which is used for finding frequent candidates. The sketch contains
@@ -148,13 +159,14 @@ class LogCluster(object):
                 varnum = 0
 
                 for word in words:
-                    if self.frequent_words[word]:
+                    if word in self.frequent_words:
                         candidate.append(word)
                         varx.append(varnum)
                         varnum = 0
                     else:
                         varnum += 1
                 varx.append(varnum)
+                print 'candidate', candidate
 
                 # if the given candidate already exists, increase its support and
                 # adjust its wildcard information, otherwise create a new candidate
@@ -165,9 +177,10 @@ class LogCluster(object):
                         self.candidates[candidate_join]['Words'] = candidate
                         self.candidates[candidate_join]['WordCount'] = len(candidate)
                         self.candidates[candidate_join]['Vars'] = []
-                        for var in varx:
-                            self.candidates[candidate_join]['Vars'][var].append([varnum, varnum])
+                        for varnum in varx:
+                            self.candidates[candidate_join]['Vars'].append([varnum, varnum])
                         self.candidates[candidate_join]['Count'] = 1
+                        print self.candidates
 
                     else:
                         total = len(varx)
@@ -183,7 +196,14 @@ class LogCluster(object):
     def find_frequent_candidates(self):
         for candidate in self.candidates.keys():
             if self.candidates[candidate]['Count'] < self.support:
-                del self.candidates[candidate]
+                self.candidates[candidate]['Count'] = 0
+
+        candidates_nonzero = {}
+        for key, val in self.candidates.iteritems():
+            if self.candidates[key]['Count'] != 0:
+                candidates_nonzero[key] = val
+
+        self.candidates = candidates_nonzero
 
     # This function inserts a candidate into the prefix tree
     # This function is OPTIONAL
@@ -287,3 +307,24 @@ class LogCluster(object):
     # This function prints all clusters to standard output.
     def print_clusters(self):
         pass
+
+    def get_cluster(self):
+        # make a pass over the data set and find frequent words (words which appear
+        # in $support or more lines), and store them to %fwords hash table
+        self.find_frequent_words()
+
+        # make a pass over the data set and find cluster candidates;
+        # if --wweight option has been given, dependencies between frequent
+        # words are also identified during the data pass
+        self.find_candidates()
+
+        # find frequent candidates
+        self.find_frequent_candidates()
+        self.clusters = self.candidates
+
+        # report clusters
+        self.print_clusters()
+
+filename = '/home/hudan/Git/datasets/SecRepo/perday/dec-15-test.log'
+lc = LogCluster(filename, 10)
+lc.get_cluster()
