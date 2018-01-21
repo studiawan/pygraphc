@@ -141,7 +141,15 @@ class LogCluster(object):
 
     # This function logs the description for candidate parameter1.
     def print_candidate(self):
-        pass
+        for candidate in self.candidates:
+            msg = ''
+            for index in range(self.candidates[candidate]['WordCount']):
+                if self.candidates[candidate]['Vars'][index][1] > 0:
+                    msg += '*{' + str(self.candidates[candidate]['Vars'][index][0]) + ',' + \
+                           str(self.candidates[candidate]['Vars'][index][1]) + '} '
+                msg += self.candidates[candidate]['Words'][index] + ' '
+
+            print msg
 
     # This function makes a pass over the data set, identifies cluster candidates
     # and stores them to %candidates hash table. If the --wweight command line
@@ -166,12 +174,11 @@ class LogCluster(object):
                     else:
                         varnum += 1
                 varx.append(varnum)
-                print 'candidate', candidate
 
                 # if the given candidate already exists, increase its support and
                 # adjust its wildcard information, otherwise create a new candidate
                 if candidate:
-                    candidate_join = '\n'.join(candidate)
+                    candidate_join = ' '.join(candidate)
                     if candidate_join not in self.candidates:
                         self.candidates[candidate_join] = {}
                         self.candidates[candidate_join]['Words'] = candidate
@@ -180,7 +187,6 @@ class LogCluster(object):
                         for varnum in varx:
                             self.candidates[candidate_join]['Vars'].append([varnum, varnum])
                         self.candidates[candidate_join]['Count'] = 1
-                        print self.candidates
 
                     else:
                         total = len(varx)
@@ -323,8 +329,8 @@ class LogCluster(object):
         self.clusters = self.candidates
 
         # report clusters
-        self.print_clusters()
+        self.print_candidate()
 
-filename = '/home/hudan/Git/datasets/SecRepo/perday/dec-15-test.log'
-lc = LogCluster(filename, 10)
+filename = '/home/hudan/Git/datasets/SecRepo/perday/dec-2.log'
+lc = LogCluster(filename, 100)
 lc.get_cluster()
