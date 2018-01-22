@@ -96,8 +96,8 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                 best_cluster = mcpw_sa_cluster
 
                 # print current parameter
-                # if current_parameter['k'] and current_parameter['I']:
-                #     print current_parameter['k'], ',', current_parameter['I'], ',', current_energy * -1
+                if current_parameter['k'] and current_parameter['I']:
+                    print current_parameter['k'], ',', current_parameter['I'], ',', current_energy * -1
 
                 # cooling the temperature
                 tnew = sa.get_temperature(self.Tmax)
@@ -126,7 +126,8 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                         new_energy = 0.
 
                     # print new parameter
-                    # print new_parameter['k'], ',', new_parameter['I'], ',', new_energy * -1
+                    if current_parameter['k'] and current_parameter['I']:
+                        print new_parameter['k'], ',', new_parameter['I'], ',', new_energy * -1
 
                     # get delta energy and check
                     delta_energy = new_energy - current_energy
@@ -161,6 +162,7 @@ class MaxCliquesPercolationSA(MaxCliquesPercolationWeighted):
                     best_cluster[cluster_id] = [node[0]]
                     cluster_id += 1
 
+        print 'best parameter and energy', best_parameter, best_energy
         return best_parameter, best_cluster, best_energy
 
     def __set_parameters(self, percolation_only=False):
