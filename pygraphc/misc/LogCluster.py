@@ -150,12 +150,14 @@ class LogCluster(object):
                 msg += self.candidates[candidate]['Words'][index] + ' '
 
             print msg
+            print 'Support:', len(self.candidates[candidate]['Members'])
 
     # This function makes a pass over the data set, identifies cluster candidates
     # and stores them to %candidates hash table. If the --wweight command line
     # option has been provided, dependencies between frequent words are also
     # identified during the data pass and stored to %fword_deps hash table.
     def find_candidates(self):
+        line_index = 0
         with open(self.log_file, 'r') as f:
             for line in f:
                 if not line:
@@ -187,6 +189,7 @@ class LogCluster(object):
                         for varnum in varx:
                             self.candidates[candidate_join]['Vars'].append([varnum, varnum])
                         self.candidates[candidate_join]['Count'] = 1
+                        self.candidates[candidate_join]['Members'] = []
 
                     else:
                         total = len(varx)
@@ -196,6 +199,8 @@ class LogCluster(object):
                             elif self.candidates[candidate_join]['Vars'][index][1] < varx[index]:
                                 self.candidates[candidate_join]['Vars'][index][1] = varx[index]
                         self.candidates[candidate_join]['Count'] += 1
+                    self.candidates[candidate_join]['Members'].append(line_index)
+                line_index += 1
 
     # This function finds frequent candidates by removing candidates with
     # insufficient support from the %candidates hash table.
@@ -314,7 +319,7 @@ class LogCluster(object):
     def print_clusters(self):
         pass
 
-    def get_cluster(self):
+    def get_clusters(self):
         # make a pass over the data set and find frequent words (words which appear
         # in $support or more lines), and store them to %fwords hash table
         self.find_frequent_words()
@@ -333,4 +338,4 @@ class LogCluster(object):
 
 filename = '/home/hudan/Git/datasets/SecRepo/perday/dec-2.log'
 lc = LogCluster(filename, 100)
-lc.get_cluster()
+lc.get_clusters()
