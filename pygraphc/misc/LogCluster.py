@@ -16,6 +16,7 @@ class LogCluster(object):
         self.frequent_words = defaultdict(lambda: 0)
         self.candidates = {}
         self.clusters = {}
+        self.outliers = []
 
     # This function logs the message given with parameter2,++,parameterN to
     # syslog, using the level parameter1+ The message is also written to stderr+
@@ -249,7 +250,27 @@ class LogCluster(object):
     # This function makes a pass over the data set, find outliers and stores them
     # to file $outlierfile (can be set with the --outliers command line option).
     def find_outliers(self):
-        pass
+        line_index = 0
+        with open(self.log_file, 'r') as f:
+            for line in f:
+                if not line:
+                    continue
+
+                words = line.split()
+                candidate = []
+
+                for word in words:
+                    if word in self.frequent_words:
+                        candidate.append(word)
+
+                if candidate:
+                    candidate_join = ' '.join(candidate)
+                    if candidate_join in self.candidates:
+                        continue
+
+                # set outlier cluster
+                self.outliers.append(line_index)
+                line_index += 1
 
     # This function inspects the cluster candidate parameter1 and finds the weight
     # of each word in the candidate description. The weights are calculated from
@@ -331,7 +352,15 @@ class LogCluster(object):
 
         # find frequent candidates
         self.find_frequent_candidates()
-        self.clusters = self.candidates
+
+        # get cluster dictionary
+        cluster_id = 0
+        for candidate, values in self.candidates.iteritems():
+            self.clusters[cluster_id] = candidate['Members']
+            cluster_id += 1
+            
+        # add outlier cluster to the whole cluster
+        self.clusters[cluster_id] = self.outliers
 
         # report clusters
         self.print_candidate()
