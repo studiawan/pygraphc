@@ -7,6 +7,7 @@ import multiprocessing.pool
 from time import time
 from operator import itemgetter
 from ConfigParser import SafeConfigParser
+from numpy import linspace
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.preprocess.ParallelPreprocess import ParallelPreprocess
 from pygraphc.preprocess.PreprocessLog import PreprocessLog
@@ -17,10 +18,10 @@ from pygraphc.evaluation.EvaluationUtility import EvaluationUtility
 from pygraphc.evaluation.CalinskiHarabaszIndex import CalinskiHarabaszIndex
 from pygraphc.evaluation.DaviesBouldinIndex import DaviesBouldinIndex
 from pygraphc.evaluation.XieBeniIndex import XieBeniIndex
-from pygraphc.misc.ReverseVaarandi import ReverseVaarandi
 from pygraphc.misc.IPLoM import ParaIPLoM, IPLoM
 from pygraphc.misc.LogSig import Para, LogSig
 from pygraphc.misc.LKE import ParaLKE, LKE
+from pygraphc.misc.LogCluster import LogCluster
 from pygraphc.output.OutputText import OutputText
 
 
@@ -246,10 +247,9 @@ class ClusteringExperiment(object):
                 clusters, original_logs = {}, []
                 preprocessed_logs, log_length = {}, 0
 
-                if self.method == 'LogCluster' or self.method == 'SLCT':
+                if self.method == 'LogCluster':
                     # initialization of parameters
-                    mode = self.method
-                    supports = range(10, 110, 10)
+                    rsupports = linspace(0.1, 0.9, 9)
                     log_file = self.files[filename]['log_path']
                     outlier_file = self.files[filename]['outlier_path']
                     output_file = self.files[filename]['output_path']
@@ -263,8 +263,8 @@ class ClusteringExperiment(object):
                     original_logs = pp.logs
 
                     # run LogCluster clustering
-                    for support in supports:
-                        lc = ReverseVaarandi(mode, support, log_file, outlier_file, output_file)
+                    for rsupport in rsupports:
+                        lc = LogCluster(None, rsupport, log_file, outlier_file, output_file)
                         clusters = lc.get_clusters()
                         evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
                         evaluation_results.append([evaluation[0], clusters])
@@ -498,10 +498,9 @@ class ClusteringExperiment(object):
                 clusters, original_logs = {}, []
                 preprocessed_logs, log_length = {}, 0
 
-                if self.method == 'LogCluster' or self.method == 'SLCT':
+                if self.method == 'LogCluster':
                     # initialization of parameters
-                    mode = self.method
-                    supports = range(10, 110, 10)
+                    rsupports = linspace(0.1, 0.9, 9)
                     log_file = self.files[filename]['log_path']
                     outlier_file = self.files[filename]['outlier_path']
                     output_file = self.files[filename]['output_path']
@@ -515,9 +514,8 @@ class ClusteringExperiment(object):
                     original_logs = pp.logs
 
                     # run LogCluster clustering
-                    for support in supports:
-                        print filename, support
-                        lc = ReverseVaarandi(mode, support, log_file, outlier_file, output_file)
+                    for rsupport in rsupports:
+                        lc = LogCluster(None, rsupport, log_file, outlier_file, output_file)
                         clusters = lc.get_clusters()
                         evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
                         evaluation_results.append([evaluation[0], clusters])
