@@ -5,12 +5,14 @@ from collections import defaultdict
 
 
 class LogCluster(object):
-    def __init__(self, log_file, support, rsupport=0.0, wsize=0, csize=0):
-        self.log_file = log_file
+    def __init__(self, support, rsupport, log_file, outlier_file='', output_file=''):
         self.support = support
         self.rsupport = rsupport
-        self.wsize = wsize
-        self.csize = csize
+        self.log_file = log_file
+        self.outlier_file = outlier_file
+        self.output_file = output_file
+        self.wsize = 0
+        self.csize = 0
         self.wsketch = {}
         self.wfilter = 0
         self.frequent_words = defaultdict(lambda: 0)
@@ -358,7 +360,7 @@ class LogCluster(object):
         for candidate, values in self.candidates.iteritems():
             self.clusters[cluster_id] = candidate['Members']
             cluster_id += 1
-            
+
         # add outlier cluster to the whole cluster
         self.clusters[cluster_id] = self.outliers
 
@@ -366,5 +368,5 @@ class LogCluster(object):
         self.print_candidate()
 
 filename = '/home/hudan/Git/datasets/SecRepo/perday/dec-2.log'
-lc = LogCluster(filename, 100)
+lc = LogCluster(None, 0.1, filename)
 lc.get_clusters()
