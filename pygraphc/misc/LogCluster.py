@@ -358,7 +358,7 @@ class LogCluster(object):
         # get cluster dictionary
         cluster_id = 0
         for candidate, values in self.candidates.iteritems():
-            self.clusters[cluster_id] = candidate['Members']
+            self.clusters[cluster_id] = values['Members']
             cluster_id += 1
 
         # add outlier cluster to the whole cluster
