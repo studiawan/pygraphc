@@ -364,9 +364,11 @@ class LogCluster(object):
         # add outlier cluster to the whole cluster
         self.clusters[cluster_id] = self.outliers
 
-        # report clusters
-        self.print_candidate()
+        return self.clusters
 
-filename = '/home/hudan/Git/datasets/SecRepo/perday/dec-2.log'
-lc = LogCluster(None, 0.1, filename)
-lc.get_clusters()
+        # report clusters
+        # self.print_candidate()
+
+# filename = '/home/hudan/Git/datasets/SecRepo/perday/dec-2.log'
+# lc = LogCluster(None, 0.1, filename)
+# lc.get_clusters()
