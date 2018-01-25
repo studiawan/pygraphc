@@ -1,4 +1,5 @@
 from orderedset import OrderedSet
+from operator import itemgetter
 from pygraphc.preprocess.ParallelPreprocess import ParallelPreprocess
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.clustering.GraphEntropy import GraphEntropy
@@ -119,5 +120,10 @@ class AutoAbstraction(object):
 aa = AutoAbstraction('/home/hudan/Git/labeled-authlog/dataset/illustration/per_day/test.log')
 aa.get_abstraction()
 
+abstraction = []
 for k, v in aa.abstractions.iteritems():
-    print k, v
+    abstraction.append(v['abstraction'])
+
+abstraction_sorted = sorted(abstraction, key=itemgetter(0))
+for a in abstraction_sorted:
+    print ' '.join(a)
