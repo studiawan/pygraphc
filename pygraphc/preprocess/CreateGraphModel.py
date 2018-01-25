@@ -49,7 +49,7 @@ class CreateGraphModel(object):
 
     def __get_nodes_nopreprocess(self):
         # create nodes without log preprocessing
-        pp = ParallelPreprocess('', self.count_groups)
+        pp = ParallelPreprocess('', True, self.count_groups)
         self.unique_events = pp.get_unique_events_nopreprocess()
         self.unique_events_length = pp.unique_events_length
         self.event_attributes = pp.event_attributes
