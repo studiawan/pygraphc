@@ -263,9 +263,9 @@ class ClusteringExperiment(object):
                     original_logs = pp.logs
 
                     # run LogCluster clustering
-                    for rsupport in rsupports:
-                        lc = LogCluster(None, rsupport, log_file, outlier_file, output_file)
-                        clusters = lc.get_clusters()
+                    lc = LogCluster(None, None, log_file, rsupports, outlier_file, output_file)
+                    clusters_list = lc.get_clusters()
+                    for clusters in clusters_list:
                         evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
                         evaluation_results.append([evaluation[0], clusters])
 
@@ -618,7 +618,7 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
 # change the method in ClusteringExperiment() to run an experiment.
 # change the config file to change the dataset used in experiment.
 start = time()
-e = ClusteringExperiment('majorclust')
+e = ClusteringExperiment('LogCluster')
 e.run_clustering()
 # e.run_clustering_experiment()
 
