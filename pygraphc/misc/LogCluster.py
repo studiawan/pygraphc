@@ -375,11 +375,10 @@ class LogCluster(object):
         # self.print_candidate()
 
     def get_clusters_manysupports(self):
-        print 'find frequent words...'
         self.find_frequent_words()
         clusters_list = []
         for rsupport in self.rsupports:
-            print rsupport
+            print self.log_file.split('/')[-1], rsupport
             self.find_frequent_words_withsupport(rsupport)
             self.find_candidates()
             self.find_frequent_candidates()
@@ -391,13 +390,14 @@ class LogCluster(object):
                 cluster_id += 1
 
             # add outlier cluster to the whole cluster
-            self.clusters[cluster_id] = self.outliers
+            if self.outliers:
+                self.clusters[cluster_id] = self.outliers
             clusters_list.append(self.clusters)
 
         return clusters_list
 
-# filename = '/home/hudan/Git/datasets/SecRepo/perday/dec-2.log'
+# filename = '/home/hudan/Git/datasets/Syslog_Chuvakin/perday/messages.10.log'
 # supports_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 # lc = LogCluster(None, 0, filename, supports_list)
 # lc.get_clusters()
-# lc.get_clusters_manysupports()
+# cl = lc.get_clusters_manysupports()
