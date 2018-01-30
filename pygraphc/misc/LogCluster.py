@@ -1,6 +1,8 @@
+from __future__ import division
 import datetime
 import hashlib
 import textwrap
+import copy
 from collections import defaultdict
 
 
@@ -17,6 +19,7 @@ class LogCluster(object):
         self.wsketch = {}
         self.wfilter = 0
         self.frequent_words = defaultdict(lambda: 0)
+        self.frequent_words_nonzero = {}
         self.candidates = {}
         self.clusters = {}
         self.outliers = []
@@ -125,20 +128,21 @@ class LogCluster(object):
                     else:
                         self.frequent_words[word] += 1
 
-    def find_frequent_words_withsupport(self, rsupport):
-        if not self.support:
-            self.support = int(rsupport * self.line_length / 100)
+            self.line_length = i
 
+    def find_frequent_words_withsupport(self, rsupport):
+        support = int(rsupport * self.line_length / 100)
+        frequent_words_withzero = copy.deepcopy(self.frequent_words)
         for word, frequency in self.frequent_words.iteritems():
-            if frequency < self.support:
-                self.frequent_words[word] = 0
+            if frequency < support:
+                frequent_words_withzero[word] = 0
 
         frequent_words_nonzero = {}
-        for word, frequency in self.frequent_words.iteritems():
+        for word, frequency in frequent_words_withzero.iteritems():
             if frequency != 0:
                 frequent_words_nonzero[word] = frequency
 
-        self.frequent_words = frequent_words_nonzero
+        self.frequent_words_nonzero = frequent_words_nonzero
 
     # This function makes a pass over the data set and builds the sketch
     # @csketch which is used for finding frequent candidates. The sketch contains
@@ -177,7 +181,7 @@ class LogCluster(object):
                 varnum = 0
 
                 for word in words:
-                    if word in self.frequent_words:
+                    if word in self.frequent_words_nonzero:
                         candidate.append(word)
                         varx.append(varnum)
                         varnum = 0
@@ -212,9 +216,10 @@ class LogCluster(object):
 
     # This function finds frequent candidates by removing candidates with
     # insufficient support from the %candidates hash table.
-    def find_frequent_candidates(self):
+    def find_frequent_candidates(self, rsupport):
+        support = int(rsupport * self.line_length / 100)
         for candidate in self.candidates.keys():
-            if self.candidates[candidate]['Count'] < self.support:
+            if self.candidates[candidate]['Count'] < support:
                 self.candidates[candidate]['Count'] = 0
 
         candidates_nonzero = {}
@@ -267,7 +272,7 @@ class LogCluster(object):
                 candidate = []
 
                 for word in words:
-                    if word in self.frequent_words:
+                    if word in self.frequent_words_nonzero:
                         candidate.append(word)
 
                 if candidate:
@@ -351,6 +356,7 @@ class LogCluster(object):
         # make a pass over the data set and find frequent words (words which appear
         # in $support or more lines), and store them to %fwords hash table
         self.find_frequent_words()
+        self.find_frequent_words_withsupport(self.rsupport)
 
         # make a pass over the data set and find cluster candidates;
         # if --wweight option has been given, dependencies between frequent
@@ -358,7 +364,7 @@ class LogCluster(object):
         self.find_candidates()
 
         # find frequent candidates
-        self.find_frequent_candidates()
+        self.find_frequent_candidates(self.rsupport)
 
         # get cluster dictionary
         cluster_id = 0
@@ -367,7 +373,9 @@ class LogCluster(object):
             cluster_id += 1
 
         # add outlier cluster to the whole cluster
-        self.clusters[cluster_id] = self.outliers
+        self.find_outliers()
+        if self.outliers:
+            self.clusters[cluster_id] = self.outliers
 
         return self.clusters
 
@@ -381,15 +389,17 @@ class LogCluster(object):
             print self.log_file.split('/')[-1], rsupport
             self.find_frequent_words_withsupport(rsupport)
             self.find_candidates()
-            self.find_frequent_candidates()
+            self.find_frequent_candidates(rsupport)
 
             # get cluster dictionary
             cluster_id = 0
+            self.clusters = {}
             for candidate, values in self.candidates.iteritems():
                 self.clusters[cluster_id] = values['Members']
                 cluster_id += 1
 
             # add outlier cluster to the whole cluster
+            self.find_outliers()
             if self.outliers:
                 self.clusters[cluster_id] = self.outliers
             clusters_list.append(self.clusters)
@@ -397,7 +407,6 @@ class LogCluster(object):
         return clusters_list
 
 # filename = '/home/hudan/Git/datasets/Syslog_Chuvakin/perday/messages.10.log'
-# supports_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+# supports_list = [10, 20, 30, 40, 50, 60, 70, 80, 90]
 # lc = LogCluster(None, 0, filename, supports_list)
-# lc.get_clusters()
 # cl = lc.get_clusters_manysupports()
