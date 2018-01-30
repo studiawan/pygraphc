@@ -249,7 +249,7 @@ class ClusteringExperiment(object):
 
                 if self.method == 'LogCluster':
                     # initialization of parameters
-                    rsupports = linspace(0.1, 0.9, 9)
+                    rsupports = linspace(10, 90, 9)
                     log_file = self.files[filename]['log_path']
                     outlier_file = self.files[filename]['outlier_path']
                     output_file = self.files[filename]['output_path']
@@ -264,7 +264,7 @@ class ClusteringExperiment(object):
 
                     # run LogCluster clustering
                     lc = LogCluster(None, None, log_file, rsupports, outlier_file, output_file)
-                    clusters_list = lc.get_clusters()
+                    clusters_list = lc.get_clusters_manysupports()
                     for clusters in clusters_list:
                         evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
                         evaluation_results.append([evaluation[0], clusters])
@@ -500,7 +500,7 @@ class ClusteringExperiment(object):
 
                 if self.method == 'LogCluster':
                     # initialization of parameters
-                    rsupports = linspace(0.1, 0.9, 9)
+                    rsupports = linspace(10, 90, 9)
                     log_file = self.files[filename]['log_path']
                     outlier_file = self.files[filename]['outlier_path']
                     output_file = self.files[filename]['output_path']
@@ -514,9 +514,9 @@ class ClusteringExperiment(object):
                     original_logs = pp.logs
 
                     # run LogCluster clustering
-                    for rsupport in rsupports:
-                        lc = LogCluster(None, rsupport, log_file, outlier_file, output_file)
-                        clusters = lc.get_clusters()
+                    lc = LogCluster(None, None, log_file, rsupports, outlier_file, output_file)
+                    clusters_list = lc.get_clusters_manysupports()
+                    for clusters in clusters_list:
                         evaluation = self.__get_internal_evaluation(clusters, preprocessed_logs, log_length)
                         evaluation_results.append([evaluation[0], clusters])
 
