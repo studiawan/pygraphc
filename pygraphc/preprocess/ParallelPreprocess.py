@@ -14,6 +14,8 @@ class ParallelPreprocess(object):
         self.event_attributes = {}
         self.refine_unique_events = refine_unique_events
         self.count_groups = count_groups
+        self.events_withduplicates = []
+        self.events_withduplicates_length = 0
 
     def __call__(self, line):
         # main method called when running in multiprocessing
@@ -124,3 +126,34 @@ class ParallelPreprocess(object):
 
         self.unique_events_length = len(self.unique_events)
         return self.unique_events
+
+    def get_events_withduplicates(self):
+        # get event with duplicates. every log line is a node.
+        # read logs
+        self.__read_log()
+        logs_with_id = []
+        index = 0
+        for index, log in enumerate(self.logs):
+            logs_with_id.append((index, log))
+        self.events_withduplicates_length = index + 1
+
+        # run preprocessing in parallel
+        total_cpu = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=total_cpu)
+
+        # get events with duplicates
+        events = pool.map(self, logs_with_id)
+        pool.close()
+        pool.join()
+
+        # get graph event_attributes
+        for log_id, event in events:
+            event_split = event.split()
+            attr = {'preprocessed_event': event_split, 'log_id': log_id}
+            self.event_attributes[log_id] = attr
+            self.events_withduplicates.append((log_id, attr))
+
+            # get preprocessed logs as dictionary
+            self.preprocessed_logs[log_id] = event
+
+        return self.events_withduplicates
