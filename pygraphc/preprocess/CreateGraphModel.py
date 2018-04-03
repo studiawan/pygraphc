@@ -17,6 +17,8 @@ class CreateGraphModel(object):
         self.edges_weight = self.distances
         self.pruning = pruning
         self.logs = []
+        self.events_withduplicates = []
+        self.events_withduplicates_length = 0
 
     def __get_nodes(self):
         # preprocess logs and get unique events as nodes in a graph
@@ -63,6 +65,27 @@ class CreateGraphModel(object):
         # create graph without preprocessing logs
         self.__get_nodes_nopreprocess()
         self.__get_distances_nopreprocess()
+        self.graph.add_nodes_from(self.unique_events)
+        self.graph.add_weighted_edges_from(self.distances)
+
+        return self.graph
+
+    def __get_nodes_withduplicates(self):
+        # create nodes without creating unique event. every log line is now a node
+        pp = ParallelPreprocess(self.log_file)
+        self.events_withduplicates = pp.get_events_withduplicates()
+        self.events_withduplicates_length = pp.events_withduplicates_length
+        self.event_attributes = pp.event_attributes
+
+    def __get_distances_withduplicates(self):
+        # create distances as edge weight
+        pcs = ParallelCosineSimilarity(self.event_attributes, self.events_withduplicates_length)
+        self.distances = pcs.get_parallel_cosine_similarity()
+
+    def create_graph_withduplicates(self):
+        # create graph without preprocessing logs
+        self.__get_nodes_withduplicates()
+        self.__get_distances_withduplicates()
         self.graph.add_nodes_from(self.unique_events)
         self.graph.add_weighted_edges_from(self.distances)
 
