@@ -1,3 +1,4 @@
+import networkx as nx
 from orderedset import OrderedSet
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.clustering.Louvan import Louvan
@@ -7,6 +8,7 @@ class AutoAbstraction(object):
     def __init__(self, log_file):
         self.log_file = log_file
         self.graph = None
+        self.graph_noattributes = None
         self.clusters = {}
         self.abstraction_candidates = {}
         self.abstractions = {}
@@ -14,9 +16,11 @@ class AutoAbstraction(object):
     def __get_community_detection(self):
         graph_model = CreateGraphModel(self.log_file)
         self.graph = graph_model.create_graph()
+        self.graph_noattributes = graph_model.create_graph_noattributes()
+        nx.write_gexf(self.graph_noattributes, '/tmp/graph.gexf')
 
         # graph clustering based on Louvan community detection
-        louvan = Louvan(self.graph)
+        louvan = Louvan()
         self.clusters = louvan.get_cluster()
 
     def __get_count_groups(self):
@@ -25,6 +29,7 @@ class AutoAbstraction(object):
             count_groups = {}
             for node_id in nodes:
                 # we need OrderedSet to preserve order because a regular set does not preserve order
+                node_id = int(node_id)
                 message = self.graph.node[node_id]['preprocessed_event']
                 words_split = OrderedSet(message.strip().split())
                 words_count = len(words_split)
@@ -34,28 +39,29 @@ class AutoAbstraction(object):
                     count_groups[words_count] = {}
                 count_groups[words_count][node_id] = words_split
 
-            self.abstraction_candidates[abstraction_id].update(count_groups)
-            abstraction_id += 1
+            for count, group in count_groups.iteritems():
+                self.abstraction_candidates[abstraction_id] = {count: group}
+                abstraction_id += 1
 
     def __get_abstraction_asterisk(self):
         # get abstraction with asterisk sign
         for abstraction_id, candidates in self.abstraction_candidates.iteritems():
-            for word_count, candidate in candidates.iteritems():
-                node_id = candidate.keys()[0]
-                if word_count > 1:
+            for count, candidate in candidates.iteritems():
+                candidate_length = len(candidate.values())
+                if candidate_length > 1:
                     # get abstraction
                     # prevent initialization to refer to current group variable. re-initialize with OrderedSet()
                     self.abstractions[abstraction_id] = {'original_id': [],
                                                          'abstraction': OrderedSet(candidate.values()[0])}
                     for index, message in candidate.iteritems():
-                        self.abstractions[abstraction_id]['original_id'].append(index)
+                        self.abstractions[abstraction_id]['original_id'].extend(self.graph.node[index]['member'])
                         self.abstractions[abstraction_id]['abstraction'].intersection_update(message)
 
                     # check for abstraction that only contains one word,
                     # the abstraction is its original message in count group
                     if len(self.abstractions[abstraction_id]['abstraction']) == 1:
                         for index, message in candidate.iteritems():
-                            self.abstractions[abstraction_id] = {'original_id': [index],
+                            self.abstractions[abstraction_id] = {'original_id': [self.graph.node[index]['member']],
                                                                  'abstraction': list(message)}
                             abstraction_id += 1
                     else:
@@ -80,13 +86,18 @@ class AutoAbstraction(object):
                     if set(self.abstractions[abstraction_id - 1]['abstraction']) == {'*'}:
                         abstraction_id -= 1
                         for index, message in candidate.iteritems():
-                            self.abstractions[abstraction_id] = {'original_id': [index],
+                            self.abstractions[abstraction_id] = {'original_id': [self.graph.node[index]['member']],
                                                                  'abstraction': list(message)}
                             abstraction_id += 1
 
-                elif word_count == 1:
-                    self.abstractions[abstraction_id] = {'original_id': self.graph[node_id]['member'],
+                elif candidate_length == 1:
+                    node_id = candidate.keys()[0]
+                    self.abstractions[abstraction_id] = {'original_id': self.graph.node[node_id]['member'],
                                                          'abstraction': list(candidate.values()[0])}
+
+    def __check_subabstraction(self):
+        # check whether an abstraction is a substring of another abstraction
+        pass
 
     def get_abstraction(self):
         self.__get_community_detection()
