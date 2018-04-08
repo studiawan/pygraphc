@@ -19,6 +19,7 @@ class CreateGraphModel(object):
         self.logs = []
         self.events_withduplicates = []
         self.events_withduplicates_length = 0
+        self.graph_noattributes = nx.MultiGraph()
 
     def __get_nodes(self):
         # preprocess logs and get unique events as nodes in a graph
@@ -72,7 +73,7 @@ class CreateGraphModel(object):
 
     def __get_nodes_withduplicates(self):
         # create nodes without creating unique event. every log line is now a node
-        pp = ParallelPreprocess(self.log_file)
+        pp = ParallelPreprocess('', True, self.count_groups)
         self.events_withduplicates = pp.get_events_withduplicates()
         self.events_withduplicates_length = pp.events_withduplicates_length
         self.event_attributes = pp.event_attributes
@@ -90,3 +91,8 @@ class CreateGraphModel(object):
         self.graph.add_weighted_edges_from(self.distances)
 
         return self.graph
+
+    def create_graph_noattributes(self):
+        self.graph_noattributes.add_weighted_edges_from(self.distances)
+
+        return self.graph_noattributes
