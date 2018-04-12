@@ -1,5 +1,7 @@
 import networkx as nx
 import os
+from operator import itemgetter
+from itertools import combinations
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.clustering.Louvan import Louvan
 
@@ -92,49 +94,76 @@ class AutoAbstraction(object):
                 if candidate_length > 1:
                     # prevent initialization to refer to current group variable
                     self.abstractions[abstraction_id] = {'original_id': [],
-                                                         'abstraction': candidate.values()[0]}
-
+                                                         'abstraction': [],
+                                                         'length': 0}
                     # get abstraction
-                    abstraction_string = []
+                    abstraction_list = []
                     for index, message in enumerate(candidate_transpose):
                         message_length = len(set(message))
                         if message_length == 1:
-                            abstraction_string.append(message[0])
+                            abstraction_list.append(message[0])
                         else:
-                            abstraction_string.append('*')
-                    self.abstractions[abstraction_id]['abstraction'] = abstraction_string
+                            abstraction_list.append('*')
 
-                    for index, message in candidate.iteritems():
-                        # set original line id
-                        self.abstractions[abstraction_id]['original_id'].extend(self.graph.node[index]['member'])
+                    # if abstraction only contains asterisks, each candidate becomes an abstraction
+                    if set(abstraction_list) == set('*'):
+                        for node_id, message in candidate.iteritems():
+                            self.abstractions[abstraction_id] = {'original_id': self.graph.node[node_id]['member'],
+                                                                 'abstraction': ' '.join(message),
+                                                                 'length': len(message)}
+                            abstraction_id += 1
 
-                        # check for abstraction that only contains one word
-                        # the abstraction is its original message in count group
-                        if len(self.abstractions[abstraction_id]['abstraction']) == 1:
-                            self.abstractions[abstraction_id]['abstraction'] = message
+                    # set abstraction and original line id
+                    else:
+                        for node_id, message in candidate.iteritems():
+                            self.abstractions[abstraction_id]['original_id'].extend(self.graph.node[node_id]['member'])
+                        self.abstractions[abstraction_id]['abstraction'] = ' '.join(abstraction_list)
+                        self.abstractions[abstraction_id]['length'] = len(abstraction_list)
+                        abstraction_id += 1
 
                 elif candidate_length == 1:
                     node_id = candidate.keys()[0]
+                    abstraction = candidate.values()[0]
                     self.abstractions[abstraction_id] = {'original_id': self.graph.node[node_id]['member'],
-                                                         'abstraction': candidate.values()[0]}
-                abstraction_id += 1
-
-    def __check_asterisk_only(self, abstraction_id, abstraction_list):
-        # if abstraction only contains asterisks, each candidate becomes an abstraction
-        if set(abstraction_list) == set('*'):
-            print self.abstractions[abstraction_id]
+                                                         'abstraction': ' '.join(abstraction),
+                                                         'length': len(abstraction)}
+                    abstraction_id += 1
 
     def __check_subabstraction(self):
         # check whether an abstraction is a substring of another abstraction
-        pass
+        # convert abstraction to list of tuple.
+        # tuple: (abstraction_length, original_id, abstraction_string, abstraction_id)
+        count_abstraction = []
+        for abstraction_id, abstraction in self.abstractions.iteritems():
+            count_abstraction.append((abstraction['length'], abstraction['original_id'],
+                                      abstraction['abstraction'], abstraction_id))
+
+        # sort abstraction based on word count
+        count_sorted = sorted(count_abstraction, key=itemgetter(0))
+        count_sorted_length = len(count_sorted)
+
+        # save combinations to dictionary
+        index_combination = {}
+        for index1, index2 in combinations(range(count_sorted_length), 2):
+            if index1 not in index_combination.keys():
+                index_combination[index1] = []
+            index_combination[index1].append(index2)
+
+        for index1, index2_list in index_combination.iteritems():
+            for index2 in index2_list:
+                if count_sorted[index1][2] in count_sorted[index2][2]:
+                    # empty the member of shorter abstraction
+                    shorter_member = self.abstractions[count_sorted[index1][3]]['original_id']
+                    self.abstractions[count_sorted[index1][3]] = {'original_id': [],
+                                                                  'abstraction': '',
+                                                                  'length': 0}
+                    # merge to longer abstraction then break
+                    self.abstractions[count_sorted[index2][3]]['original_id'].extend(shorter_member)
+                    break
 
     def __print(self):
-        for k, v in self.abstraction_candidates.iteritems():
-            print self.abstractions[k]['abstraction']
-            for x, y in v.iteritems():
-                for p, q in y.iteritems():
-                    print k, q
-            print '-----------------------------------------'
+        for k, v in self.abstractions.iteritems():
+            print k, v['abstraction']
 
         for k, v in self.clusters.iteritems():
             print k, v
@@ -143,6 +172,7 @@ class AutoAbstraction(object):
         self.__get_community_detection()
         self.__get_count_groups()
         self.__get_abstraction_asterisk()
+        self.__check_subabstraction()
         self.__print()
 
 
