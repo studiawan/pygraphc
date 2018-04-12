@@ -3,13 +3,14 @@ import community
 
 
 class Louvan(object):
-    def __init__(self):
+    def __init__(self, gexf_file):
+        self.gexf_file = gexf_file
         self.graph = None
         self.partition = {}
         self.clusters = {}
 
     def __get_community(self):
-        self.graph = nx.read_gexf('/tmp/graph.gexf')
+        self.graph = nx.read_gexf(self.gexf_file)
         self.partition = community.best_partition(self.graph)
 
     def get_cluster(self):
