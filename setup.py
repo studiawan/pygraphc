@@ -31,7 +31,8 @@ setup(name='pygraphc',
           'TextBlob',
           'pyparsing',
           'jellyfish',
-          'orderedset'
+          'orderedset',
+          'community'
       ],
       include_package_data=True,
       zip_safe=False)
