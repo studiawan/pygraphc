@@ -14,7 +14,7 @@ class AutoAbstraction(object):
         self.clusters = {}
         self.abstraction_candidates = {}
         self.abstractions = {}
-        self.previous_clusters = {}
+        self.final_abstractions = {}
 
     def __get_community_detection(self):
         # create graph
@@ -131,7 +131,7 @@ class AutoAbstraction(object):
 
     def __check_subabstraction(self):
         # check whether an abstraction is a substring of another abstraction
-        # convert abstraction to list of tuple.
+        # convert abstraction to list of tuple for sorting.
         # tuple: (abstraction_length, original_id, abstraction_string, abstraction_id)
         count_abstraction = []
         for abstraction_id, abstraction in self.abstractions.iteritems():
@@ -149,6 +149,7 @@ class AutoAbstraction(object):
                 index_combination[index1] = []
             index_combination[index1].append(index2)
 
+        # check for subabtraction
         for index1, index2_list in index_combination.iteritems():
             for index2 in index2_list:
                 if count_sorted[index1][2] in count_sorted[index2][2]:
@@ -161,20 +162,15 @@ class AutoAbstraction(object):
                     self.abstractions[count_sorted[index2][3]]['original_id'].extend(shorter_member)
                     break
 
-    def __print(self):
-        for k, v in self.abstractions.iteritems():
-            print k, v['abstraction']
-
-        for k, v in self.clusters.iteritems():
-            print k, v
+        # final abstraction, left the empty abstraction behind
+        final_id = 0
+        for abstraction_id, abstraction in self.abstractions.iteritems():
+            if abstraction['length'] > 0:
+                self.final_abstractions[final_id] = abstraction
+                final_id += 1
 
     def get_abstraction(self):
         self.__get_community_detection()
         self.__get_count_groups()
         self.__get_abstraction_asterisk()
-        self.__check_subabstraction()
-        self.__print()
-
-
-aa = AutoAbstraction('/home/hudan/Git/datasets/casper-rw/logs/dmesg')
-aa.get_abstraction()
+        self.__check_subabstraction()        
