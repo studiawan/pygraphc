@@ -1,129 +1,176 @@
-from orderedset import OrderedSet
+import networkx as nx
+import os
 from operator import itemgetter
-from pygraphc.preprocess.ParallelPreprocess import ParallelPreprocess
+from itertools import combinations
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
-from pygraphc.clustering.GraphEntropy import GraphEntropy
+from pygraphc.clustering.Louvan import Louvan
 
 
 class AutoAbstraction(object):
     def __init__(self, log_file):
         self.log_file = log_file
-        self.unique_events = []
-        self.count_groups = {}
-        self.count_groups_refine = {}
+        self.graph = None
+        self.graph_noattributes = None
+        self.clusters = {}
+        self.abstraction_candidates = {}
         self.abstractions = {}
+        self.final_abstractions = {}
 
-    def __get_unique_events(self):
-        pp = ParallelPreprocess(self.log_file)
-        self.unique_events = pp.get_unique_events()
+    def __get_community_detection(self):
+        # create graph
+        graph_model = CreateGraphModel(self.log_file)
+        self.graph = graph_model.create_graph()
+        self.graph_noattributes = graph_model.create_graph_noattributes()
+
+        # start of phase 1
+        # write to file
+        gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] + '.gexf')
+        nx.write_gexf(self.graph_noattributes, gexf_file)
+
+        # graph clustering based on Louvan community detection
+        louvan = Louvan(gexf_file)
+        temporary_clusters = louvan.get_cluster()
+
+        # start of phase 2
+        cluster_id = 0
+        for temporary_index, temporary_cluster in temporary_clusters.iteritems():
+            # write to file
+            gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] + '.gexf')
+            temporary_cluster = [int(node) for node in temporary_cluster]
+            nx.write_gexf(self.graph_noattributes.subgraph(temporary_cluster), gexf_file)
+
+            # graph clustering based on Louvan community detection
+            louvan = Louvan(gexf_file)
+            temporary_clusters2 = louvan.get_cluster()
+
+            if len(temporary_clusters2.keys()) == 1:
+                self.clusters[cluster_id] = temporary_clusters2.values()[0]
+                cluster_id += 1
+            else:
+                # start of phase 3
+                for temporary_index2, temporary_cluster2 in temporary_clusters2.iteritems():
+                    # write to file
+                    gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] + '.gexf')
+                    temporary_cluster2 = [int(node) for node in temporary_cluster2]
+                    nx.write_gexf(self.graph_noattributes.subgraph(temporary_cluster2), gexf_file)
+
+                    # graph clustering based on Louvan community detection
+                    louvan = Louvan(gexf_file)
+                    temporary_clusters3 = louvan.get_cluster()
+
+                    if len(temporary_clusters3.keys()) == 1:
+                        self.clusters[cluster_id] = temporary_clusters3.values()[0]
+                        cluster_id += 1
+                    else:
+                        for temporary_index3, temporary_cluster3 in temporary_clusters3.iteritems():
+                            self.clusters[cluster_id] = temporary_cluster3
+                            cluster_id += 1
 
     def __get_count_groups(self):
-        self.__get_unique_events()
-        for event_id, attributes in self.unique_events:
-            message = attributes['preprocessed_event']
-
-            # we need OrderedSet to preserve order because a regular set does not preserve order
-            words_split = OrderedSet(message.strip().split())
-            words_count = len(words_split)
-
-            # group based on word count
-            group_keys = self.count_groups.keys()
-            if words_count not in group_keys:
-                self.count_groups[words_count] = {}
-            self.count_groups[words_count][event_id] = words_split
-
-    def __refine_count_groups(self):
-        self.__get_count_groups()
-        refine_id = 0
-        for words_count, count_group in self.count_groups.iteritems():
-            group_length = len(count_group)
-
-            # refine with graph clustering
-            if group_length > 1:
-                # create nodes, edges, and graph
-                preprocess = CreateGraphModel('', count_group)
-                graph = preprocess.create_graph_nopreprocess()
-
-                # graph clustering based on entropy
-                ge = GraphEntropy(graph)
-                clusters = ge.get_graph_entropy()
-
-                # get new groups, if exists
-                for cluster_id, nodes in clusters.iteritems():
-                    self.count_groups_refine[refine_id] = {}
-                    for node in nodes:
-                        # convert node id in graph clusters to original id of count group
-                        original_id = graph.node[node]['original_id']
-                        self.count_groups_refine[refine_id][original_id] = count_group[original_id]
-                    refine_id += 1
-
-            elif group_length == 1:
-                self.count_groups_refine[refine_id] = count_group
-                refine_id += 1
-
-    def get_abstraction(self):
-        # group messages which has the same word count
-        self.__refine_count_groups()
-
-        # get common words with intersection as abstraction
         abstraction_id = 0
-        for words_count, group in self.count_groups_refine.iteritems():
-            group_length = len(group.values())
-            if group_length > 1:
-                # get abstraction
-                # prevent initialization to refer to current group variable. re-initialize with OrderedSet()
-                self.abstractions[abstraction_id] = {'original_id': [],
-                                                     'abstraction': OrderedSet(group.values()[0])}
-                for index, message in group.iteritems():
-                    self.abstractions[abstraction_id]['original_id'].append(index)
-                    self.abstractions[abstraction_id]['abstraction'].intersection_update(message)
+        for cluster_id, nodes in self.clusters.iteritems():
+            count_groups = {}
+            for node_id in nodes:
+                node_id = int(node_id)
+                message = self.graph.node[node_id]['preprocessed_event'].split()
+                words_count = len(message)
 
-                # check for abstraction that only contains one word,
-                # the abstraction is its original message in count group
-                if len(self.abstractions[abstraction_id]['abstraction']) == 1:
-                    for index, message in group.iteritems():
-                        self.abstractions[abstraction_id] = {'original_id': [index],
-                                                             'abstraction': list(message)}
-                        abstraction_id += 1
-                else:
-                    # get index for abstraction
-                    abstraction_index = set()
-                    for word in self.abstractions[abstraction_id]['abstraction']:
-                        abstraction_index.add(group.values()[0].index(word))
+                # save count group per cluster
+                if words_count not in count_groups.keys():
+                    count_groups[words_count] = {}
+                count_groups[words_count][node_id] = message
 
-                    # get all index in original count_group and get asterisk index
-                    all_index = set(range(len(group.values()[0])))
-                    asterisk_index = all_index - abstraction_index
-                    final_abstraction = list(self.abstractions[abstraction_id]['abstraction'])
-
-                    # abstraction with asterisk symbol to represent the non-intersection words
-                    for index in asterisk_index:
-                        final_abstraction.insert(index, '*')
-                    self.abstractions[abstraction_id]['abstraction'] = final_abstraction
-
-                    abstraction_id += 1
-
-                # check if abstraction only contains asterisks
-                if set(self.abstractions[abstraction_id-1]['abstraction']) == {'*'}:
-                    abstraction_id -= 1
-                    for index, message in group.iteritems():
-                        self.abstractions[abstraction_id] = {'original_id': [index],
-                                                             'abstraction': list(message)}
-                        abstraction_id += 1
-
-            elif group_length == 1:
-                self.abstractions[abstraction_id] = {'original_id': [group.keys()[0]],
-                                                     'abstraction': list(group.values()[0])}
+            for count, group in count_groups.iteritems():
+                self.abstraction_candidates[abstraction_id] = {count: group}
                 abstraction_id += 1
 
+    def __get_abstraction_asterisk(self):
+        # get abstraction with asterisk sign
+        for abstraction_id, candidates in self.abstraction_candidates.iteritems():
+            for count, candidate in candidates.iteritems():
+                # transpose row to column
+                candidate_transpose = list(zip(*candidate.values()))
+                candidate_length = len(candidate.values())
+                if candidate_length > 1:
+                    # prevent initialization to refer to current group variable
+                    self.abstractions[abstraction_id] = {'original_id': [],
+                                                         'abstraction': [],
+                                                         'length': 0}
+                    # get abstraction
+                    abstraction_list = []
+                    for index, message in enumerate(candidate_transpose):
+                        message_length = len(set(message))
+                        if message_length == 1:
+                            abstraction_list.append(message[0])
+                        else:
+                            abstraction_list.append('*')
 
-aa = AutoAbstraction('/home/hudan/Git/labeled-authlog/dataset/illustration/per_day/test.log')
-aa.get_abstraction()
+                    # if abstraction only contains asterisks, each candidate becomes an abstraction
+                    if set(abstraction_list) == set('*'):
+                        for node_id, message in candidate.iteritems():
+                            self.abstractions[abstraction_id] = {'original_id': self.graph.node[node_id]['member'],
+                                                                 'abstraction': ' '.join(message),
+                                                                 'length': len(message)}
+                            abstraction_id += 1
 
-abstraction = []
-for k, v in aa.abstractions.iteritems():
-    abstraction.append(v['abstraction'])
+                    # set abstraction and original line id
+                    else:
+                        for node_id, message in candidate.iteritems():
+                            self.abstractions[abstraction_id]['original_id'].extend(self.graph.node[node_id]['member'])
+                        self.abstractions[abstraction_id]['abstraction'] = ' '.join(abstraction_list)
+                        self.abstractions[abstraction_id]['length'] = len(abstraction_list)
+                        abstraction_id += 1
 
-abstraction_sorted = sorted(abstraction, key=itemgetter(0))
-for a in abstraction_sorted:
-    print ' '.join(a)
+                elif candidate_length == 1:
+                    node_id = candidate.keys()[0]
+                    abstraction = candidate.values()[0]
+                    self.abstractions[abstraction_id] = {'original_id': self.graph.node[node_id]['member'],
+                                                         'abstraction': ' '.join(abstraction),
+                                                         'length': len(abstraction)}
+                    abstraction_id += 1
+
+    def __check_subabstraction(self):
+        # check whether an abstraction is a substring of another abstraction
+        # convert abstraction to list of tuple for sorting.
+        # tuple: (abstraction_length, original_id, abstraction_string, abstraction_id)
+        count_abstraction = []
+        for abstraction_id, abstraction in self.abstractions.iteritems():
+            count_abstraction.append((abstraction['length'], abstraction['original_id'],
+                                      abstraction['abstraction'], abstraction_id))
+
+        # sort abstraction based on word count
+        count_sorted = sorted(count_abstraction, key=itemgetter(0))
+        count_sorted_length = len(count_sorted)
+
+        # save combinations to dictionary
+        index_combination = {}
+        for index1, index2 in combinations(range(count_sorted_length), 2):
+            if index1 not in index_combination.keys():
+                index_combination[index1] = []
+            index_combination[index1].append(index2)
+
+        # check for subabtraction
+        for index1, index2_list in index_combination.iteritems():
+            for index2 in index2_list:
+                if count_sorted[index1][2] in count_sorted[index2][2]:
+                    # empty the member of shorter abstraction
+                    shorter_member = self.abstractions[count_sorted[index1][3]]['original_id']
+                    self.abstractions[count_sorted[index1][3]] = {'original_id': [],
+                                                                  'abstraction': '',
+                                                                  'length': 0}
+                    # merge to longer abstraction then break
+                    self.abstractions[count_sorted[index2][3]]['original_id'].extend(shorter_member)
+                    break
+
+        # final abstraction, left the empty abstraction behind
+        final_id = 0
+        for abstraction_id, abstraction in self.abstractions.iteritems():
+            if abstraction['length'] > 0:
+                self.final_abstractions[final_id] = abstraction
+                final_id += 1
+
+    def get_abstraction(self):
+        self.__get_community_detection()
+        self.__get_count_groups()
+        self.__get_abstraction_asterisk()
+        self.__check_subabstraction()        
