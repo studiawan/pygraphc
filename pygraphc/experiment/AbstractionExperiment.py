@@ -1,10 +1,11 @@
 import os
 import errno
-import fnmatch
 import csv
 import multiprocessing
 import multiprocessing.pool
 from ConfigParser import SafeConfigParser
+from pygraphc.abstraction.AutoAbstraction import AutoAbstraction
+from pygraphc.abstraction.AbstractionUtility import AbstractionUtility
 from pygraphc.evaluation.ExternalEvaluation import ExternalEvaluation
 
 
@@ -12,6 +13,7 @@ class AbstractionExperiment(object):
     def __init__(self, method):
         self.method = method
         self.configuration = {}
+        self.dataset_configuration = {}
         self.methods = {}
         self.files = {}
 
@@ -31,11 +33,23 @@ class AbstractionExperiment(object):
     def __get_dataset(self):
         # get all log files under dataset directory
         dataset = self.configuration['main']['dataset']
-        dataset_path = self.configuration[dataset]['path']
-        file_extension = self.configuration[dataset]['file_extension']
+        parser = SafeConfigParser()
+        current_path = os.path.dirname(os.path.realpath(__file__))
+        dataset_config_path = os.path.join(current_path, 'config', 'abstraction', 'datasets.conf')
+        parser.read(dataset_config_path)
+
+        # read dataset section
+        for section_name in parser.sections():
+            options = {}
+            for name, value in parser.items(section_name):
+                options[name] = value
+            self.dataset_configuration[section_name] = options
+
+        # get full path of each filename
+        dataset_path = self.dataset_configuration[dataset]['path']
         matches = []
         for root, dirnames, filenames in os.walk(dataset_path):
-            for filename in fnmatch.filter(filenames, file_extension):
+            for filename in filenames:
                 full_path = os.path.join(root, filename)
                 matches.append((full_path, filename))
 
@@ -104,10 +118,15 @@ class AbstractionExperiment(object):
         if self.configuration['external_evaluation']['fowlkes_mallows_index'] == '1':
             pass
 
+        external_evaluation = [0, 0, 0]
         return tuple(external_evaluation)
 
-    def __run_alaf(self):
-        pass
+    @staticmethod
+    def __run_alaf(filename):
+        auto_abstraction = AutoAbstraction(filename)
+        abstractions = auto_abstraction.get_abstraction()
+
+        return abstractions
 
     def __run_iplom(self):
         pass
@@ -134,7 +153,8 @@ class AbstractionExperiment(object):
             if self.method in self.methods['graph']:
 
                 if self.method == 'alaf':
-                    self.__run_alaf()
+                    abstractions = self.__run_alaf(properties['log_path'])
+                    AbstractionUtility.write_perline(abstractions, properties['log_path'], properties['perline_path'])
 
             elif self.method in self.methods['non_graph']:
 
@@ -155,7 +175,7 @@ class AbstractionExperiment(object):
 
             # get external evaluation
             external_evaluation = self.__get_external_evaluation(properties['standard_file'],
-                                                                 properties['prediction_file'])
+                                                                 properties['perline_path'])
             row = (filename,) + external_evaluation
             print filename, external_evaluation
 
@@ -166,7 +186,58 @@ class AbstractionExperiment(object):
         return self.__get_abstraction(filename_properties)
 
     def run_abstraction_serial(self):
-        pass
+        # initialization
+        self.__get_methods()
+        self.__read_config()
+        self.__get_dataset()
+
+        # open evaluation file
+        self.__check_path(self.files['evaluation_directory'])
+        f = open(self.files['evaluation_file'], 'wt')
+        writer = csv.writer(f)
+
+        # set header for evaluation file
+        header = []
+        if self.configuration['main']['abstraction']:
+            header = self.configuration['abstraction_evaluation']['evaluation_file_header'].split('\n')
+        writer.writerow(tuple(header))
+
+        # run the experiment
+        for filename, properties in self.files.iteritems():
+            if filename == 'evaluation_directory' or filename == 'evaluation_file':
+                continue
+
+            if self.method in self.methods['graph']:
+                if self.method == 'alaf':
+                    abstractions = self.__run_alaf(properties['log_path'])
+                    AbstractionUtility.write_perline(abstractions, properties['log_path'], properties['perline_path'])
+
+            elif self.method in self.methods['non_graph']:
+                if self.method == 'IPLoM':
+                    self.__run_iplom()
+
+                elif self.method == 'LogSig':
+                    self.__run_logsig()
+
+                elif self.method == 'LKE':
+                    self.__run_lke()
+
+                elif self.method == 'LogCluster':
+                    self.__run_logcluster()
+
+                elif self.method == 'Drain':
+                    self.__run_drain()
+
+            # get external evaluation
+            external_evaluation = self.__get_external_evaluation(properties['standard_file'],
+                                                                 properties['perline_path'])
+            # write experiment result
+            row = (filename,) + external_evaluation
+            writer.writerow(row)
+            print filename, external_evaluation
+
+        # close evaluation file
+        f.close()
 
     def run_abstraction_parallel(self):
         # initialization
@@ -224,3 +295,7 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
         pass
 
     Process = NoDaemonProcess
+
+
+e = AbstractionExperiment('alaf')
+e.run_abstraction_serial()
