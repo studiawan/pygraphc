@@ -4,12 +4,15 @@ from operator import itemgetter
 from itertools import combinations
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.clustering.Louvan import Louvan
+from pygraphc.clustering.ClusterUtility import ClusterUtility
 
 
 class AutoAbstraction(object):
     def __init__(self, log_file):
+        print log_file
         self.log_file = log_file
         self.graph = None
+        self.graph_copy = None
         self.graph_noattributes = None
         self.clusters = {}
         self.abstraction_candidates = {}
@@ -21,6 +24,7 @@ class AutoAbstraction(object):
         graph_model = CreateGraphModel(self.log_file)
         self.graph = graph_model.create_graph()
         self.graph_noattributes = graph_model.create_graph_noattributes()
+        self.graph_copy = self.graph.copy()
 
         # start of phase 1
         # write to file
@@ -34,44 +38,102 @@ class AutoAbstraction(object):
         # start of phase 2
         cluster_id = 0
         for temporary_index, temporary_cluster in temporary_clusters.iteritems():
-            # write to file
-            gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] + '.gexf')
-            temporary_cluster = [int(node) for node in temporary_cluster]
-            nx.write_gexf(self.graph_noattributes.subgraph(temporary_cluster), gexf_file)
-
-            # graph clustering based on Louvan community detection
-            louvan = Louvan(gexf_file)
-            temporary_clusters2 = louvan.get_cluster()
-
-            if len(temporary_clusters2.keys()) == 1:
-                self.clusters[cluster_id] = temporary_clusters2.values()[0]
+            if len(temporary_cluster) == 1:
+                self.clusters[cluster_id] = temporary_cluster
                 cluster_id += 1
             else:
-                # start of phase 3
-                for temporary_index2, temporary_cluster2 in temporary_clusters2.iteritems():
-                    # write to file
-                    gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] + '.gexf')
-                    temporary_cluster2 = [int(node) for node in temporary_cluster2]
-                    nx.write_gexf(self.graph_noattributes.subgraph(temporary_cluster2), gexf_file)
+                # write to file
+                gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] + '.gexf')
+                temporary_cluster = [int(node) for node in temporary_cluster]
+                nx.write_gexf(self.graph_noattributes.subgraph(temporary_cluster), gexf_file)
 
-                    # graph clustering based on Louvan community detection
-                    louvan = Louvan(gexf_file)
-                    temporary_clusters3 = louvan.get_cluster()
+                # graph clustering based on Louvan community detection
+                louvan = Louvan(gexf_file)
+                temporary_clusters2 = louvan.get_cluster()
 
-                    if len(temporary_clusters3.keys()) == 1:
-                        self.clusters[cluster_id] = temporary_clusters3.values()[0]
-                        cluster_id += 1
-                    else:
-                        for temporary_index3, temporary_cluster3 in temporary_clusters3.iteritems():
-                            self.clusters[cluster_id] = temporary_cluster3
+                if len(temporary_clusters2.keys()) == 1:
+                    self.clusters[cluster_id] = temporary_clusters2.values()[0]
+                    cluster_id += 1
+                else:
+                    # start of phase 3
+                    for temporary_index2, temporary_cluster2 in temporary_clusters2.iteritems():
+                        # write to file
+                        gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] + '.gexf')
+                        temporary_cluster2 = [int(node) for node in temporary_cluster2]
+                        nx.write_gexf(self.graph_noattributes.subgraph(temporary_cluster2), gexf_file)
+
+                        # graph clustering based on Louvan community detection
+                        louvan = Louvan(gexf_file)
+                        temporary_clusters3 = louvan.get_cluster()
+
+                        if len(temporary_clusters3.keys()) == 1:
+                            self.clusters[cluster_id] = temporary_clusters3.values()[0]
                             cluster_id += 1
+                        else:
+                            for temporary_index3, temporary_cluster3 in temporary_clusters3.iteritems():
+                                self.clusters[cluster_id] = temporary_cluster3
+                                cluster_id += 1
+
+    def __check_all_node_id(self):
+        check_node_id = {}
+        for cluster_id, nodes in self.clusters.iteritems():
+            for node in nodes:
+                node = int(node)
+                check_node_id[node] = cluster_id
+
+        for key in sorted(check_node_id.iterkeys()):
+            print "%s: %s" % (key, check_node_id[key])
+
+    def __check_abstractions(self):
+        for abstraction_id, abstraction in self.abstractions.iteritems():
+            print abstraction_id, abstraction
+
+    def __set_cluster_attribute(self):
+        # set cluster id in cluster node attribute
+        for cluster_id, clusters in self.clusters.iteritems():
+            for node in clusters:
+                self.graph_copy.node[int(node)]['cluster'] = cluster_id
+
+    def __remove_outcluster(self):
+        """Remove edges that connect to other clusters.
+
+        This method will first find any edges in the cluster member. If edges connecting to a node does not belong to
+        the current cluster, then it will be removed.
+        """
+        # remove edge outside cluster
+        for node in self.graph_copy.nodes_iter(data=True):
+            neighbors = self.graph_copy.neighbors(node[0])
+            for neighbor in neighbors:
+                # if cluster id of current node is not the same of the connecting node
+                if self.graph_copy.node[node[0]]['cluster'] != self.graph_copy.node[neighbor]['cluster']:
+                    try:
+                        self.graph_copy.remove_edge(node[0], neighbor)
+                    except nx.exception.NetworkXError:
+                        pass
+
+    def __get_clusters(self):
+        """Get final result of the clustering.
+
+        Returns
+        -------
+        clusters    : dict[list]
+            Dictionary of list containing nodes identifier for each cluster.
+        """
+        clusters = {}
+        cluster_id = 0
+        for components in nx.connected_components(self.graph_copy):
+            clusters[cluster_id] = components
+            cluster_id += 1
+
+        # refine cluster id
+        ClusterUtility.set_cluster_id(self.graph_copy, clusters)
+        self.clusters = clusters
 
     def __get_count_groups(self):
         abstraction_id = 0
         for cluster_id, nodes in self.clusters.iteritems():
             count_groups = {}
             for node_id in nodes:
-                node_id = int(node_id)
                 message = self.graph.node[node_id]['preprocessed_event'].split()
                 words_count = len(message)
 
@@ -87,7 +149,7 @@ class AutoAbstraction(object):
     def __get_abstraction_asterisk(self):
         # get abstraction with asterisk sign
         for abstraction_id, candidates in self.abstraction_candidates.iteritems():
-            for count, candidate in candidates.iteritems():
+            for word_count, candidate in candidates.iteritems():
                 # transpose row to column
                 candidate_transpose = list(zip(*candidate.values()))
                 candidate_length = len(candidate.values())
@@ -171,6 +233,12 @@ class AutoAbstraction(object):
 
     def get_abstraction(self):
         self.__get_community_detection()
+        self.__set_cluster_attribute()
+        self.__remove_outcluster()
+        self.__get_clusters()
         self.__get_count_groups()
         self.__get_abstraction_asterisk()
-        self.__check_subabstraction()        
+        self.__check_abstractions()
+        self.__check_subabstraction()
+
+        return self.final_abstractions
