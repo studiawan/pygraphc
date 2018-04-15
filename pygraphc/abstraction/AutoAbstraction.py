@@ -85,7 +85,7 @@ class AutoAbstraction(object):
             print "%s: %s" % (key, check_node_id[key])
 
     def __check_abstractions(self):
-        for abstraction_id, abstraction in self.abstractions.iteritems():
+        for abstraction_id, abstraction in self.abstraction_candidates.iteritems():
             print abstraction_id, abstraction
 
     def __set_cluster_attribute(self):
@@ -148,7 +148,8 @@ class AutoAbstraction(object):
 
     def __get_abstraction_asterisk(self):
         # get abstraction with asterisk sign
-        for abstraction_id, candidates in self.abstraction_candidates.iteritems():
+        abstraction_id = 0
+        for abs_id, candidates in self.abstraction_candidates.iteritems():
             for word_count, candidate in candidates.iteritems():
                 # transpose row to column
                 candidate_transpose = list(zip(*candidate.values()))
