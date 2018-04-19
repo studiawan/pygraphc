@@ -93,6 +93,8 @@ class CreateGraphModel(object):
         return self.graph
 
     def create_graph_noattributes(self):
+        nodes = range(self.unique_events_length)
+        self.graph_noattributes.add_nodes_from(nodes)
         self.graph_noattributes.add_weighted_edges_from(self.distances)
 
         return self.graph_noattributes
