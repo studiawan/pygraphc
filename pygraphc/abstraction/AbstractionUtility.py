@@ -3,6 +3,13 @@ import json
 
 class AbstractionUtility(object):
     @staticmethod
+    def read_json(json_file):
+        with open(json_file, 'r') as f:
+            data = json.load(f)
+
+        return data
+
+    @staticmethod
     def read_abstraction_label_groundtruth(abstraction_label_file):
         with open(abstraction_label_file, 'r') as f:
             abstraction = json.load(f)
