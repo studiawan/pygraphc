@@ -1,6 +1,7 @@
 from sklearn import metrics
 from operator import itemgetter
 from pygraphc.output.OutputText import OutputText
+from pygraphc.abstraction.AbstractionUtility import AbstractionUtility
 
 
 class ExternalEvaluation(object):
@@ -154,7 +155,7 @@ class ExternalEvaluation(object):
         OutputText.txt_perline(perline_file, analysis_result, max_cluster_id, cluster_labels, original_logs)
 
     @staticmethod
-    def get_evaluated(evaluated_file, isdict=False):
+    def get_evaluated(evaluated_file, isdict=False, isint=False):
         """Get evaluated log file.
 
         Parameters
@@ -163,6 +164,8 @@ class ExternalEvaluation(object):
             The evaluated log file.
         isdict          : bool
             Flag for returned evaluation_labels (it is dictionary or not)
+        isint           : bool
+            Flag for value.
 
         Returns
         -------
@@ -180,10 +183,13 @@ class ExternalEvaluation(object):
         else:
             evaluation_labels = labels
 
+        if isint:
+            evaluation_labels = [int(label) for label in labels]
+
         return evaluation_labels
 
     @staticmethod
-    def get_adjusted_rand(standard_file, prediction_file):
+    def get_adjusted_rand(standard_file, prediction_file, isjson=False, isint=False):
         """Get adjusted rand index [Hubert1985]_.
 
         Parameters
@@ -192,6 +198,10 @@ class ExternalEvaluation(object):
             The ground truth or standard filename.
         prediction_file : str
             The analyzed or predicted filename.
+        isjson          : bool
+            The flag for standard_file.
+        isint           : bool
+            The flag for value in prediction_file.
 
         Returns
         -------
@@ -203,8 +213,13 @@ class ExternalEvaluation(object):
         .. [Hubert1985] Lawrence Hubert and Phipps Arabie. Comparing partitions.
                         Journal of Classification, 2(1):193-218, 1985.
         """
-        standard_labels = ExternalEvaluation.get_evaluated(standard_file)
-        prediction_labels = ExternalEvaluation.get_evaluated(prediction_file)
+        if isjson:
+            standard_data = AbstractionUtility.read_json(standard_file)
+            standard_labels = standard_data.values()
+        else:
+            standard_labels = ExternalEvaluation.get_evaluated(standard_file)
+
+        prediction_labels = ExternalEvaluation.get_evaluated(prediction_file, isint=isint)
         adjusted_rand_index = metrics.adjusted_rand_score(standard_labels, prediction_labels)
 
         return adjusted_rand_index
@@ -239,7 +254,7 @@ class ExternalEvaluation(object):
         return adjusted_mutual_info
 
     @staticmethod
-    def get_normalized_mutual_info(standard_file, prediction_file):
+    def get_normalized_mutual_info(standard_file, prediction_file, isjson=False, isint=False):
         """Get normalized mutual information (NMI) [Strehl2002]_.
 
         Parameters
@@ -248,6 +263,10 @@ class ExternalEvaluation(object):
             The ground truth or standard filename.
         prediction_file : str
             The analyzed or predicted filename.
+        isjson          : bool
+            The flag for standard_file.
+        isint           : bool
+            The flag for value in prediction_file.
 
         Returns
         -------
@@ -260,8 +279,13 @@ class ExternalEvaluation(object):
                         for combining multiple partitions. Journal of Machine Learning Research,
                         3(Dec):583-617, 2002.
         """
-        standard_labels = ExternalEvaluation.get_evaluated(standard_file)
-        prediction_labels = ExternalEvaluation.get_evaluated(prediction_file)
+        if isjson:
+            standard_data = AbstractionUtility.read_json(standard_file)
+            standard_labels = standard_data.values()
+        else:
+            standard_labels = ExternalEvaluation.get_evaluated(standard_file)
+
+        prediction_labels = ExternalEvaluation.get_evaluated(prediction_file, isint=isint)
         normalized_mutual_info = metrics.normalized_mutual_info_score(standard_labels, prediction_labels)
 
         return normalized_mutual_info
