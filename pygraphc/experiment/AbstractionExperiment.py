@@ -3,6 +3,7 @@ import errno
 import csv
 import multiprocessing
 import multiprocessing.pool
+from time import time
 from ConfigParser import SafeConfigParser
 from pygraphc.abstraction.AutoAbstraction import AutoAbstraction
 from pygraphc.abstraction.AbstractionUtility import AbstractionUtility
@@ -121,12 +122,13 @@ class AbstractionExperiment(object):
             ari = ExternalEvaluation.get_adjusted_rand(standard_file, prediction_file, isjson=True, isint=True)
             external_evaluation.append(ari)
 
-        if self.configuration['external_evaluation']['normalized_mutual_info'] == '1':
-            nmi = ExternalEvaluation.get_normalized_mutual_info(standard_file, prediction_file, isjson=True, isint=True)
+        if self.configuration['external_evaluation']['adjusted_mutual_info'] == '1':
+            nmi = ExternalEvaluation.get_adjusted_mutual_info(standard_file, prediction_file, isjson=True, isint=True)
             external_evaluation.append(nmi)
 
         if self.configuration['external_evaluation']['fowlkes_mallows_index'] == '1':
-            pass
+            fms = ExternalEvaluation.get_fowlkes_mallows_score(standard_file, prediction_file, isjson=True, isint=True)
+            external_evaluation.append(fms)
 
         return tuple(external_evaluation)
 
@@ -157,13 +159,13 @@ class AbstractionExperiment(object):
         filename = filename_properties[0]
         properties = filename_properties[1]
         row = ()
+        abstractions = {}
 
         if filename != 'evaluation_directory' and filename != 'evaluation_file':
             if self.method in self.methods['graph']:
 
                 if self.method == 'alaf':
                     abstractions = self.__run_alaf(properties['log_path'])
-                    AbstractionUtility.write_perline(abstractions, properties['log_path'], properties['perline_path'])
 
             elif self.method in self.methods['non_graph']:
 
@@ -181,6 +183,15 @@ class AbstractionExperiment(object):
 
                 elif self.method == 'Drain':
                     self.__run_drain()
+
+            # update abstraction id based on ground truth
+            abstractions = AbstractionUtility.get_abstractionid_from_groundtruth(
+                properties['abstraction_label_withid_path'], abstractions)
+
+            # write result to file
+            AbstractionUtility.write_perline(abstractions, properties['log_path'], properties['perline_path'])
+            AbstractionUtility.write_perabstraction(abstractions, properties['log_path'],
+                                                    properties['perabstraction_path'])
 
             # get external evaluation
             external_evaluation = self.__get_external_evaluation(properties['lineid_abstractionid_path'],
@@ -277,5 +288,14 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
     Process = NoDaemonProcess
 
 
-e = AbstractionExperiment('alaf')
+# run the experiment
+start = time()
+abstraction_methods = ['alaf', 'iplom', 'logsig', 'lke', 'logcluster', 'drain']
+e = AbstractionExperiment(abstraction_methods[0])
 e.run_abstraction_serial()
+
+# print runtime
+duration = time() - start
+minute, second = divmod(duration, 60)
+hour, minute = divmod(minute, 60)
+print "Runtime: %d:%02d:%02d" % (hour, minute, second)
