@@ -4,24 +4,16 @@ import json
 class AbstractionUtility(object):
     @staticmethod
     def read_json(json_file):
+        # read json data
         with open(json_file, 'r') as f:
             data = json.load(f)
 
-        return data
+        # change json key string to int
+        converted_data = {}
+        for key, value in data.iteritems():
+            converted_data[int(key)] = value
 
-    @staticmethod
-    def read_abstraction_label_groundtruth(abstraction_label_file):
-        with open(abstraction_label_file, 'r') as f:
-            abstraction = json.load(f)
-
-        return abstraction
-
-    @staticmethod
-    def read_logid_abstractionid_groundtruth(logid_abstractionid_file):
-        with open(logid_abstractionid_file, 'r') as f:
-            logid_absid = json.load(f)
-
-        return logid_absid
+        return converted_data
 
     @staticmethod
     def write_perabstraction(final_abstraction, log_file, perabstraction_file):
@@ -32,7 +24,7 @@ class AbstractionUtility(object):
         # write logs per abstraction to file
         f_perabstraction = open(perabstraction_file, 'w')
         for abstraction_id, abstraction in final_abstraction.iteritems():
-            f_perabstraction.write('Abstraction #' + str(abstraction_id) + abstraction['abstraction'])
+            f_perabstraction.write('Abstraction #' + str(abstraction_id) + ' ' + abstraction['abstraction'] + '\n')
             for line_id in abstraction['original_id']:
                 f_perabstraction.write(str(line_id) + ' ' + logs[line_id])
             f_perabstraction.write('\n')
@@ -53,5 +45,27 @@ class AbstractionUtility(object):
         # write log per line with abstraction id
         f_perline = open(perline_file, 'w')
         for line_id, log in enumerate(logs):
-            f_perline.write(str(abstraction_label[line_id]) + ';' + log)
+            f_perline.write(str(abstraction_label[line_id]) + '; ' + log)
         f_perline.close()
+
+    @staticmethod
+    def get_abstractionid_from_groundtruth(logid_abstractionid_file, abstractions):
+        # read ground truth
+        abstraction_groundtruth = AbstractionUtility.read_json(logid_abstractionid_file)
+        groundtruth_length = len(abstraction_groundtruth.keys())
+
+        abstractions_edited_id = {}
+        for abstraction_id, abstraction in abstractions.iteritems():
+            # if abstraction exist in ground truth, get id from dictionary key
+            if abstraction['abstraction'] in abstraction_groundtruth.values():
+                new_id = \
+                    abstraction_groundtruth.keys()[abstraction_groundtruth.values().index(abstraction['abstraction'])]
+
+            # if not exist, new id is dictionary length + 1
+            else:
+                new_id = groundtruth_length
+                groundtruth_length += 1
+
+            abstractions_edited_id[new_id] = abstraction
+
+        return abstractions_edited_id
