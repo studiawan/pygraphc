@@ -46,9 +46,11 @@ class AbstractionExperiment(object):
             self.dataset_configuration[section_name] = options
 
         # get full path of each filename
-        dataset_path = self.dataset_configuration[dataset]['path']
+        dataset_path = self.dataset_configuration['main']['dataset_path']
+        dataset_path_logs = os.path.join(self.dataset_configuration['main']['dataset_path'], dataset,
+                                         self.dataset_configuration['main']['logs_path'])
         matches = []
-        for root, dirnames, filenames in os.walk(dataset_path):
+        for root, dirnames, filenames in os.walk(dataset_path_logs):
             for filename in filenames:
                 full_path = os.path.join(root, filename)
                 matches.append((full_path, filename))
@@ -63,7 +65,7 @@ class AbstractionExperiment(object):
 
         if self.configuration['main']['abstraction'] == '1':
             for full_path, filename in matches:
-                # get all files for clustering
+                # get all files for abstraction
                 properties = {}
                 for key, value in self.configuration['abstraction_result_path'].iteritems():
                     directory = os.path.join(result_path, dataset, value)
@@ -73,14 +75,22 @@ class AbstractionExperiment(object):
                 # update files dictionary
                 self.files[filename].update(properties)
 
-                # get evaluation directory and file for clustering
-                self.files['evaluation_directory'] = \
-                    os.path.join(result_path, dataset,
-                                 self.configuration['abstraction_evaluation']['evaluation_directory'])
-                self.files['evaluation_file'] = \
-                    os.path.join(result_path, dataset,
-                                 self.configuration['abstraction_evaluation']['evaluation_directory'],
-                                 self.configuration['abstraction_evaluation']['evaluation_file'])
+                # get ground truth for each file
+                properties = {}
+                for key, value in self.configuration['abstraction_ground_truth'].iteritems():
+                    properties[key] = os.path.join(dataset_path, dataset, value, filename)
+
+                # update files dictionary
+                self.files[filename].update(properties)
+
+            # get evaluation directory and file for clustering
+            self.files['evaluation_directory'] = \
+                os.path.join(result_path, dataset,
+                             self.configuration['abstraction_evaluation']['evaluation_directory'])
+            self.files['evaluation_file'] = \
+                os.path.join(result_path, dataset,
+                             self.configuration['abstraction_evaluation']['evaluation_directory'],
+                             self.configuration['abstraction_evaluation']['evaluation_file'])
 
     @staticmethod
     def __check_path(path):
@@ -108,17 +118,16 @@ class AbstractionExperiment(object):
     def __get_external_evaluation(self, standard_file, prediction_file):
         external_evaluation = []
         if self.configuration['external_evaluation']['adjusted_rand_index'] == '1':
-            ari = ExternalEvaluation.get_adjusted_rand(standard_file, prediction_file)
+            ari = ExternalEvaluation.get_adjusted_rand(standard_file, prediction_file, isjson=True, isint=True)
             external_evaluation.append(ari)
 
         if self.configuration['external_evaluation']['normalized_mutual_info'] == '1':
-            nmi = ExternalEvaluation.get_normalized_mutual_info(standard_file, prediction_file)
+            nmi = ExternalEvaluation.get_normalized_mutual_info(standard_file, prediction_file, isjson=True, isint=True)
             external_evaluation.append(nmi)
 
         if self.configuration['external_evaluation']['fowlkes_mallows_index'] == '1':
             pass
 
-        external_evaluation = [0, 0, 0]
         return tuple(external_evaluation)
 
     @staticmethod
@@ -174,7 +183,7 @@ class AbstractionExperiment(object):
                     self.__run_drain()
 
             # get external evaluation
-            external_evaluation = self.__get_external_evaluation(properties['standard_file'],
+            external_evaluation = self.__get_external_evaluation(properties['lineid_abstractionid_path'],
                                                                  properties['perline_path'])
             row = (filename,) + external_evaluation
             print filename, external_evaluation
@@ -198,43 +207,14 @@ class AbstractionExperiment(object):
 
         # set header for evaluation file
         header = []
-        if self.configuration['main']['abstraction']:
+        if self.configuration['main']['abstraction'] == '1':
             header = self.configuration['abstraction_evaluation']['evaluation_file_header'].split('\n')
         writer.writerow(tuple(header))
 
         # run the experiment
         for filename, properties in self.files.iteritems():
-            if filename == 'evaluation_directory' or filename == 'evaluation_file':
-                continue
-
-            if self.method in self.methods['graph']:
-                if self.method == 'alaf':
-                    abstractions = self.__run_alaf(properties['log_path'])
-                    AbstractionUtility.write_perline(abstractions, properties['log_path'], properties['perline_path'])
-
-            elif self.method in self.methods['non_graph']:
-                if self.method == 'IPLoM':
-                    self.__run_iplom()
-
-                elif self.method == 'LogSig':
-                    self.__run_logsig()
-
-                elif self.method == 'LKE':
-                    self.__run_lke()
-
-                elif self.method == 'LogCluster':
-                    self.__run_logcluster()
-
-                elif self.method == 'Drain':
-                    self.__run_drain()
-
-            # get external evaluation
-            external_evaluation = self.__get_external_evaluation(properties['standard_file'],
-                                                                 properties['perline_path'])
-            # write experiment result
-            row = (filename,) + external_evaluation
+            row = self.__get_abstraction((filename, properties))
             writer.writerow(row)
-            print filename, external_evaluation
 
         # close evaluation file
         f.close()
@@ -264,7 +244,7 @@ class AbstractionExperiment(object):
 
         # set header for evaluation file
         header = []
-        if self.configuration['main']['abstraction']:
+        if self.configuration['main']['abstraction'] == '1':
             header = self.configuration['abstraction_evaluation']['evaluation_file_header'].split('\n')
         writer.writerow(tuple(header))
 
