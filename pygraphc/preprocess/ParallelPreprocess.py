@@ -76,6 +76,7 @@ class ParallelPreprocess(object):
             if event not in unique_events_only.values():
                 unique_events_only[unique_event_id] = event
                 self.event_attributes[unique_event_id] = {'preprocessed_event': event_split,
+                                                          'preprocessed_event_norefine': event_split,
                                                           'cluster': unique_event_id,
                                                           'member': [log_id]}
                 unique_event_id += 1
