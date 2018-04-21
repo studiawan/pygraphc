@@ -225,7 +225,7 @@ class ExternalEvaluation(object):
         return adjusted_rand_index
 
     @staticmethod
-    def get_adjusted_mutual_info(standard_file, prediction_file):
+    def get_adjusted_mutual_info(standard_file, prediction_file, isjson=False, isint=False):
         """Get adjusted mutual information (AMI) [Vinh2009]_.
 
         Parameters
@@ -234,6 +234,10 @@ class ExternalEvaluation(object):
             The ground truth or standard filename.
         prediction_file : str
             The analyzed or predicted filename.
+        isjson          : bool
+            The flag for standard_file.
+        isint           : bool
+            The flag for value in prediction_file.
 
         Returns
         -------
@@ -247,11 +251,29 @@ class ExternalEvaluation(object):
                       In Proceedings of the 26th Annual International Conference on Machine Learning,
                       pp. 1073-1080, 2009.
         """
-        standard_labels = ExternalEvaluation.get_evaluated(standard_file)
-        prediction_labels = ExternalEvaluation.get_evaluated(prediction_file)
+        if isjson:
+            standard_data = AbstractionUtility.read_json(standard_file)
+            standard_labels = standard_data.values()
+        else:
+            standard_labels = ExternalEvaluation.get_evaluated(standard_file)
+
+        prediction_labels = ExternalEvaluation.get_evaluated(prediction_file, isint=isint)
         adjusted_mutual_info = metrics.adjusted_mutual_info_score(standard_labels, prediction_labels)
 
         return adjusted_mutual_info
+
+    @staticmethod
+    def get_fowlkes_mallows_score(standard_file, prediction_file, isjson=False, isint=False):
+        if isjson:
+            standard_data = AbstractionUtility.read_json(standard_file)
+            standard_labels = standard_data.values()
+        else:
+            standard_labels = ExternalEvaluation.get_evaluated(standard_file)
+
+        prediction_labels = ExternalEvaluation.get_evaluated(prediction_file, isint=isint)
+        fowlkes_mallows_score = metrics.fowlkes_mallows_score(standard_labels, prediction_labels)
+
+        return fowlkes_mallows_score
 
     @staticmethod
     def get_normalized_mutual_info(standard_file, prediction_file, isjson=False, isint=False):
