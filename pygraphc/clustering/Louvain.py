@@ -2,7 +2,7 @@ import networkx as nx
 import community
 
 
-class Louvan(object):
+class Louvain(object):
     def __init__(self, gexf_file):
         self.gexf_file = gexf_file
         self.graph = None
