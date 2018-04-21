@@ -3,7 +3,7 @@ import os
 from operator import itemgetter
 from itertools import combinations
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
-from pygraphc.clustering.Louvan import Louvan
+from pygraphc.clustering.Louvain import Louvain
 from pygraphc.clustering.ClusterUtility import ClusterUtility
 
 
@@ -30,8 +30,8 @@ class AutoAbstraction(object):
         gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] + '.gexf')
         nx.write_gexf(self.graph_noattributes, gexf_file)
 
-        # graph clustering based on Louvan community detection
-        louvan = Louvan(gexf_file)
+        # graph clustering based on Louvain community detection
+        louvan = Louvain(gexf_file)
         temporary_clusters = louvan.get_cluster()
 
         # start of phase 2
@@ -46,8 +46,8 @@ class AutoAbstraction(object):
                 temporary_cluster = [int(node) for node in temporary_cluster]
                 nx.write_gexf(self.graph_noattributes.subgraph(temporary_cluster), gexf_file)
 
-                # graph clustering based on Louvan community detection
-                louvan = Louvan(gexf_file)
+                # graph clustering based on Louvain community detection
+                louvan = Louvain(gexf_file)
                 temporary_clusters2 = louvan.get_cluster()
 
                 if len(temporary_clusters2.keys()) == 1:
@@ -61,8 +61,8 @@ class AutoAbstraction(object):
                         temporary_cluster2 = [int(node) for node in temporary_cluster2]
                         nx.write_gexf(self.graph_noattributes.subgraph(temporary_cluster2), gexf_file)
 
-                        # graph clustering based on Louvan community detection
-                        louvan = Louvan(gexf_file)
+                        # graph clustering based on Louvain community detection
+                        louvan = Louvain(gexf_file)
                         temporary_clusters3 = louvan.get_cluster()
 
                         if len(temporary_clusters3.keys()) == 1:
@@ -84,8 +84,8 @@ class AutoAbstraction(object):
             print "%s: %s" % (key, check_node_id[key])
 
     def __check_abstractions(self):
-        for abstraction_id, abstraction in self.abstraction_candidates.iteritems():
-            print abstraction_id, abstraction
+        for abstraction_id, abstraction in self.abstractions.iteritems():
+            print abstraction_id, abstraction['abstraction']
 
     def __set_cluster_attribute(self):
         # set cluster id in cluster node attribute
@@ -133,7 +133,7 @@ class AutoAbstraction(object):
         for cluster_id, nodes in self.clusters.iteritems():
             count_groups = {}
             for node_id in nodes:
-                message = self.graph.node[node_id]['preprocessed_event'].split()
+                message = self.graph.node[node_id]['preprocessed_event_norefine']
                 words_count = len(message)
 
                 # save count group per cluster
