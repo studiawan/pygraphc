@@ -238,6 +238,6 @@ class AutoAbstraction(object):
         self.__get_clusters()
         self.__get_count_groups()
         self.__get_abstraction_asterisk()
-        self.__check_subabstraction()
+        # self.__check_subabstraction()
 
-        return self.final_abstractions
+        return self.abstractions
