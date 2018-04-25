@@ -34,6 +34,8 @@ class LogGrammar(object):
             self.snort_sotm34_grammar = self.__get_snort_sotm34_grammar()
         elif self.log_type == 'httpd_error_chuvakin':
             self.httpd_error_chuvakin_grammar = self.__get_httpd_error_chuvakin()
+        elif self.log_type == 'messages_casper_rw':
+            self.messages_casper_rw_grammar = self.__get_messages_casper_rw_grammar()
 
     @staticmethod
     def __get_authlog_grammar():
@@ -472,5 +474,68 @@ class LogGrammar(object):
             parsed['timestamp'] = ''
             parsed['message_type'] = ''
             parsed['message'] = log_line
+
+        return parsed
+
+    @staticmethod
+    def __get_messages_casper_rw_grammar():
+        """The definition of syslog grammar.
+
+        Returns
+        -------
+        syslog_grammar    :
+            Grammar for syslog.
+        """
+        ints = Word(nums)
+
+        # timestamp
+        month = Word(string.uppercase, string.lowercase, exact=3)
+        day = ints
+        hour = Combine(ints + ":" + ints + ":" + ints)
+        timestamp = month + day + hour
+
+        # hostname, service name, message
+        hostname = Word(alphas + nums + "_" + "-" + ".")
+        appname = Word(alphas + "/" + "-" + "_" + ".") + \
+            Optional(Suppress("(") + Word(alphas + "_") + Suppress(")")) + \
+            Optional(Suppress("[") + ints + Suppress("]")) + Optional(Suppress(":"))
+        message = Regex(".*")
+
+        syslog_grammar = timestamp + hostname + appname + message
+        return syslog_grammar
+
+    def parse_messages_casper_rw(self, log_line):
+        """Parse syslog based on defined grammar.
+
+        Parameters
+        ----------
+        log_line    : str
+            A log line to be parsed.
+
+        Returns
+        -------
+        parsed      : dict[str, str]
+            A parsed syslog (or messages in RedHat-based Linux) containing these elements:
+            timestamp, hostname, service, message, time in second (optional), and pid (optional).
+        """
+        parsed_syslog = self.messages_casper_rw_grammar.parseString(log_line)
+
+        parsed = dict()
+        parsed['timestamp'] = parsed_syslog[0] + ' ' + parsed_syslog[1] + ' ' + parsed_syslog[2]
+        parsed['hostname'] = parsed_syslog[3]
+        if len(parsed_syslog) == 6:
+            parsed['service'] = parsed_syslog[4]
+            parsed['message'] = parsed_syslog[5]
+        elif len(parsed_syslog) == 7:
+            parsed['service'] = parsed_syslog[4]
+            parsed['pid'] = parsed_syslog[5]
+            parsed['message'] = parsed_syslog[6]
+        else:
+            if '.' in parsed_syslog[5]:
+                parsed['second'] = parsed_syslog[5]
+            else:
+                parsed['service'] = parsed_syslog[4] + ' ' + parsed_syslog[5]
+                parsed['pid'] = parsed_syslog[6]
+            parsed['message'] = parsed_syslog[7]
 
         return parsed
