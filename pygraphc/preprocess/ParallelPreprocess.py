@@ -1,6 +1,8 @@
 from re import sub
 from nltk import corpus
 import multiprocessing
+# from string import digits
+from pygraphc.preprocess.LogGrammar import LogGrammar
 
 
 class ParallelPreprocess(object):
@@ -16,6 +18,7 @@ class ParallelPreprocess(object):
         self.count_groups = count_groups
         self.events_withduplicates = []
         self.events_withduplicates_length = 0
+        self.log_grammar = None
 
     def __call__(self, line):
         # main method called when running in multiprocessing
@@ -31,10 +34,18 @@ class ParallelPreprocess(object):
     @staticmethod
     def __get_events(logs_with_id):
         log_index, line = logs_with_id
-        line = line.replace('.', '')
         line = sub('[^a-zA-Z]', ' ', line)
-        line = line.replace('_', ' ')
+        # line = line.replace('.', '')
+        # line = line.replace('_', ' ')
+        # line = line.translate(None, digits)
+        # experimental_line = line.translate(None, digits).split()
+        # experimental_line = [x.lower() for x in experimental_line if len(x) > 1]
 
+        # GET preprocessed_event_norefine
+        # line2 = ' '.join(line.split())
+        # preprocessed_event_norefine = line2.lower()
+
+        # GET preprocessed_events
         # remove word with length only 1 character
         line_split = line.split()
         for index, word in enumerate(line_split):
@@ -48,9 +59,35 @@ class ParallelPreprocess(object):
         # remove stopwords
         stopwords = corpus.stopwords.words('english')
         stopwords_result = [w.lower() for w in line.split() if w.lower() not in stopwords]
-        preprocessed_events = ' '.join(stopwords_result)
-        preprocessed_with_id = (log_index, preprocessed_events)
+        preprocessed_events = ' '.join(stopwords_result)    # maximal frequent itemset mining
 
+        # GET experimental_line
+        # get log grammar
+        log_grammar = LogGrammar('messages_casper_rw')
+        parse_result = log_grammar.parse_messages_casper_rw(logs_with_id[1])
+        experimental_line = sub('[^a-zA-Z]', ' ', parse_result['message'])
+
+        # GET preprocessed_event_norefine
+        line2 = ' '.join(experimental_line.split())
+        preprocessed_event_norefine = line2.lower()
+
+        # remove word with length only 1 character
+        line_split = experimental_line.split()
+        for index, word in enumerate(line_split):
+            if len(word) == 1:
+                line_split[index] = ''
+
+        # remove more than one space
+        line = ' '.join(line_split)
+        line = ' '.join(line.split())
+
+        # remove stopwords
+        stopwords = corpus.stopwords.words('english')
+        stopwords_result = [w.lower() for w in line.split() if w.lower() not in stopwords]
+        experimental_line = ' '.join(stopwords_result)
+        print preprocessed_events
+
+        preprocessed_with_id = (log_index, preprocessed_events, preprocessed_event_norefine, experimental_line)
         return preprocessed_with_id
 
     def get_unique_events(self):
@@ -71,19 +108,22 @@ class ParallelPreprocess(object):
         unique_events_only = {}
         unique_event_id = 0
         unique_events_list = []
-        for log_id, event in events:
+        for log_id, event, preprocessed_event_norefine, event_experimental in events:
             event_split = event.split()
-            if event not in unique_events_only.values():
-                unique_events_only[unique_event_id] = event
+            if event_experimental not in unique_events_only.values():
+                unique_events_only[unique_event_id] = event_experimental
                 self.event_attributes[unique_event_id] = {'preprocessed_event': event_split,
-                                                          'preprocessed_event_norefine': event_split,
+                                                          'preprocessed_event_norefine':
+                                                              preprocessed_event_norefine.split(),
+                                                          'preprocessed_event_experimental': event_experimental,
                                                           'cluster': unique_event_id,
                                                           'member': [log_id]}
                 unique_event_id += 1
                 unique_events_list.append(event_split)
             else:
                 for index, attr in self.event_attributes.iteritems():
-                    if event_split == attr['preprocessed_event']:
+                    # if event_split == attr['preprocessed_event']:
+                    if event_experimental == attr['preprocessed_event_experimental']:
                         attr['member'].append(log_id)
 
             # get preprocessed logs as dictionary
