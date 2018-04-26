@@ -133,7 +133,7 @@ class AutoAbstraction(object):
         for cluster_id, nodes in self.clusters.iteritems():
             count_groups = {}
             for node_id in nodes:
-                message = self.graph.node[node_id]['preprocessed_event_norefine']
+                message = self.graph.node[node_id]['preprocessed_event_countgroup']
                 words_count = len(message)
 
                 # save count group per cluster
@@ -164,7 +164,7 @@ class AutoAbstraction(object):
                         message_length = len(set(message))
                         if message_length == 1:
                             abstraction_list.append(message[0])
-                        else:
+                        elif message_length > 1:
                             abstraction_list.append('*')
 
                     # if abstraction only contains asterisks, each candidate becomes an abstraction
