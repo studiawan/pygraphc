@@ -91,8 +91,8 @@ class ParallelCosineSimilarity(object):
 
     def __get_cosine_similarity(self, unique_event_id):
         # calculate cosine similarity
-        string1 = self.event_attributes[unique_event_id[0]]['preprocessed_event_experimental']
-        string2 = self.event_attributes[unique_event_id[1]]['preprocessed_event_experimental']
+        string1 = self.event_attributes[unique_event_id[0]]['preprocessed_events_graphedge']
+        string2 = self.event_attributes[unique_event_id[1]]['preprocessed_events_graphedge']
         distance = self.cosine_similarity.get_cosine_similarity(string1, string2)
         if distance > 0.:
             return round(distance, 3)
