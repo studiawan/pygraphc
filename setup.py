@@ -32,7 +32,8 @@ setup(name='pygraphc',
           'pyparsing',
           'jellyfish',
           'orderedset',
-          'community'
+          'community',
+          'datefinder'
       ],
       include_package_data=True,
       zip_safe=False)
