@@ -5,6 +5,7 @@ from itertools import combinations
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.clustering.Louvain import Louvain
 from pygraphc.clustering.ClusterUtility import ClusterUtility
+from pygraphc.abstraction.AbstractionUtility import AbstractionUtility
 
 
 class AutoAbstraction(object):
@@ -157,7 +158,8 @@ class AutoAbstraction(object):
                     # prevent initialization to refer to current group variable
                     self.abstractions[abstraction_id] = {'original_id': [],
                                                          'abstraction': [],
-                                                         'length': 0}
+                                                         'length': 0,
+                                                         'nodes': []}
                     # get abstraction
                     abstraction_list = []
                     for index, message in enumerate(candidate_transpose):
@@ -217,25 +219,31 @@ class AutoAbstraction(object):
                 index_combination[index1] = []
             index_combination[index1].append(index2)
 
-        # check for subabtraction
+        # check for subabstraction
         for index1, index2_list in index_combination.iteritems():
             for index2 in index2_list:
                 if count_sorted[index1][2] in count_sorted[index2][2]:
-                    # empty the member of shorter abstraction
-                    shorter_member = self.abstractions[count_sorted[index1][3]]['original_id']
-                    self.abstractions[count_sorted[index1][3]] = {'original_id': [],
-                                                                  'abstraction': '',
-                                                                  'length': 0}
-                    # merge to longer abstraction then break
-                    self.abstractions[count_sorted[index2][3]]['original_id'].extend(shorter_member)
+                    # get nodes to be re-cluster, then write to file
+                    abstraction_id_shorter_string = count_sorted[index1][3]
+                    nodes = self.abstractions[abstraction_id_shorter_string]['nodes']
+                    gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] +
+                                             str(abstraction_id_shorter_string) + '.gexf')
+                    nodes = [int(node) for node in nodes]
+                    nx.write_gexf(self.graph_noattributes.subgraph(nodes), gexf_file)
+
+                    # graph clustering based on Louvain community detection
+                    louvan = Louvain(gexf_file)
+                    temporary_clusters = louvan.get_cluster()
+                    print temporary_clusters
+
                     break
 
         # final abstraction, left the empty abstraction behind
-        final_id = 0
-        for abstraction_id, abstraction in self.abstractions.iteritems():
-            if abstraction['length'] > 0:
-                self.final_abstractions[final_id] = abstraction
-                final_id += 1
+        # final_id = 0
+        # for abstraction_id, abstraction in self.abstractions.iteritems():
+        #     if abstraction['length'] > 0:
+        #         self.final_abstractions[final_id] = abstraction
+        #         final_id += 1
 
     def get_abstraction(self):
         self.__get_community_detection()
@@ -244,7 +252,6 @@ class AutoAbstraction(object):
         self.__get_clusters()
         self.__get_count_groups()
         self.__get_abstraction_asterisk()
-        self.__check_abstractions()
-        # self.__check_subabstraction()
+        self.__check_subabstraction()
 
         return self.abstractions
