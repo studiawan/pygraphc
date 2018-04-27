@@ -85,7 +85,7 @@ class AutoAbstraction(object):
 
     def __check_abstractions(self):
         for abstraction_id, abstraction in self.abstractions.iteritems():
-            print abstraction_id, abstraction['abstraction']
+            print abstraction_id, abstraction
 
     def __set_cluster_attribute(self):
         # set cluster id in cluster node attribute
@@ -172,13 +172,18 @@ class AutoAbstraction(object):
                         for node_id, message in candidate.iteritems():
                             self.abstractions[abstraction_id] = {'original_id': self.graph.node[node_id]['member'],
                                                                  'abstraction': ' '.join(message),
-                                                                 'length': len(message)}
+                                                                 'length': len(message),
+                                                                 'nodes': [node_id]}
                             abstraction_id += 1
 
                     # set abstraction and original line id
                     else:
+                        member_nodes = []
                         for node_id, message in candidate.iteritems():
                             self.abstractions[abstraction_id]['original_id'].extend(self.graph.node[node_id]['member'])
+                            member_nodes.append(node_id)
+
+                        self.abstractions[abstraction_id]['nodes'] = member_nodes
                         self.abstractions[abstraction_id]['abstraction'] = ' '.join(abstraction_list)
                         self.abstractions[abstraction_id]['length'] = len(abstraction_list)
                         abstraction_id += 1
@@ -188,7 +193,8 @@ class AutoAbstraction(object):
                     abstraction = candidate.values()[0]
                     self.abstractions[abstraction_id] = {'original_id': self.graph.node[node_id]['member'],
                                                          'abstraction': ' '.join(abstraction),
-                                                         'length': len(abstraction)}
+                                                         'length': len(abstraction),
+                                                         'nodes': [node_id]}
                     abstraction_id += 1
 
     def __check_subabstraction(self):
@@ -238,6 +244,7 @@ class AutoAbstraction(object):
         self.__get_clusters()
         self.__get_count_groups()
         self.__get_abstraction_asterisk()
+        self.__check_abstractions()
         # self.__check_subabstraction()
 
         return self.abstractions
