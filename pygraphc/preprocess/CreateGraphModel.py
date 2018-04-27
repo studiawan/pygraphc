@@ -10,6 +10,7 @@ class CreateGraphModel(object):
         self.log_length = 0
         self.unique_events = []
         self.unique_events_length = 0
+        self.event_attributes = {}
         self.preprocessed_logs = {}
         self.distances = []
         self.graph = nx.MultiGraph()
@@ -20,6 +21,7 @@ class CreateGraphModel(object):
         self.events_withduplicates = []
         self.events_withduplicates_length = 0
         self.graph_noattributes = nx.MultiGraph()
+        self.subgraph = nx.MultiGraph()
 
     def __get_nodes(self):
         # preprocess logs and get unique events as nodes in a graph
@@ -98,3 +100,31 @@ class CreateGraphModel(object):
         self.graph_noattributes.add_weighted_edges_from(self.distances)
 
         return self.graph_noattributes
+
+    def __get_nodes_subgraph(self, nodes):
+        self.unique_events_subgraph = []
+        for unique_event in self.unique_events:
+            index = unique_event[0]
+            attributes = unique_event[1]
+            if index in nodes:
+                self.unique_events_subgraph.append((index, attributes))
+
+        self.unique_events_length_subgraph = len(nodes)
+        self.event_attributes_subgraph = {}
+        for index, attributes in self.event_attributes.iteritems():
+            if index in nodes:
+                self.event_attributes_subgraph[index] = attributes
+
+    def __get_distances_subgraph(self):
+        # check for combinations is not incremental,
+        # but from combinations of node id(s)
+        pcs = ParallelCosineSimilarity(self.event_attributes_subgraph, self.unique_events_length_subgraph)
+        self.distances_subgraph = pcs.get_parallel_cosine_similarity()
+
+    def create_graph_subgraph(self, nodes):
+        self.__get_nodes_subgraph(nodes)
+        self.__get_distances_subgraph()
+        self.subgraph.add_nodes_from(self.unique_events_subgraph)
+        self.subgraph.add_weighted_edges_from(self.distances_subgraph)
+
+        return self.subgraph
