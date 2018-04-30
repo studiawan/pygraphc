@@ -5,7 +5,7 @@ from itertools import combinations
 from pygraphc.preprocess.CreateGraphModel import CreateGraphModel
 from pygraphc.clustering.Louvain import Louvain
 from pygraphc.clustering.ClusterUtility import ClusterUtility
-from pygraphc.abstraction.AbstractionUtility import AbstractionUtility
+# from pygraphc.abstraction.AbstractionUtility import AbstractionUtility
 
 
 class AutoAbstraction(object):
@@ -21,9 +21,9 @@ class AutoAbstraction(object):
 
     def __get_community_detection(self):
         # create graph
-        graph_model = CreateGraphModel(self.log_file)
-        self.graph = graph_model.create_graph()
-        self.graph_noattributes = graph_model.create_graph_noattributes()
+        self.graph_model = CreateGraphModel(self.log_file)
+        self.graph = self.graph_model.create_graph()
+        self.graph_noattributes = self.graph_model.create_graph_noattributes()
         self.graph_copy = self.graph.copy()
 
         # start of phase 1
@@ -220,21 +220,38 @@ class AutoAbstraction(object):
             index_combination[index1].append(index2)
 
         # check for subabstraction
+        # temporary_abstractions = {}
+        # temporary_abstraction_id = 0
         for index1, index2_list in index_combination.iteritems():
             for index2 in index2_list:
                 if count_sorted[index1][2] in count_sorted[index2][2]:
-                    # get nodes to be re-cluster, then write to file
+                    # get nodes to run re-cluster
                     abstraction_id_shorter_string = count_sorted[index1][3]
                     nodes = self.abstractions[abstraction_id_shorter_string]['nodes']
                     gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] +
                                              str(abstraction_id_shorter_string) + '.gexf')
-                    nodes = [int(node) for node in nodes]
-                    nx.write_gexf(self.graph_noattributes.subgraph(nodes), gexf_file)
+
+                    # create new temporary graph based on subgraph nodes
+                    self.graph_model.create_graph_subgraph(nodes)
+
+                    # create graph with no attributes to be written to gexf file
+                    subgraph_noattributes = self.graph_model.create_graph_noattributes(nodes)
+                    nx.write_gexf(subgraph_noattributes, gexf_file)
 
                     # graph clustering based on Louvain community detection
                     louvan = Louvain(gexf_file)
-                    temporary_clusters = louvan.get_cluster()
-                    print temporary_clusters
+                    new_clusters = louvan.get_cluster()
+
+                    # node id in new clusters is in string, convert to int
+                    print new_clusters
+
+                    # each cluster become an abstraction
+                    # an abstraction needs to generate asterisk, we need a separate method to generate asterisk
+                    # temporary_abstractions[temporary_abstraction_id] = \
+                    #     {'original_id': self.graph.node[node_id]['member'],
+                    #      'abstraction': ' '.join(abstraction),
+                    #      'length': len(abstraction),
+                    #      'nodes': [node_id]}
 
                     break
 
