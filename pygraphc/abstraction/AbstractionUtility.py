@@ -69,28 +69,3 @@ class AbstractionUtility(object):
             abstractions_edited_id[new_id] = abstraction
 
         return abstractions_edited_id
-
-    @staticmethod
-    def refine_preprocessed_event_graphedge(graph, nodes):
-        # get events for string similarity in graph edge
-        unique_events_list = []
-        for node_id, properties in graph.nodes_iter(data='True'):
-            if node_id in nodes:
-                unique_events_list.append(properties['preprocessed_events_graphedge'])
-
-        # transpose unique events list
-        unique_events_transpose = map(list, zip(*unique_events_list))
-
-        # check if each transposed list has the same elements
-        true_status = []
-        for index, transposed in enumerate(unique_events_transpose):
-            status = all(item == transposed[0] for item in transposed)
-            if status:
-                true_status.append(index)
-
-        # remove repetitive words
-        for node_id, properties in graph.nodes_iter(data='True'):
-            if node_id in nodes:
-                graphedge = properties['preprocessed_events_graphedge']
-                refined_graphedge = [y for x, y in enumerate(graphedge.split()) if x not in true_status]
-                properties['preprocessed_events_graphedge'] = ' '.join(refined_graphedge)
