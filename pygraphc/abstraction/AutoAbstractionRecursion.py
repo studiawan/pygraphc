@@ -10,10 +10,11 @@ class AutoAbstraction(object):
         self.clusters = []
 
     def __prepare_graph(self, cluster=None):
-        # get subgraph
+        # create new temporary graph based on subgraph nodes
         if cluster:
             subgraph = [int(node) for node in cluster]
-            graph_noattributes = self.graph_noattributes.subgraph(subgraph)
+            self.graph_model.create_graph_subgraph(subgraph)
+            graph_noattributes = self.graph_model.create_graph_noattributes(subgraph)
 
         # create graph
         else:
@@ -24,15 +25,16 @@ class AutoAbstraction(object):
             graph_noattributes = self.graph_noattributes
 
         # write to gexf file
-        gexf_file = os.path.join('/', 'tmp', self.log_file.split('/')[-1] + '.gexf')
+        filename = self.log_file.split('/')[-1]
+        gexf_file = os.path.join('/', 'tmp', filename + '.gexf')
         nx.write_gexf(graph_noattributes, gexf_file)
 
         return gexf_file
 
-    def __get_community(self, cluster=None):
+    def __get_community(self, subgraph=None):
         # prepare graph or subgraph
-        if cluster:
-            gexf_file = self.__prepare_graph(cluster)
+        if subgraph:
+            gexf_file = self.__prepare_graph(subgraph)
         else:
             gexf_file = self.__prepare_graph()
 
