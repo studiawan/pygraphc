@@ -98,6 +98,7 @@ class CreateGraphModel(object):
 
     def create_graph_noattributes(self, nodes=None):
         if nodes:
+            self.subgraph_noattributes = nx.MultiGraph()
             self.subgraph_noattributes.add_nodes_from(nodes)
             self.subgraph_noattributes.add_weighted_edges_from(self.distances_subgraph)
             return self.subgraph_noattributes
@@ -131,6 +132,7 @@ class CreateGraphModel(object):
         self.distances_subgraph = pcs.get_parallel_cosine_similarity()
 
     def create_graph_subgraph(self, nodes):
+        self.subgraph = nx.MultiGraph()
         self.__get_nodes_subgraph(nodes)
         self.__get_distances_subgraph(nodes)
         self.subgraph.add_nodes_from(self.unique_events_subgraph)
