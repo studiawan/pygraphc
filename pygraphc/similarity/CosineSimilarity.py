@@ -83,11 +83,12 @@ class CosineSimilarity(object):
 
 
 class ParallelCosineSimilarity(object):
-    def __init__(self, event_attributes, event_length):
+    def __init__(self, event_attributes, event_length, nodes=None):
         self.event_attributes = event_attributes
         self.event_length = event_length
         self.cosine_similarity = CosineSimilarity()
         self.edges_weight = []
+        self.nodes = nodes
 
     def __get_cosine_similarity(self, unique_event_id):
         # calculate cosine similarity
@@ -105,7 +106,10 @@ class ParallelCosineSimilarity(object):
 
     def get_parallel_cosine_similarity(self):
         # get unique event id combination
-        event_id_combination = list(combinations(xrange(self.event_length), 2))
+        if self.nodes:
+            event_id_combination = list(combinations(self.nodes, 2))
+        else:
+            event_id_combination = list(combinations(xrange(self.event_length), 2))
 
         # get distance with multiprocessing
         total_cpu = multiprocessing.cpu_count()
