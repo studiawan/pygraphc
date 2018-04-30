@@ -34,7 +34,6 @@ class ParallelPreprocess(object):
     def __get_events(logs_with_id):
         log_index, line = logs_with_id
         line = line.lower()
-        # preprocessed_event_countgroup = line
 
         # GET month
         matches = datefinder.find_dates(line, source=True)
@@ -69,7 +68,7 @@ class ParallelPreprocess(object):
         stopwords_month = stopwords
         if months:
             stopwords_month.extend(months)
-        # print months
+
         stopwords_result = [word for word in line.split() if word not in stopwords_month]
         preprocessed_events = ' '.join(stopwords_result)
         preprocessed_events_graphedge = preprocessed_events
@@ -169,3 +168,34 @@ class ParallelPreprocess(object):
                 self.events_withduplicates.append((log_id, attr))
 
         return self.events_withduplicates
+
+    @staticmethod
+    def refine_preprocessed_event_graphedge(unique_events_subgraph, event_attributes_subgraph):
+        # get events for string similarity in graph edge
+        unique_events_list = []
+        for index, properties in unique_events_subgraph:
+            unique_events_list.append(properties['preprocessed_events_graphedge'])
+
+        # transpose unique events list
+        unique_events_transpose = map(list, zip(*unique_events_list))
+
+        # check if each transposed list has the same elements
+        true_status = []
+        for index, transposed in enumerate(unique_events_transpose):
+            status = all(item == transposed[0] for item in transposed)
+            if status:
+                true_status.append(index)
+
+        # remove repetitive words
+        for index, properties in unique_events_subgraph:
+            graphedge = properties['preprocessed_events_graphedge']
+            refined_graphedge = [y for x, y in enumerate(graphedge.split()) if x not in true_status]
+            properties['preprocessed_events_graphedge'] = ' '.join(refined_graphedge)
+
+        # remove repetitive words
+        for index, properties in event_attributes_subgraph.iteritems():
+            graphedge = properties['preprocessed_events_graphedge']
+            refined_graphedge = [y for x, y in enumerate(graphedge.split()) if x not in true_status]
+            properties['preprocessed_events_graphedge'] = ' '.join(refined_graphedge)
+
+        return unique_events_subgraph, event_attributes_subgraph
