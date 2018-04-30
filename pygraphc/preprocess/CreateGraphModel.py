@@ -5,7 +5,7 @@ import networkx as nx
 
 
 class CreateGraphModel(object):
-    def __init__(self, log_file, count_groups=None, pruning=False):
+    def __init__(self, log_file='', count_groups=None, pruning=False):
         self.log_file = log_file
         self.log_length = 0
         self.unique_events = []
@@ -22,16 +22,18 @@ class CreateGraphModel(object):
         self.events_withduplicates_length = 0
         self.graph_noattributes = nx.MultiGraph()
         self.subgraph = nx.MultiGraph()
+        self.subgraph_noattributes = nx.MultiGraph()
+        self.pp = None
 
     def __get_nodes(self):
         # preprocess logs and get unique events as nodes in a graph
-        pp = ParallelPreprocess(self.log_file)
-        self.unique_events = pp.get_unique_events()
-        self.unique_events_length = pp.unique_events_length
-        self.event_attributes = pp.event_attributes
-        self.preprocessed_logs = pp.preprocessed_logs
-        self.log_length = pp.log_length
-        self.logs = pp.logs
+        self.pp = ParallelPreprocess(self.log_file)
+        self.unique_events = self.pp.get_unique_events()
+        self.unique_events_length = self.pp.unique_events_length
+        self.event_attributes = self.pp.event_attributes
+        self.preprocessed_logs = self.pp.preprocessed_logs
+        self.log_length = self.pp.log_length
+        self.logs = self.pp.logs
 
     def __get_distances(self):
         # get cosine distance as edges with weight
@@ -94,12 +96,17 @@ class CreateGraphModel(object):
 
         return self.graph
 
-    def create_graph_noattributes(self):
-        nodes = range(self.unique_events_length)
-        self.graph_noattributes.add_nodes_from(nodes)
-        self.graph_noattributes.add_weighted_edges_from(self.distances)
+    def create_graph_noattributes(self, nodes=None):
+        if nodes:
+            self.subgraph_noattributes.add_nodes_from(nodes)
+            self.subgraph_noattributes.add_weighted_edges_from(self.distances_subgraph)
+            return self.subgraph_noattributes
 
-        return self.graph_noattributes
+        else:
+            nodes = range(self.unique_events_length)
+            self.graph_noattributes.add_nodes_from(nodes)
+            self.graph_noattributes.add_weighted_edges_from(self.distances)
+            return self.graph_noattributes
 
     def __get_nodes_subgraph(self, nodes):
         self.unique_events_subgraph = []
@@ -115,15 +122,17 @@ class CreateGraphModel(object):
             if index in nodes:
                 self.event_attributes_subgraph[index] = attributes
 
-    def __get_distances_subgraph(self):
-        # check for combinations is not incremental,
-        # but from combinations of node id(s)
-        pcs = ParallelCosineSimilarity(self.event_attributes_subgraph, self.unique_events_length_subgraph)
+        # remove same word, same column
+        self.unique_events_subgraph, self.event_attributes_subgraph = \
+            self.pp.refine_preprocessed_event_graphedge(self.unique_events_subgraph, self.event_attributes_subgraph)
+
+    def __get_distances_subgraph(self, nodes):
+        pcs = ParallelCosineSimilarity(self.event_attributes_subgraph, self.unique_events_length_subgraph, nodes)
         self.distances_subgraph = pcs.get_parallel_cosine_similarity()
 
     def create_graph_subgraph(self, nodes):
         self.__get_nodes_subgraph(nodes)
-        self.__get_distances_subgraph()
+        self.__get_distances_subgraph(nodes)
         self.subgraph.add_nodes_from(self.unique_events_subgraph)
         self.subgraph.add_weighted_edges_from(self.distances_subgraph)
 
