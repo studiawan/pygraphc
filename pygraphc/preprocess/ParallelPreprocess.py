@@ -174,10 +174,10 @@ class ParallelPreprocess(object):
         # get events for string similarity in graph edge
         unique_events_list = []
         for index, properties in unique_events_subgraph:
-            unique_events_list.append(properties['preprocessed_events_graphedge'])
+            unique_events_list.append(properties['preprocessed_events_graphedge'].split())
 
         # transpose unique events list
-        unique_events_transpose = map(list, zip(*unique_events_list))
+        unique_events_transpose = list(zip(*unique_events_list))
 
         # check if each transposed list has the same elements
         true_status = []
