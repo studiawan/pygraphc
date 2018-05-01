@@ -179,23 +179,24 @@ class ParallelPreprocess(object):
         # transpose unique events list
         unique_events_transpose = list(zip(*unique_events_list))
 
-        # check if each transposed list has the same elements
-        true_status = []
-        for index, transposed in enumerate(unique_events_transpose):
-            status = all(item == transposed[0] for item in transposed)
-            if status:
-                true_status.append(index)
+        if len(unique_events_subgraph) > 1:
+            # check if each transposed list has the same elements
+            true_status = []
+            for index, transposed in enumerate(unique_events_transpose):
+                status = all(item == transposed[0] for item in transposed)
+                if status:
+                    true_status.append(index)
 
-        # remove repetitive words
-        for index, properties in unique_events_subgraph:
-            graphedge = properties['preprocessed_events_graphedge']
-            refined_graphedge = [y for x, y in enumerate(graphedge.split()) if x not in true_status]
-            properties['preprocessed_events_graphedge'] = ' '.join(refined_graphedge)
+            # remove repetitive words
+            for index, properties in unique_events_subgraph:
+                graphedge = properties['preprocessed_events_graphedge']
+                refined_graphedge = [y for x, y in enumerate(graphedge.split()) if x not in true_status]
+                properties['preprocessed_events_graphedge'] = ' '.join(refined_graphedge)
 
-        # remove repetitive words
-        for index, properties in event_attributes_subgraph.iteritems():
-            graphedge = properties['preprocessed_events_graphedge']
-            refined_graphedge = [y for x, y in enumerate(graphedge.split()) if x not in true_status]
-            properties['preprocessed_events_graphedge'] = ' '.join(refined_graphedge)
+            # remove repetitive words
+            for index, properties in event_attributes_subgraph.iteritems():
+                graphedge = properties['preprocessed_events_graphedge']
+                refined_graphedge = [y for x, y in enumerate(graphedge.split()) if x not in true_status]
+                properties['preprocessed_events_graphedge'] = ' '.join(refined_graphedge)
 
         return unique_events_subgraph, event_attributes_subgraph
