@@ -20,9 +20,9 @@ class CreateGraphModel(object):
         self.logs = []
         self.events_withduplicates = []
         self.events_withduplicates_length = 0
-        self.graph_noattributes = nx.MultiGraph()
+        self.graph_noattributes = nx.Graph()
         self.subgraph = nx.MultiGraph()
-        self.subgraph_noattributes = nx.MultiGraph()
+        self.subgraph_noattributes = nx.Graph()
         self.pp = None
 
     def __get_nodes(self):
@@ -98,7 +98,7 @@ class CreateGraphModel(object):
 
     def create_graph_noattributes(self, nodes=None):
         if nodes:
-            self.subgraph_noattributes = nx.MultiGraph()
+            self.subgraph_noattributes = nx.Graph()
             self.subgraph_noattributes.add_nodes_from(nodes)
             self.subgraph_noattributes.add_weighted_edges_from(self.distances_subgraph)
             return self.subgraph_noattributes
@@ -124,15 +124,17 @@ class CreateGraphModel(object):
                 self.event_attributes_subgraph[index] = attributes
 
         # remove same word, same column
-        self.unique_events_subgraph, self.event_attributes_subgraph = \
-            self.pp.refine_preprocessed_event_graphedge(self.unique_events_subgraph, self.event_attributes_subgraph)
+        self.unique_events_subgraph, self.event_attributes_subgraph, self.graph = \
+            self.pp.refine_preprocessed_event_graphedge(self.unique_events_subgraph,
+                                                        self.event_attributes_subgraph,
+                                                        self.graph)
 
     def __get_distances_subgraph(self, nodes):
         pcs = ParallelCosineSimilarity(self.event_attributes_subgraph, self.unique_events_length_subgraph, nodes)
         self.distances_subgraph = pcs.get_parallel_cosine_similarity()
 
     def create_graph_subgraph(self, nodes):
-        self.subgraph = nx.MultiGraph()
+        self.subgraph = nx.Graph()
         self.__get_nodes_subgraph(nodes)
         self.__get_distances_subgraph(nodes)
         self.subgraph.add_nodes_from(self.unique_events_subgraph)
