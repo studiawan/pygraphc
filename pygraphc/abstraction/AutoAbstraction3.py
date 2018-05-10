@@ -278,16 +278,44 @@ class AutoAbstraction(object):
                         self.abstractions[abstraction_id] = {'original_id': [], 'abstraction': [],
                                                              'length': 0, 'nodes': [], 'candidate_id': 0}
 
+    @staticmethod
+    def __remove_one_character(abstraction):
+        line_split = abstraction.split()
+        for index, word in enumerate(line_split):
+            if len(word) == 1 and word != '*':
+                line_split[index] = ''
+
+        # remove more than one space
+        line = ' '.join(line_split)
+        line = ' '.join(line.split())
+
+        return line
+
+    def __get_final_abstractions(self):
+        final_id = 0
+        abstraction_only = []
+        for abstraction_id, abstraction in self.abstractions.iteritems():
+            # remove empty abstraction, remove duplicates
+            if abstraction['abstraction']:
+                # remove word with length only 1 character
+                # abstraction['abstraction'] = self.__remove_one_character(abstraction['abstraction'])
+
+                # final abstraction
+                if abstraction['abstraction'] not in abstraction_only:
+                    self.final_abstractions[final_id] = abstraction
+                    abstraction_only.append(abstraction['abstraction'])
+                    final_id += 1
+
     def get_abstraction(self):
         clusters = self.__get_community()
         abstraction_candidates = self.__get_count_groups(clusters)
         self.__get_abstraction_asterisk(abstraction_candidates)
         check_abstraction_id = self.__check_subabstraction()
         self.__check_all_asterisk(check_abstraction_id)
+        self.__get_final_abstractions()
 
-        for k, v in self.abstractions.iteritems():
-            print k, v['abstraction']
+        return self.final_abstractions
 
 
-aa = AutoAbstraction('/home/hudan/Git/datasets/casper-rw/logs/messages')
-aa.get_abstraction()
+# aa = AutoAbstraction('/home/hudan/Git/datasets/casper-rw/logs/messages')
+# aa.get_abstraction()
