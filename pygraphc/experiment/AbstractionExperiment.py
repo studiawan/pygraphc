@@ -185,8 +185,9 @@ class AbstractionExperiment(object):
                     self.__run_drain()
 
             # update abstraction id based on ground truth
-            abstractions = AbstractionUtility.get_abstractionid_from_groundtruth(
-                properties['abstraction_label_withid_path'], abstractions)
+            abstractions = \
+                AbstractionUtility.get_abstractionid_from_groundtruth(properties['abstraction_label_withid_path'],
+                                                                      abstractions)
 
             # write result to file
             AbstractionUtility.write_perline(abstractions, properties['log_path'], properties['perline_path'])
