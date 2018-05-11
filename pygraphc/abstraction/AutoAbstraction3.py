@@ -293,18 +293,14 @@ class AutoAbstraction(object):
 
     def __get_final_abstractions(self):
         final_id = 0
-        abstraction_only = []
         for abstraction_id, abstraction in self.abstractions.iteritems():
             # remove empty abstraction, remove duplicates
             if abstraction['abstraction']:
                 # remove word with length only 1 character
                 # abstraction['abstraction'] = self.__remove_one_character(abstraction['abstraction'])
-
                 # final abstraction
-                if abstraction['abstraction'] not in abstraction_only:
-                    self.final_abstractions[final_id] = abstraction
-                    abstraction_only.append(abstraction['abstraction'])
-                    final_id += 1
+                self.final_abstractions[final_id] = abstraction
+                final_id += 1
 
     def get_abstraction(self):
         clusters = self.__get_community()
@@ -315,7 +311,3 @@ class AutoAbstraction(object):
         self.__get_final_abstractions()
 
         return self.final_abstractions
-
-
-# aa = AutoAbstraction('/home/hudan/Git/datasets/casper-rw/logs/messages')
-# aa.get_abstraction()
