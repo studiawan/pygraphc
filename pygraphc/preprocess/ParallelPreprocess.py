@@ -18,6 +18,7 @@ class ParallelPreprocess(object):
         self.events_withduplicates = []
         self.events_withduplicates_length = 0
         self.log_grammar = None
+        self.preprocessed_logs_groundtruth = {}
 
     def __call__(self, line):
         # main method called when running in multiprocessing
@@ -51,7 +52,10 @@ class ParallelPreprocess(object):
             line_split.append(alphabet_only)
 
         # GET preprocessed_event_countgroup
-        preprocessed_event_countgroup = ' '.join(line_split)
+        # remove more than one space
+        line = ' '.join(line_split)
+        line = ' '.join(line.split())
+        preprocessed_event_countgroup = line
 
         # GET preprocessed_events
         # remove word with length only 1 character
@@ -97,24 +101,29 @@ class ParallelPreprocess(object):
         unique_events_list = []
         for log_id, event, preprocessed_event_countgroup, preprocessed_events_graphedge in events:
             event_split = event.split()
+            preprocessed_event_countgroup_split = preprocessed_event_countgroup.split()
             if event not in unique_events_only.values():
                 unique_events_only[unique_event_id] = event
+                count_group = [preprocessed_event_countgroup_split]
                 self.event_attributes[unique_event_id] = {'preprocessed_event': event_split,
-                                                          'preprocessed_event_countgroup':
-                                                              preprocessed_event_countgroup.split(),
+                                                          'preprocessed_event_countgroup': count_group,
                                                           'preprocessed_events_graphedge':
                                                               preprocessed_events_graphedge,
                                                           'cluster': unique_event_id,
                                                           'member': [log_id]}
                 unique_event_id += 1
                 unique_events_list.append(event_split)
+
             else:
                 for index, attr in self.event_attributes.iteritems():
                     if event_split == attr['preprocessed_event']:
                         attr['member'].append(log_id)
+                        if preprocessed_event_countgroup_split not in attr['preprocessed_event_countgroup']:
+                            attr['preprocessed_event_countgroup'].append(preprocessed_event_countgroup_split)
 
             # get preprocessed logs as dictionary
             self.preprocessed_logs[log_id] = event
+            self.preprocessed_logs_groundtruth[log_id] = preprocessed_event_countgroup
 
         # refine unique events to remove repetitive words
         if self.refine_unique_events:
