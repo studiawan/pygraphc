@@ -68,13 +68,19 @@ class AutoAbstraction(object):
         for cluster_id, nodes in clusters.iteritems():
             count_groups = {}
             for node_id in nodes:
-                message = self.graph.node[node_id]['preprocessed_event_countgroup']
-                words_count = len(message)
+                # event count group is now a list
+                messages = self.graph.node[node_id]['preprocessed_event_countgroup']
+                for message in messages:
+                    words_count = len(message)
 
-                # save count group per cluster
-                if words_count not in count_groups.keys():
-                    count_groups[words_count] = {}
-                count_groups[words_count][node_id] = message
+                    # save count group per cluster
+                    if words_count not in count_groups.keys():
+                        count_groups[words_count] = {}
+
+                    if node_id not in count_groups[words_count].keys():
+                        count_groups[words_count][node_id] = []
+
+                    count_groups[words_count][node_id].append(message)
 
             for count, group in count_groups.iteritems():
                 abstraction_candidates[self.candidate_id] = {count: group}
@@ -88,9 +94,18 @@ class AutoAbstraction(object):
         check_abstraction_id = []
         for abs_id, candidates in abstraction_candidates.iteritems():
             for word_count, candidate in candidates.iteritems():
+                # prepare the candidate
+                candidate_temp = []
+                for cands in candidate.values():
+                    if len(cands) == 1:
+                        candidate_temp.append(cands[0])
+                    else:
+                        for cand in cands:
+                            candidate_temp.append(cand)
+
                 # transpose row to column
-                candidate_transpose = list(zip(*candidate.values()))
-                candidate_length = len(candidate.values())
+                candidate_transpose = list(zip(*candidate_temp))
+                candidate_length = len(candidate_temp)
 
                 if candidate_length > 1:
                     # prevent initialization to refer to current group variable
@@ -137,7 +152,7 @@ class AutoAbstraction(object):
                 # create abstraction
                 elif candidate_length == 1:
                     node_id = candidate.keys()[0]
-                    abstraction = candidate.values()[0]
+                    abstraction = candidate.values()[0][0]
                     self.abstractions[self.abstraction_id] = {'original_id': self.graph.node[node_id]['member'],
                                                               'abstraction': ' '.join(abstraction),
                                                               'length': len(abstraction),
