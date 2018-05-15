@@ -126,13 +126,15 @@ class AutoAbstraction(object):
                     # if abstraction only contains asterisks, each candidate becomes an abstraction
                     if set(abstraction_list) == set('*'):
                         for node_id, message in candidate.iteritems():
-                            self.abstractions[self.abstraction_id] = {'original_id': self.graph.node[node_id]['member'],
-                                                                      'abstraction': ' '.join(message),
-                                                                      'length': len(message),
-                                                                      'nodes': [node_id],
-                                                                      'candidate_id': abs_id}
-                            check_abstraction_id.append(self.abstraction_id)
-                            self.abstraction_id += 1
+                            for msg in message:
+                                self.abstractions[self.abstraction_id] = \
+                                    {'original_id': self.graph.node[node_id]['member'],
+                                     'abstraction': ' '.join(msg),
+                                     'length': len(msg),
+                                     'nodes': [node_id],
+                                     'candidate_id': abs_id}
+                                check_abstraction_id.append(self.abstraction_id)
+                                self.abstraction_id += 1
 
                     # set abstraction and original line id
                     else:
@@ -251,7 +253,7 @@ class AutoAbstraction(object):
             node_id = nodes[0]
 
             # get intersection
-            event_count_group = self.graph.node[node_id]['preprocessed_event_countgroup']
+            event_count_group = self.graph.node[node_id]['preprocessed_event_countgroup'][0]
             event_graph_edge = self.graph.node[node_id]['preprocessed_events_graphedge'].split()
             event_intersection = list((Counter(event_count_group) & Counter(event_graph_edge)).elements())
 
@@ -281,13 +283,14 @@ class AutoAbstraction(object):
                         candidates = self.abstraction_candidates[candidate_id]
                         for word_count, candidate in candidates.iteritems():
                             for node_id, message in candidate.iteritems():
-                                self.abstractions[self.abstraction_id] = \
-                                    {'original_id': self.graph.node[node_id]['member'],
-                                     'abstraction': ' '.join(message),
-                                     'length': len(message),
-                                     'nodes': [node_id],
-                                     'candidate_id': candidate_id}
-                                self.abstraction_id += 1
+                                for msg in message:
+                                    self.abstractions[self.abstraction_id] = \
+                                        {'original_id': self.graph.node[node_id]['member'],
+                                         'abstraction': ' '.join(msg),
+                                         'length': len(msg),
+                                         'nodes': [node_id],
+                                         'candidate_id': candidate_id}
+                                    self.abstraction_id += 1
 
                         # reset abstraction
                         self.abstractions[abstraction_id] = {'original_id': [], 'abstraction': [],
