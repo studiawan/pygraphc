@@ -272,11 +272,15 @@ class AutoAbstraction(object):
 
             # asterisk indices are incremental
             if len(asterisk_indices) > 1:
-                if asterisk_indices == range(asterisk_indices[0], asterisk_indices[-1] + 1) \
-                        and asterisk_indices[-1] == (len(abstraction_split) - 1):
+                if (asterisk_indices == range(asterisk_indices[0], asterisk_indices[-1] + 1) and
+                    asterisk_indices[-1] == (len(abstraction_split) - 1)) or \
+                        (asterisk_indices[1:] == range(asterisk_indices[1], asterisk_indices[-1] + 1) and
+                         asterisk_indices[-1] == (len(abstraction_split) - 1)):
 
                     if set(asterisk_indices) <= set(intersection_indices) or \
-                                    set(asterisk_indices) >= set(intersection_indices):
+                       set(asterisk_indices) >= set(intersection_indices) or \
+                       set(asterisk_indices[1:]) <= set(intersection_indices) or \
+                       set(asterisk_indices[1:]) >= set(intersection_indices):
 
                         # each abstraction candidate become a new abstraction
                         candidate_id = self.abstractions[abstraction_id]['candidate_id']
