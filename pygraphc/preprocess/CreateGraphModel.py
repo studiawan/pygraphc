@@ -12,6 +12,7 @@ class CreateGraphModel(object):
         self.unique_events_length = 0
         self.event_attributes = {}
         self.preprocessed_logs = {}
+        self.preprocessed_logs_groundtruth = {}
         self.distances = []
         self.graph = nx.MultiGraph()
         self.count_groups = count_groups
@@ -34,6 +35,7 @@ class CreateGraphModel(object):
         self.preprocessed_logs = self.pp.preprocessed_logs
         self.log_length = self.pp.log_length
         self.logs = self.pp.logs
+        self.preprocessed_logs_groundtruth = self.pp.preprocessed_logs_groundtruth
 
     def __get_distances(self):
         # get cosine distance as edges with weight
