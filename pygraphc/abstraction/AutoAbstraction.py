@@ -89,6 +89,32 @@ class AutoAbstraction(object):
 
         return abstraction_candidates
 
+    @staticmethod
+    def __get_asterisk(candidate):
+        # candidate: list of list
+        abstraction = ''
+
+        # transpose row to column
+        candidate_transpose = list(zip(*candidate))
+        candidate_length = len(candidate)
+
+        if candidate_length > 1:
+            # get abstraction
+            abstraction_list = []
+            for index, message in enumerate(candidate_transpose):
+                message_length = len(set(message))
+                if message_length == 1:
+                    abstraction_list.append(message[0])
+                else:
+                    abstraction_list.append('*')
+
+            abstraction = ' '.join(abstraction_list)
+
+        elif candidate_length == 1:
+            abstraction = candidate[0]
+
+        return abstraction
+
     def __get_abstraction_asterisk(self, abstraction_candidates):
         # get abstraction with asterisk sign
         check_abstraction_id = []
@@ -126,15 +152,14 @@ class AutoAbstraction(object):
                     # if abstraction only contains asterisks, each candidate becomes an abstraction
                     if set(abstraction_list) == set('*'):
                         for node_id, message in candidate.iteritems():
-                            for msg in message:
-                                self.abstractions[self.abstraction_id] = \
-                                    {'original_id': self.graph.node[node_id]['member'],
-                                     'abstraction': ' '.join(msg),
-                                     'length': len(msg),
-                                     'nodes': [node_id],
-                                     'candidate_id': abs_id}
-                                check_abstraction_id.append(self.abstraction_id)
-                                self.abstraction_id += 1
+                            self.abstractions[self.abstraction_id] = \
+                                {'original_id': self.graph.node[node_id]['member'],
+                                 'abstraction': self.__get_asterisk(message),
+                                 'length': len(message),
+                                 'nodes': [node_id],
+                                 'candidate_id': abs_id}
+                            check_abstraction_id.append(self.abstraction_id)
+                            self.abstraction_id += 1
 
                     # set abstraction and original line id
                     else:
@@ -287,14 +312,9 @@ class AutoAbstraction(object):
                         candidates = self.abstraction_candidates[candidate_id]
                         for word_count, candidate in candidates.iteritems():
                             for node_id, message in candidate.iteritems():
-                                for msg in message:
-                                    self.abstractions[self.abstraction_id] = \
-                                        {'original_id': self.graph.node[node_id]['member'],
-                                         'abstraction': ' '.join(msg),
-                                         'length': len(msg),
-                                         'nodes': [node_id],
-                                         'candidate_id': candidate_id}
-                                    self.abstraction_id += 1
+                                clusters = {0: [node_id]}
+                                abstraction_candidates = self.__get_count_groups(clusters)
+                                self.__get_abstraction_asterisk(abstraction_candidates)
 
                         # reset abstraction
                         self.abstractions[abstraction_id] = {'original_id': [], 'abstraction': [],
