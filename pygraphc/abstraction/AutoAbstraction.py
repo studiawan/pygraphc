@@ -113,7 +113,7 @@ class AutoAbstraction(object):
             abstraction = ' '.join(abstraction_list)
 
         elif candidate_length == 1:
-            abstraction = candidate[0]
+            abstraction = ' '.join(candidate[0])
 
         return abstraction
 
