@@ -17,6 +17,7 @@ class AutoAbstraction(object):
         self.abstractions = {}
         self.abstraction_id = 0
         self.final_abstractions = {}
+        self.preprocessed_logs_groundtruth = {}
 
     def __prepare_graph(self, cluster=None):
         # create new temporary graph based on subgraph nodes
@@ -31,6 +32,7 @@ class AutoAbstraction(object):
             self.graph_noattributes = self.graph_model.create_graph_noattributes()
             self.graph_copy = self.graph.copy()
             graph_noattributes = self.graph_noattributes
+            self.preprocessed_logs_groundtruth = self.graph_model.preprocessed_logs_groundtruth
 
         # write to gexf file
         filename = self.log_file.split('/')[-1]
@@ -152,9 +154,18 @@ class AutoAbstraction(object):
                     # if abstraction only contains asterisks, each candidate becomes an abstraction
                     if set(abstraction_list) == set('*'):
                         for node_id, message in candidate.iteritems():
+                            abstract = self.__get_asterisk(message)
+                            abstract_split_length = abstract.split()
+                            member = self.graph.node[node_id]['member']
+                            become_member = []
+                            for log_id in member:
+                                if len(abstract_split_length) == \
+                                        len(self.preprocessed_logs_groundtruth[log_id].split()):
+                                    become_member.append(log_id)
+
                             self.abstractions[self.abstraction_id] = \
-                                {'original_id': self.graph.node[node_id]['member'],
-                                 'abstraction': self.__get_asterisk(message),
+                                {'original_id': become_member,
+                                 'abstraction': abstract,
                                  'length': len(message),
                                  'nodes': [node_id],
                                  'candidate_id': abs_id}
@@ -166,7 +177,11 @@ class AutoAbstraction(object):
                         member_nodes = []
                         for node_id, message in candidate.iteritems():
                             member = self.graph.node[node_id]['member']
-                            self.abstractions[self.abstraction_id]['original_id'].extend(member)
+                            become_member = []
+                            for log_id in member:
+                                if len(abstraction_list) == len(self.preprocessed_logs_groundtruth[log_id].split()):
+                                    become_member.append(log_id)
+                            self.abstractions[self.abstraction_id]['original_id'].extend(become_member)
                             member_nodes.append(node_id)
 
                         self.abstractions[self.abstraction_id]['nodes'] = member_nodes
